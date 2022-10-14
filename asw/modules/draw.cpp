@@ -61,6 +61,10 @@ void asw::draw::text(asw::Font font,
                      int x,
                      int y,
                      asw::Color color) {
+  if (!text.size()) {
+    return;
+  }
+
   SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
   SDL_Surface* textSurface =
       TTF_RenderText_Solid(font.get(), text.c_str(), sdlColor);

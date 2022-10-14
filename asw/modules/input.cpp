@@ -10,6 +10,7 @@ void asw::input::reset() {
 
   // Clear key state
   keyboard.anyPressed = false;
+  keyboard.lastPressed = -1;
   for (unsigned int i = 0; i < keyboard.pressed.size(); i++) {
     keyboard.pressed[i] = false;
   }
