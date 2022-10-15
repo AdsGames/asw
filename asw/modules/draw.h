@@ -35,6 +35,12 @@ namespace asw::draw {
                   int y,
                   asw::Color color);
 
+  void textRight(asw::Font font,
+                 std::string text,
+                 int x,
+                 int y,
+                 asw::Color color);
+
   void point(int x, int y, asw::Color color);
 
   void line(int x1, int y1, int x2, int y2, asw::Color color);
