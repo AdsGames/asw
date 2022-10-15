@@ -69,8 +69,14 @@ void asw::core::update() {
       }
 
       case SDL_MOUSEMOTION:
+        mouse.xChange = e.motion.xrel;
+        mouse.yChange = e.motion.yrel;
         mouse.x = e.motion.x;
         mouse.y = e.motion.y;
+        break;
+
+      case SDL_MOUSEWHEEL:
+        mouse.z = e.wheel.y;
         break;
 
       case SDL_QUIT:

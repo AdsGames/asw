@@ -16,21 +16,21 @@ using namespace std::chrono;
 // Timer class
 class Timer {
  public:
-  Timer();
-  virtual ~Timer(){};
-
   // Start time
-  void Start();
+  void start();
 
   // Stop
-  void Stop();
+  void stop();
 
   // Is running
-  bool IsRunning() const;
+  bool isRunning() const;
+
+  // Reset timer
+  void reset();
 
   // Get time running
   template <typename Precision>
-  double GetElapsedTime() {
+  double getElapsedTime() {
     // Get time now
     if (running) {
       t2 = high_resolution_clock::now();
@@ -45,8 +45,9 @@ class Timer {
 
  private:
   // Holds time points for start and end
-  time_point<high_resolution_clock> t1, t2;
-  bool running;
+  time_point<high_resolution_clock> t1{high_resolution_clock::now()};
+  time_point<high_resolution_clock> t2{high_resolution_clock::now()};
+  bool running{false};
 };
 
 #endif  // TIMER_H

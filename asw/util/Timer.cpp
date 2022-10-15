@@ -1,25 +1,25 @@
 #include "Timer.h"
 
-// Init
-Timer::Timer()
-    : t1(high_resolution_clock::now()),
-      t2(high_resolution_clock::now()),
-      running(false) {}
-
 // Start Timer
-void Timer::Start() {
+void Timer::start() {
   t1 = high_resolution_clock::now();
   t2 = high_resolution_clock::now();
   running = true;
 }
 
 // Stop
-void Timer::Stop() {
+void Timer::stop() {
   running = false;
   t2 = high_resolution_clock::now();
 }
 
 // Is running
-bool Timer::IsRunning() const {
+bool Timer::isRunning() const {
   return running;
+}
+
+// Reset
+void Timer::reset() {
+  t1 = high_resolution_clock::now();
+  t2 = high_resolution_clock::now();
 }
