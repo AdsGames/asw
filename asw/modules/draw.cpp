@@ -85,6 +85,15 @@ void asw::draw::textCenter(asw::Font font,
   asw::draw::text(font, text, x - size.x / 2, y, color);
 }
 
+void asw::draw::textRight(asw::Font font,
+                          std::string text,
+                          int x,
+                          int y,
+                          asw::Color color) {
+  auto size = asw::util::getTextSize(font, text);
+  asw::draw::text(font, text, x - size.x, y, color);
+}
+
 void asw::draw::point(int x, int y, asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
