@@ -16,6 +16,9 @@ namespace asw::input {
     bool anyPressed{false};
     int lastPressed{-1};
 
+    int xChange{0};
+    int yChange{0};
+
     int x{0};
     int y{0};
     int z{0};

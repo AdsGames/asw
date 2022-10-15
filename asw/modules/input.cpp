@@ -20,6 +20,9 @@ void asw::input::reset() {
 
   // Clear mouse state
   mouse.anyPressed = false;
+  mouse.xChange = 0;
+  mouse.yChange = 0;
+  mouse.z = 0;
   for (unsigned int i = 0; i < mouse.pressed.size(); i++) {
     mouse.pressed[i] = false;
   }
