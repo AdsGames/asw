@@ -1,4 +1,4 @@
-#include "./input.h"
+#include "./modules/input.h"
 
 asw::input::KeyState asw::input::keyboard;
 

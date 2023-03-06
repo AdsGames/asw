@@ -1,4 +1,4 @@
-#include "./sound.h"
+#include "./modules/sound.h"
 
 #include <SDL2/SDL_mixer.h>
 
