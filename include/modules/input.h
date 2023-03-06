@@ -8,7 +8,7 @@
 #define ASW_NUM_MOUSE_BUTTONS 5
 
 namespace asw::input {
-  typedef struct MouseState {
+  using MouseState = struct MouseState {
     std::array<bool, ASW_NUM_MOUSE_BUTTONS> pressed{false};
     std::array<bool, ASW_NUM_MOUSE_BUTTONS> released{false};
     std::array<bool, ASW_NUM_MOUSE_BUTTONS> down{false};
@@ -22,18 +22,18 @@ namespace asw::input {
     int x{0};
     int y{0};
     int z{0};
-  } MouseState;
+  };
 
   extern MouseState mouse;
 
-  typedef struct KeyState {
+  using KeyState = struct KeyState {
     std::array<bool, ASW_NUM_KEYS> pressed{false};
     std::array<bool, ASW_NUM_KEYS> released{false};
     std::array<bool, ASW_NUM_KEYS> down{false};
 
     bool anyPressed{false};
     int lastPressed{-1};
-  } KeyState;
+  };
 
   extern KeyState keyboard;
 

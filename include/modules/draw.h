@@ -27,16 +27,20 @@ namespace asw::draw {
                          int w2,
                          int h2);
 
-  void text(asw::Font font, std::string text, int x, int y, asw::Color color);
+  void text(asw::Font font,
+            const std::string& text,
+            int x,
+            int y,
+            asw::Color color);
 
   void textCenter(asw::Font font,
-                  std::string text,
+                  const std::string& text,
                   int x,
                   int y,
                   asw::Color color);
 
   void textRight(asw::Font font,
-                 std::string text,
+                 const std::string& text,
                  int x,
                  int y,
                  asw::Color color);

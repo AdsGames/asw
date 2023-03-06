@@ -1,11 +1,11 @@
-#include "./draw.h"
+#include "./modules/draw.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "./display.h"
-#include "./util.h"
+#include "./modules/display.h"
+#include "./modules/util.h"
 
 void asw::draw::clearColor(asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
@@ -57,7 +57,7 @@ void asw::draw::stretchSpriteBlit(asw::Texture tex,
 }
 
 void asw::draw::text(asw::Font font,
-                     std::string text,
+                     const std::string& text,
                      int x,
                      int y,
                      asw::Color color) {
@@ -77,7 +77,7 @@ void asw::draw::text(asw::Font font,
 }
 
 void asw::draw::textCenter(asw::Font font,
-                           std::string text,
+                           const std::string& text,
                            int x,
                            int y,
                            asw::Color color) {
@@ -86,7 +86,7 @@ void asw::draw::textCenter(asw::Font font,
 }
 
 void asw::draw::textRight(asw::Font font,
-                          std::string text,
+                          const std::string& text,
                           int x,
                           int y,
                           asw::Color color) {
