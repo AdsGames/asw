@@ -11,8 +11,6 @@
 
 #include <chrono>
 
-using namespace std::chrono;
-
 // Timer class
 class Timer {
  public:
@@ -33,11 +31,11 @@ class Timer {
   double getElapsedTime() {
     // Get time now
     if (running) {
-      t2 = high_resolution_clock::now();
+      t2 = std::chrono::high_resolution_clock::now();
     }
 
     // Choose precision
-    auto time_diff = duration_cast<Precision>(t2 - t1);
+    auto time_diff = std::chrono::duration_cast<Precision>(t2 - t1);
 
     // Return time as double
     return time_diff.count();
@@ -45,8 +43,10 @@ class Timer {
 
  private:
   // Holds time points for start and end
-  time_point<high_resolution_clock> t1{high_resolution_clock::now()};
-  time_point<high_resolution_clock> t2{high_resolution_clock::now()};
+  std::chrono::time_point<std::chrono::high_resolution_clock> t1{
+      std::chrono::high_resolution_clock::now()};
+  std::chrono::time_point<std::chrono::high_resolution_clock> t2{
+      std::chrono::high_resolution_clock::now()};
   bool running{false};
 };
 

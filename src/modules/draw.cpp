@@ -57,7 +57,7 @@ void asw::draw::stretchSpriteBlit(asw::Texture tex,
 }
 
 void asw::draw::text(asw::Font font,
-                     std::string text,
+                     const std::string& text,
                      int x,
                      int y,
                      asw::Color color) {
@@ -77,7 +77,7 @@ void asw::draw::text(asw::Font font,
 }
 
 void asw::draw::textCenter(asw::Font font,
-                           std::string text,
+                           const std::string& text,
                            int x,
                            int y,
                            asw::Color color) {
@@ -86,7 +86,7 @@ void asw::draw::textCenter(asw::Font font,
 }
 
 void asw::draw::textRight(asw::Font font,
-                          std::string text,
+                          const std::string& text,
                           int x,
                           int y,
                           asw::Color color) {

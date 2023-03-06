@@ -33,6 +33,9 @@ void asw::core::update() {
                               size.y * scale.y);
             break;
           }
+
+          default:
+            break;
         }
         break;
 
