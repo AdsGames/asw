@@ -1,11 +1,11 @@
-#include "./modules/draw.h"
+#include "./asw/modules/draw.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <SDL2/SDL_ttf.h>
 
-#include "./modules/display.h"
-#include "./modules/util.h"
+#include "./asw/modules/display.h"
+#include "./asw/modules/util.h"
 
 void asw::draw::clearColor(asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
