@@ -1,4 +1,4 @@
-#include "./modules/assets.h"
+#include "./asw/modules/assets.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
@@ -6,7 +6,7 @@
 #include <SDL2/SDL_ttf.h>
 #include <memory>
 
-#include "./modules/display.h"
+#include "./asw/modules/display.h"
 
 asw::Texture asw::assets::loadTexture(const std::string& filename) {
   SDL_Texture* temp = IMG_LoadTexture(asw::display::renderer, filename.c_str());

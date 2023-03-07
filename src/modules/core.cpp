@@ -1,12 +1,12 @@
-#include "./modules/core.h"
+#include "./asw/modules/core.h"
 
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_image.h>
 #include <iostream>
 
-#include "./modules/display.h"
-#include "./modules/input.h"
-#include "./modules/util.h"
+#include "./asw/modules/display.h"
+#include "./asw/modules/input.h"
+#include "./asw/modules/util.h"
 
 bool asw::core::exit = false;
 
