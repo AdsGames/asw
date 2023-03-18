@@ -20,6 +20,12 @@ namespace asw::core {
    */
   void init(int width, int height, int scale = 1);
 
+  /**
+   * @brief Prints information about the core module.
+   *
+   */
+  void print_info();
+
 }  // namespace asw::core
 
 #endif  // ASW_CORE_H
