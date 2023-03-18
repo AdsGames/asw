@@ -122,7 +122,34 @@ void asw::core::init(int width, int height, int scale) {
 
   // Get window surface
   asw::display::renderer =
-      SDL_CreateRenderer(asw::display::window, -1, SDL_RENDERER_ACCELERATED);
+      SDL_CreateRenderer(asw::display::window, -1,
+                         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
 
   SDL_RenderSetLogicalSize(asw::display::renderer, width, height);
+}
+
+void asw::core::print_info() {
+  std::cout << "ASW Info" << std::endl;
+  std::cout << "========" << std::endl;
+
+  SDL_version compiled;
+  SDL_GetVersion(&compiled);
+
+  SDL_RendererInfo info;
+  SDL_GetRendererInfo(asw::display::renderer, &info);
+
+  bool is_accelerated = info.flags & SDL_RENDERER_ACCELERATED;
+  bool is_software = info.flags & SDL_RENDERER_SOFTWARE;
+  bool is_target_texture = info.flags & SDL_RENDERER_TARGETTEXTURE;
+  bool is_vsync = info.flags & SDL_RENDERER_PRESENTVSYNC;
+
+  std::cout << "SDL Version: " << static_cast<int>(compiled.major) << "."
+            << static_cast<int>(compiled.minor) << "."
+            << static_cast<int>(compiled.patch) << std::endl;
+
+  std::cout << "Renderer: " << info.name << std::endl;
+  std::cout << "Accelerated: " << is_accelerated << std::endl;
+  std::cout << "Software: " << is_software << std::endl;
+  std::cout << "Target Texture: " << is_target_texture << std::endl;
+  std::cout << "Vsync: " << is_vsync << std::endl;
 }
