@@ -12,8 +12,8 @@ namespace asw::assets {
    * BMP, GIF, JPG, LBM, PCX, PNM, TIF, XCF, XPM, XV, and WEBP. This will abort
    * if the file is not found.
    *
-   * @param filename - The path to the file.
-   * @return asw::Texture The loaded texture.
+   * @param filename The path to the file.
+   * @return The loaded texture.
    */
   asw::Texture loadTexture(const std::string& filename);
 
@@ -21,9 +21,9 @@ namespace asw::assets {
    * @brief Loads a TTF font from a file. This will abort if the file is not
    * found.
    *
-   * @param filename - The path to the file.
-   * @param size
-   * @return asw::Font
+   * @param filename The path to the file.
+   * @param size The size of the font.
+   * @return The loaded font.
    */
   asw::Font loadFont(const std::string& filename, int size);
 
@@ -32,16 +32,16 @@ namespace asw::assets {
    * OGG and VOC. This will abort if the file is not found.
    *
    * @param filename
-   * @return asw::Sample The loaded sample.
+   * @return The loaded sample.
    */
   asw::Sample loadSample(const std::string& filename);
 
   /**
    * @brief Create a Texture given the specified dimensions.
    *
-   * @param w - The width of the texture.
-   * @param h - The height of the texture.
-   * @return asw::Texture The created texture.
+   * @param w The width of the texture.
+   * @param h The height of the texture.
+   * @return The created texture.
    */
   asw::Texture createTexture(int w, int h);
 }  // namespace asw::assets

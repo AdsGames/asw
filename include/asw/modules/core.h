@@ -14,9 +14,9 @@ namespace asw::core {
   /**
    * @brief Initializes the core module.
    *
-   * @param width - The width of the window.
-   * @param height - The height of the window.
-   * @param scale - The scale of the window.
+   * @param width The width of the window.
+   * @param height The height of the window.
+   * @param scale The scale of the window.
    */
   void init(int width, int height, int scale = 1);
 
