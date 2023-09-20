@@ -64,6 +64,26 @@ namespace asw::display {
    */
   SDL_FPoint getScale();
 
+  /**
+   * @brief Set the render target to the window.
+   */
+  void setRenderTarget(asw::Texture& texture);
+
+  /**
+   * @brief Reset the render target to the default.
+   */
+  void resetRenderTarget();
+
+  /**
+   * @brief Clear the window.
+   */
+  void clear();
+
+  /**
+   * @brief Present the window.
+   */
+  void present();
+
 }  // namespace asw::display
 
 #endif  // ASW_DISPLAY_H

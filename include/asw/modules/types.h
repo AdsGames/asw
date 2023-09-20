@@ -13,6 +13,15 @@ namespace asw {
   using Renderer = SDL_Renderer;
   using Window = SDL_Window;
   using Color = SDL_Color;
+
+  enum class BlendMode {
+    NONE = SDL_BLENDMODE_NONE,
+    BLEND = SDL_BLENDMODE_BLEND,
+    ADD = SDL_BLENDMODE_ADD,
+    MODULATE = SDL_BLENDMODE_MOD,
+    MULTIPLY = SDL_BLENDMODE_MUL
+  };
+
 }  // namespace asw
 
 #endif  // ASW_TYPES_H
