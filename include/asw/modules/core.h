@@ -1,3 +1,13 @@
+/**
+ * @file core.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Core routines including main loop and initialization
+ * @date 2023-09-20
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #ifndef ASW_CORE_H
 #define ASW_CORE_H
 

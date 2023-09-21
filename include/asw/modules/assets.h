@@ -1,3 +1,13 @@
+/**
+ * @file assets.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Asset routines for the ASW library
+ * @date 2023-09-20
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+
 #ifndef ASW_ASSETS_H
 #define ASW_ASSETS_H
 

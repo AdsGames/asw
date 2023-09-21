@@ -1,3 +1,12 @@
+/**
+ * @file draw.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Routines for drawing sprites and primitives to the screen
+ * @date 2023-09-20
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 #ifndef ASW_DRAW_H
 #define ASW_DRAW_H
 

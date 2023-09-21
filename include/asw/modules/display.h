@@ -1,3 +1,12 @@
+/**
+ * @file display.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Display and window routines for the ASW library
+ * @date 2023-09-20
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 #ifndef ASW_DISPLAY_H
 #define ASW_DISPLAY_H
 

@@ -1,3 +1,12 @@
+/**
+ * @file input_keys.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Mapping from SDL keys to ASW keys
+ * @date 2023-09-20
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 #ifndef ASW_INPUT_KEYS_H
 #define ASW_INPUT_KEYS_H
 

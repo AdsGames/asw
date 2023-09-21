@@ -1,3 +1,12 @@
+/**
+ * @file input.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Input module for the ASW library
+ * @date 2023-09-20
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
 #ifndef ASW_INPUT_H
 #define ASW_INPUT_H
 
