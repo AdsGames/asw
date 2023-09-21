@@ -1,6 +1,3 @@
-#ifndef ASW_TYPES_H
-#define ASW_TYPES_H
-
 /**
  * @file types.h
  * @author Allan Legemaate (alegemaate@gmail.com)
@@ -10,6 +7,9 @@
  * @copyright Copyright (c) 2023
  *
  */
+#ifndef ASW_TYPES_H
+#define ASW_TYPES_H
+
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_mixer.h>
 #include <SDL2/SDL_ttf.h>

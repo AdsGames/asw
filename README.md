@@ -1,23 +1,18 @@
 # asw
 
-A.D.S. Games SDL Wrapper
+A.D.S. Games SDL Wrapper.
+
+This project started as a way to easily port allegro4 games to SDL2. Now it intends to make it easier to use SDL2 in C++. A primary focus is to allow easy compilation of games using emscripten as well, and has been throughly tested with it.
 
 ## Usage (CMAKE)
 
-### Add submodule
+### Fetch Content
 
-```
-mkdir lib
-git submodule add https://github.com/AdsGames/asw lib/asw
-```
-
-### Add to CMakeLists.txt
-
-```
-set(ASW_HEADERS lib/asw)
-
-target_include_directories(
-  executable_name PRIVATE
-  ${ASW_HEADERS}
+```sh
+FetchContent_Declare(
+  asw
+  GIT_REPOSITORY https://github.com/adsgames/asw.git
+  GIT_TAG        <tag from latest version>
 )
+FetchContent_MakeAvailable(asw)
 ```

@@ -7,7 +7,6 @@
  * @copyright Copyright (c) 2023
  *
  */
-
 #ifndef ASW_CORE_H
 #define ASW_CORE_H
 
