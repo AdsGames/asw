@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.24)
-project (asw VERSION 1.0.0 LANGUAGES CXX)
+project(asw VERSION 0.3.5 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -21,15 +21,19 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall -Wextra -pedantic)
 
 # Add include
-target_include_directories(${PROJECT_NAME} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:include>
-    PRIVATE src)
+target_include_directories(
+  ${PROJECT_NAME} PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+  PRIVATE src
+)
 
 # Versioning
-set_target_properties(${PROJECT_NAME} PROPERTIES
-    VERSION ${PROJECT_VERSION}
-    SOVERSION 1)
+set_target_properties(
+  ${PROJECT_NAME} PROPERTIES
+  VERSION ${PROJECT_VERSION}
+  SOVERSION 1
+)
 
 # Find libs
 if(NOT EMSCRIPTEN)
@@ -47,27 +51,27 @@ if(EMSCRIPTEN)
   set(CMAKE_EXECUTABLE_SUFFIX ".html")
   target_compile_options(
     ${PROJECT_NAME}
-    PRIVATE  
-    -sUSE_SDL=2 
-    -sUSE_SDL_IMAGE=2 
-    -sUSE_SDL_TTF=2 
-    -sUSE_SDL_MIXER=2 
+    PRIVATE
+    -sUSE_SDL=2
+    -sUSE_SDL_IMAGE=2
+    -sUSE_SDL_TTF=2
+    -sUSE_SDL_MIXER=2
     -sSDL2_IMAGE_FORMATS=["png"]
   )
   target_link_libraries(
-    ${PROJECT_NAME} 
-    -sWASM=1 
-    -sUSE_SDL=2 
-    -sUSE_SDL_IMAGE=2 
-    -sUSE_SDL_TTF=2 
-    -sUSE_SDL_MIXER=2 
-    -sSDL2_IMAGE_FORMATS=["png"] 
+    ${PROJECT_NAME}
+    -sWASM=1
+    -sUSE_SDL=2
+    -sUSE_SDL_IMAGE=2
+    -sUSE_SDL_TTF=2
+    -sUSE_SDL_MIXER=2
+    -sSDL2_IMAGE_FORMATS=["png"]
     -sDEMANGLE_SUPPORT=1
     -sTOTAL_MEMORY=512MB
   )
   set_target_properties(
-    ${PROJECT_NAME} 
-    PROPERTIES 
+    ${PROJECT_NAME}
+    PROPERTIES
     LINK_FLAGS
     "--preload-file ${CMAKE_CURRENT_LIST_DIR}/assets@/assets --use-preload-plugins"
   )
@@ -77,14 +81,15 @@ else(EMSCRIPTEN)
   if(MINGW)
     target_link_libraries(${PROJECT_NAME} -lmingw32)
   endif(MINGW)
+
   target_link_libraries(
-    ${PROJECT_NAME} 
-    -lm 
-    ${SDL_MAIN_LIBRARY} 
-    ${SDL_LIBRARY} 
-    ${SDL_MIXER_LIBRARY} 
-    ${SDL_IMAGE_LIBRARY} 
-    ${SDL_TTF_LIBRARY} 
+    ${PROJECT_NAME}
+    -lm
+    ${SDL_MAIN_LIBRARY}
+    ${SDL_LIBRARY}
+    ${SDL_MIXER_LIBRARY}
+    ${SDL_IMAGE_LIBRARY}
+    ${SDL_TTF_LIBRARY}
   )
 endif(EMSCRIPTEN)
 
@@ -98,12 +103,12 @@ configure_package_config_file(
 )
 
 write_basic_package_version_file(
-    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY AnyNewerVersion
 )
 
 install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-              ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
