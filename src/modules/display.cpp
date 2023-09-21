@@ -49,3 +49,19 @@ SDL_FPoint asw::display::getScale() {
   SDL_RenderGetScale(asw::display::renderer, &scale.x, &scale.y);
   return scale;
 }
+
+void asw::display::setRenderTarget(asw::Texture texture) {
+  SDL_SetRenderTarget(asw::display::renderer, texture.get());
+}
+
+void asw::display::resetRenderTarget() {
+  SDL_SetRenderTarget(asw::display::renderer, nullptr);
+}
+
+void asw::display::clear() {
+  SDL_RenderClear(asw::display::renderer);
+}
+
+void asw::display::present() {
+  SDL_RenderPresent(asw::display::renderer);
+}

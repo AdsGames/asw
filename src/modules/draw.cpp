@@ -19,27 +19,37 @@ void asw::draw::sprite(asw::Texture tex, int x, int y) {
   SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
 }
 
-void asw::draw::spriteHFlip(asw::Texture tex, int x, int y) {
+void asw::draw::spriteFlip(asw::Texture tex,
+                           int x,
+                           int y,
+                           bool flipX,
+                           bool flipY) {
   SDL_Point size = asw::util::getTextureSize(tex);
   SDL_Rect dest = {x, y, size.x, size.y};
-  SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
-}
+  SDL_RendererFlip flip = SDL_FLIP_NONE;
 
-void asw::draw::spriteVFlip(asw::Texture tex, int x, int y) {
-  SDL_Point size = asw::util::getTextureSize(tex);
-  SDL_Rect dest = {x, y, size.x, size.y};
-  SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
-}
+  if (flipX) {
+    flip = static_cast<SDL_RendererFlip>(flip | SDL_FLIP_HORIZONTAL);
+  }
 
-void asw::draw::spriteVHFlip(asw::Texture tex, int x, int y) {
-  SDL_Point size = asw::util::getTextureSize(tex);
-  SDL_Rect dest = {x, y, size.x, size.y};
-  SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
+  if (flipY) {
+    flip = static_cast<SDL_RendererFlip>(flip | SDL_FLIP_VERTICAL);
+  }
+
+  SDL_RenderCopyEx(asw::display::renderer, tex.get(), nullptr, &dest, 0,
+                   nullptr, flip);
 }
 
 void asw::draw::stretchSprite(asw::Texture tex, int x, int y, int w, int h) {
   SDL_Rect dest = {x, y, w, h};
   SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
+}
+
+void asw::draw::rotateSprite(asw::Texture tex, int x, int y, int angleDeg) {
+  SDL_Point size = asw::util::getTextureSize(tex);
+  SDL_Rect dest = {x, y, size.x, size.y};
+  SDL_RenderCopyEx(asw::display::renderer, tex.get(), nullptr, &dest, angleDeg,
+                   nullptr, SDL_FLIP_NONE);
 }
 
 void asw::draw::stretchSpriteBlit(asw::Texture tex,
@@ -135,4 +145,8 @@ void asw::draw::circleFill(int x, int y, int r, asw::Color color) {
     SDL_RenderDrawLine(asw::display::renderer, x, y, x + r * cos(i),
                        y + r * sin(i));
   }
+}
+
+void asw::draw::setBlendMode(asw::Texture texture, asw::BlendMode mode) {
+  SDL_SetTextureBlendMode(texture.get(), static_cast<SDL_BlendMode>(mode));
 }

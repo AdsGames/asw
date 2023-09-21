@@ -8,6 +8,8 @@
 #include "./modules/display.h"
 #include "./modules/draw.h"
 #include "./modules/input.h"
+#include "./modules/input_keys.h"
+#include "./modules/input_mouse_buttons.h"
 #include "./modules/sound.h"
 #include "./modules/types.h"
 #include "./modules/util.h"

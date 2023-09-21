@@ -1,0 +1,37 @@
+name: Deploy Docs
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    name: Deploy Docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install graphviz
+        run: sudo apt install graphviz
+
+      - uses: mattnotmitt/doxygen-action@v1
+        with:
+          doxyfile-path: "./Doxyfile"
+
+      - uses: actions/upload-pages-artifact@v1
+        with:
+          path: ./docs
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v2
