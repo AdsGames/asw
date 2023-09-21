@@ -76,7 +76,7 @@ namespace asw::display {
   /**
    * @brief Set the render target to the window.
    */
-  void setRenderTarget(asw::Texture& texture);
+  void setRenderTarget(asw::Texture texture);
 
   /**
    * @brief Reset the render target to the default.

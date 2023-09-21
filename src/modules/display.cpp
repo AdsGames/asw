@@ -50,7 +50,7 @@ SDL_FPoint asw::display::getScale() {
   return scale;
 }
 
-void asw::display::setRenderTarget(asw::Texture& texture) {
+void asw::display::setRenderTarget(asw::Texture texture) {
   SDL_SetRenderTarget(asw::display::renderer, texture.get());
 }
 
