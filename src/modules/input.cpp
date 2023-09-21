@@ -34,3 +34,27 @@ void asw::input::reset() {
     button = false;
   }
 }
+
+bool asw::input::isButtonDown(asw::input::MouseButton button) {
+  return mouse.down[static_cast<int>(button)];
+}
+
+bool asw::input::wasButtonPressed(asw::input::MouseButton button) {
+  return mouse.pressed[static_cast<int>(button)];
+}
+
+bool asw::input::wasButtonReleased(asw::input::MouseButton button) {
+  return mouse.released[static_cast<int>(button)];
+}
+
+bool asw::input::isKeyDown(asw::input::Key key) {
+  return keyboard.down[static_cast<int>(key)];
+}
+
+bool asw::input::wasKeyPressed(asw::input::Key key) {
+  return keyboard.pressed[static_cast<int>(key)];
+}
+
+bool asw::input::wasKeyReleased(asw::input::Key key) {
+  return keyboard.released[static_cast<int>(key)];
+}
