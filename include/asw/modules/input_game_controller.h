@@ -1,0 +1,69 @@
+/**
+ * @file input_game_controller.h
+ * @author Allan Legemaate (alegemaate@gmail.com)
+ * @brief Mappings from SDL game controller buttons and axes to ASW buttons and
+ * axes
+ * @date 2023-09-21
+ *
+ * @copyright Copyright (c) 2023
+ *
+ */
+#ifndef ASW_INPUT_GAME_CONTROLLER_H
+#define ASW_INPUT_GAME_CONTROLLER_H
+
+#include <SDL2/SDL.h>
+
+namespace asw::input {
+  /**
+   * @brief Number of buttons on a game controller
+   */
+  constexpr int NUM_CONTROLLER_BUTTONS = SDL_CONTROLLER_BUTTON_MAX;
+
+  /**
+   * @brief Mappings from SDL game controller buttons to ASW buttons
+   */
+  enum class ControllerButton {
+    A = SDL_CONTROLLER_BUTTON_A,
+    B = SDL_CONTROLLER_BUTTON_B,
+    X = SDL_CONTROLLER_BUTTON_X,
+    Y = SDL_CONTROLLER_BUTTON_Y,
+    BACK = SDL_CONTROLLER_BUTTON_BACK,
+    GUIDE = SDL_CONTROLLER_BUTTON_GUIDE,
+    START = SDL_CONTROLLER_BUTTON_START,
+    LEFT_STICK = SDL_CONTROLLER_BUTTON_LEFTSTICK,
+    RIGHT_STICK = SDL_CONTROLLER_BUTTON_RIGHTSTICK,
+    LEFT_SHOULDER = SDL_CONTROLLER_BUTTON_LEFTSHOULDER,
+    RIGHT_SHOULDER = SDL_CONTROLLER_BUTTON_RIGHTSHOULDER,
+    DPAD_UP = SDL_CONTROLLER_BUTTON_DPAD_UP,
+    DPAD_DOWN = SDL_CONTROLLER_BUTTON_DPAD_DOWN,
+    DPAD_LEFT = SDL_CONTROLLER_BUTTON_DPAD_LEFT,
+    DPAD_RIGHT = SDL_CONTROLLER_BUTTON_DPAD_RIGHT,
+    MISC_1 = SDL_CONTROLLER_BUTTON_MISC1,
+    PADDLE_1 = SDL_CONTROLLER_BUTTON_PADDLE1,
+    PADDLE_2 = SDL_CONTROLLER_BUTTON_PADDLE2,
+    PADDLE_3 = SDL_CONTROLLER_BUTTON_PADDLE3,
+    PADDLE_4 = SDL_CONTROLLER_BUTTON_PADDLE4,
+    TOUCH_PAD = SDL_CONTROLLER_BUTTON_TOUCHPAD,
+    MAX = SDL_CONTROLLER_BUTTON_MAX
+  };
+
+  /**
+   * @breif Number of axes on a game controller
+   */
+  constexpr int NUM_CONTROLLER_AXES = SDL_CONTROLLER_AXIS_MAX;
+
+  /**
+   * @brief Mappings from SDL game controller axes to ASW axes
+   */
+  enum class ControllerAxis {
+    LEFT_X = SDL_CONTROLLER_AXIS_LEFTX,
+    LEFT_Y = SDL_CONTROLLER_AXIS_LEFTY,
+    RIGHT_X = SDL_CONTROLLER_AXIS_RIGHTX,
+    RIGHT_Y = SDL_CONTROLLER_AXIS_RIGHTY,
+    TRIGGER_LEFT = SDL_CONTROLLER_AXIS_TRIGGERLEFT,
+    TRIGGER_RIGHT = SDL_CONTROLLER_AXIS_TRIGGERRIGHT,
+    MAX = SDL_CONTROLLER_AXIS_MAX
+  };
+}  // namespace asw::input
+
+#endif  // ASW_INPUT_GAME_CONTROLLER_H

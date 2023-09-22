@@ -13,7 +13,7 @@
 #include <SDL2/SDL.h>
 
 namespace asw::input {
-  constexpr int ASW_NUM_KEYS = SDL_NUM_SCANCODES;
+  constexpr int NUM_KEYS = SDL_NUM_SCANCODES;
 
   enum class Key {
     UNKNOWN = SDL_SCANCODE_UNKNOWN,
@@ -263,7 +263,7 @@ namespace asw::input {
     SOFT_RIGHT = SDL_SCANCODE_SOFTRIGHT,
     CALL = SDL_SCANCODE_CALL,
     ENDCALL = SDL_SCANCODE_ENDCALL,
-    NUM_SCANCODES = ASW_NUM_KEYS
+    NUM_SCANCODES = SDL_NUM_SCANCODES
   };
 }  // namespace asw::input
 
