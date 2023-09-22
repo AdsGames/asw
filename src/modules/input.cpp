@@ -50,10 +50,6 @@ void asw::input::reset() {
     for (auto& button : cont.released) {
       button = false;
     }
-
-    for (auto& axis : cont.axis) {
-      axis = 0;
-    }
   }
 }
 
