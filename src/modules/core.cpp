@@ -140,11 +140,27 @@ void asw::core::update() {
       }
 
       case SDL_EVENT_GAMEPAD_ADDED: {
-        if (e.cdevice.which >= asw::input::MAX_CONTROLLERS ||
-            !SDL_IsGamepad(e.cdevice.which) ||
-            SDL_OpenGamepad(e.cdevice.which) == nullptr) {
+        if (e.gdevice.which >= asw::input::MAX_CONTROLLERS ||
+            !SDL_IsGamepad(e.gdevice.which) ||
+            SDL_OpenGamepad(e.gdevice.which) == nullptr) {
           // TODO: Log error
           break;
+        }
+
+        SDL_OpenGamepad(e.gdevice.which);
+
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_REMOVED: {
+        if (e.gdevice.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto* controller = SDL_GetGamepadFromID(e.gdevice.which);
+
+        if (controller) {
+          SDL_CloseGamepad(controller);
         }
 
         break;
