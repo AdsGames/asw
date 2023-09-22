@@ -91,9 +91,11 @@ void asw::core::update() {
         }
 
         if (e.caxis.value > controller[e.caxis.which].deadZone) {
-          controller[e.caxis.which].axis[e.caxis.axis] = e.caxis.value;
+          controller[e.caxis.which].axis[e.caxis.axis] =
+              e.caxis.value / 32768.0f;
         } else if (e.caxis.value < -controller[e.caxis.which].deadZone) {
-          controller[e.caxis.which].axis[e.caxis.axis] = e.caxis.value;
+          controller[e.caxis.which].axis[e.caxis.axis] =
+              e.caxis.value / 32768.0f;
         } else {
           controller[e.caxis.which].axis[e.caxis.axis] = 0.0f;
         }
