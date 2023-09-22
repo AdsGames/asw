@@ -14,8 +14,10 @@ bool asw::core::exit = false;
 
 void asw::core::update() {
   asw::input::reset();
+
   auto& mouse = asw::input::mouse;
   auto& keyboard = asw::input::keyboard;
+  auto& controller = asw::input::controller;
 
   SDL_Event e;
 
@@ -94,6 +96,57 @@ void asw::core::update() {
         break;
       }
 
+      case SDL_EVENT_GAMEPAD_AXIS_MOTION: {
+        if (e.gaxis.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        if (e.gaxis.value > controller[e.gaxis.which].deadZone) {
+          controller[e.gaxis.which].axis[e.gaxis.axis] = e.gaxis.value;
+        } else if (e.gaxis.value < -controller[e.gaxis.which].deadZone) {
+          controller[e.gaxis.which].axis[e.gaxis.axis] = e.gaxis.value;
+        } else {
+          controller[e.gaxis.which].axis[e.gaxis.axis] = 0.0f;
+        }
+
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
+        if (e.gbutton.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto button = static_cast<int>(e.gbutton.button);
+        controller[e.gbutton.which].pressed[button] = true;
+        controller[e.gbutton.which].down[button] = true;
+        controller[e.gbutton.which].anyPressed = true;
+        controller[e.gbutton.which].lastPressed = button;
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+        if (e.gbutton.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto button = static_cast<int>(e.gbutton.button);
+        controller[e.gbutton.which].released[button] = true;
+        controller[e.gbutton.which].down[button] = false;
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_ADDED: {
+        if (e.cdevice.which >= asw::input::MAX_CONTROLLERS ||
+            !SDL_IsGamepad(e.cdevice.which) ||
+            SDL_OpenGamepad(e.cdevice.which) == nullptr) {
+          // TODO: Log error
+          break;
+        }
+
+        break;
+      }
+
       case SDL_EVENT_QUIT: {
         exit = true;
         break;
@@ -106,7 +159,7 @@ void asw::core::update() {
 }
 
 void asw::core::init(int width, int height, int scale) {
-  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
     asw::util::abortOnError("SDL_Init");
   }
 
