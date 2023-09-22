@@ -130,10 +130,24 @@ void asw::core::update() {
 
       case SDL_CONTROLLERDEVICEADDED: {
         if (e.cdevice.which >= asw::input::MAX_CONTROLLERS ||
-            !SDL_IsGameController(e.cdevice.which) ||
-            !SDL_GameControllerOpen(e.cdevice.which)) {
-          // TODO: Log error
+            !SDL_IsGameController(e.cdevice.which)) {
           break;
+        }
+
+        SDL_GameControllerOpen(e.cdevice.which);
+
+        break;
+      }
+
+      case SDL_CONTROLLERDEVICEREMOVED: {
+        if (e.cdevice.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto* controller = SDL_GameControllerFromInstanceID(e.cdevice.which);
+
+        if (controller) {
+          SDL_GameControllerClose(controller);
         }
 
         break;
