@@ -101,14 +101,15 @@ void asw::core::update() {
           break;
         }
 
-        if (e.gaxis.value > controller[e.gaxis.which].deadZone) {
-          controller[e.gaxis.which].axis[e.gaxis.axis] =
-              e.gaxis.value / 32768.0f;
-        } else if (e.gaxis.value < -controller[e.gaxis.which].deadZone) {
-          controller[e.gaxis.which].axis[e.gaxis.axis] =
-              e.gaxis.value / 32768.0f;
+        auto motion = e.gaxis.value / 32768.0f;
+        auto& current = controller[e.gaxis.which];
+
+        if (motion > current.deadZone) {
+          current.axis[e.gaxis.axis] = motion;
+        } else if (motion < -current.deadZone) {
+          current.axis[e.gaxis.axis] = motion;
         } else {
-          controller[e.gaxis.which].axis[e.gaxis.axis] = 0.0f;
+          current.axis[e.gaxis.axis] = 0.0f;
         }
 
         break;
