@@ -66,6 +66,22 @@ void asw::draw::stretchSpriteBlit(asw::Texture tex,
   SDL_RenderCopy(asw::display::renderer, tex.get(), &src, &dest);
 }
 
+void asw::draw::stretchSpriteRotateBlit(asw::Texture tex,
+                                        int x1,
+                                        int y1,
+                                        int w1,
+                                        int h1,
+                                        int x2,
+                                        int y2,
+                                        int w2,
+                                        int h2,
+                                        int angleDeg) {
+  const SDL_Rect src = {x1, y1, w1, h1};
+  SDL_Rect dest = {x2, y2, w2, h2};
+  SDL_RenderCopyEx(asw::display::renderer, tex.get(), &src, &dest, angleDeg,
+                   nullptr, SDL_FLIP_NONE);
+}
+
 void asw::draw::text(asw::Font font,
                      const std::string& text,
                      int x,
