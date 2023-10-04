@@ -86,6 +86,31 @@ namespace asw::draw {
                          int h2);
 
   /**
+   * @brief Draw a sprite with the option to stretch a portion of it.
+   *
+   * @param tex The texture to draw.
+   * @param x1 The x position to draw the sprite at.
+   * @param y1 The y position to draw the sprite at.
+   * @param w1 The width to stretch the sprite to.
+   * @param h1 The height to stretch the sprite to.
+   * @param x2 The x position of the portion of the sprite to stretch.
+   * @param y2 The y position of the portion of the sprite to stretch.
+   * @param w2 The width of the portion of the sprite to stretch.
+   * @param h2 The height of the portion of the sprite to stretch.
+   * @param angleDeg - The angle to rotate the sprite by in degrees.
+   */
+  void stretchSpriteRotateBlit(asw::Texture tex,
+                               int x1,
+                               int y1,
+                               int w1,
+                               int h1,
+                               int x2,
+                               int y2,
+                               int w2,
+                               int h2,
+                               int angleDeg);
+
+  /**
    * @brief Draw text left aligned.
    *
    * @param font The font to use.
