@@ -12,8 +12,10 @@ bool asw::core::exit = false;
 
 void asw::core::update() {
   asw::input::reset();
+
   auto& mouse = asw::input::mouse;
   auto& keyboard = asw::input::keyboard;
+  auto& controller = asw::input::controller;
 
   SDL_Event e;
 
@@ -29,8 +31,9 @@ void asw::core::update() {
             SDL_Point size;
             SDL_RenderGetLogicalSize(asw::display::renderer, &size.x, &size.y);
 
-            SDL_SetWindowSize(asw::display::window, size.x * scale.x,
-                              size.y * scale.y);
+            SDL_SetWindowSize(asw::display::window,
+                              size.x * static_cast<int>(scale.x),
+                              size.y * static_cast<int>(scale.y));
             break;
           }
 
@@ -82,6 +85,74 @@ void asw::core::update() {
         mouse.z = e.wheel.y;
         break;
 
+      case SDL_CONTROLLERAXISMOTION: {
+        if (e.caxis.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto motion = e.caxis.value / 32768.0f;
+        auto& current = controller[e.caxis.which];
+
+        if (motion > current.deadZone) {
+          current.axis[e.caxis.axis] = motion;
+        } else if (motion < -current.deadZone) {
+          current.axis[e.caxis.axis] = motion;
+        } else {
+          current.axis[e.caxis.axis] = 0.0f;
+        }
+
+        break;
+      }
+
+      case SDL_CONTROLLERBUTTONDOWN: {
+        if (e.cbutton.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto button = static_cast<int>(e.cbutton.button);
+        controller[e.cbutton.which].pressed[button] = true;
+        controller[e.cbutton.which].down[button] = true;
+        controller[e.cbutton.which].anyPressed = true;
+        controller[e.cbutton.which].lastPressed = button;
+        break;
+      }
+
+      case SDL_CONTROLLERBUTTONUP: {
+        if (e.cbutton.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto button = static_cast<int>(e.cbutton.button);
+        controller[e.cbutton.which].released[button] = true;
+        controller[e.cbutton.which].down[button] = false;
+        break;
+      }
+
+      case SDL_CONTROLLERDEVICEADDED: {
+        if (e.cdevice.which >= asw::input::MAX_CONTROLLERS ||
+            !SDL_IsGameController(e.cdevice.which)) {
+          break;
+        }
+
+        SDL_GameControllerOpen(e.cdevice.which);
+
+        break;
+      }
+
+      case SDL_CONTROLLERDEVICEREMOVED: {
+        if (e.cdevice.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto* controller = SDL_GameControllerFromInstanceID(e.cdevice.which);
+
+        if (controller) {
+          SDL_GameControllerClose(controller);
+        }
+
+        break;
+      }
+
       case SDL_QUIT:
         exit = true;
         break;
@@ -93,7 +164,8 @@ void asw::core::update() {
 }
 
 void asw::core::init(int width, int height, int scale) {
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMECONTROLLER) !=
+      0) {
     asw::util::abortOnError("SDL_Init");
   }
 

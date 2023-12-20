@@ -13,7 +13,7 @@
 #include <SDL2/SDL.h>
 
 namespace asw::input {
-  constexpr int ASW_NUM_MOUSE_BUTTONS = 5;
+  constexpr int NUM_MOUSE_BUTTONS = SDL_BUTTON_X2;
 
   enum class MouseButton {
     LEFT = SDL_BUTTON_LEFT,
@@ -21,7 +21,7 @@ namespace asw::input {
     RIGHT = SDL_BUTTON_RIGHT,
     X1 = SDL_BUTTON_X1,
     X2 = SDL_BUTTON_X2,
-    MAX = ASW_NUM_MOUSE_BUTTONS
+    MAX = SDL_BUTTON_X2
   };
 }  // namespace asw::input
 
