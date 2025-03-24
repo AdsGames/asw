@@ -91,7 +91,7 @@ void asw::core::init(int width, int height, int scale) {
     asw::util::abortOnError("SDL_Init");
   }
 
-  if (TTF_Init()) {
+  if (!TTF_Init()) {
     asw::util::abortOnError("TTF_Init");
   }
 
