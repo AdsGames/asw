@@ -49,7 +49,7 @@ namespace asw::util {
    * @param tex Texture to get size of
    * @return Size as SDL_Point
    */
-  SDL_Point getTextureSize(asw::Texture tex);
+  SDL_FPoint getTextureSize(asw::Texture tex);
 
   /**
    * @brief Get text size

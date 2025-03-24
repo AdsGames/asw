@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(asw VERSION 0.3.5 LANGUAGES CXX)
+include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +21,47 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Add compile options
 target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall -Wextra -pedantic)
 
+# SDL Flags
+set(BUILD_SHARED_LIBS OFF)
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
+
+# Fetch SDL3
+message(STATUS "Fetching SDL3")
+
+FetchContent_Declare(
+    SDL3
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL
+    GIT_TAG release-3.2.8
+    OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_Declare(
+    SDL3_image
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
+    GIT_TAG release-3.2.4
+    OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_Declare(
+    SDL3_mixer
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
+    GIT_TAG origin/main
+    OVERRIDE_FIND_PACKAGE
+)  
+
+FetchContent_Declare(
+    SDL3_ttf
+    GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
+    GIT_TAG release-3.2.0
+    OVERRIDE_FIND_PACKAGE
+)
+
+FetchContent_MakeAvailable(SDL3)
+FetchContent_MakeAvailable(SDL3_image)
+FetchContent_MakeAvailable(SDL3_mixer)
+FetchContent_MakeAvailable(SDL3_ttf)
+
 # Add include
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
@@ -34,15 +76,6 @@ set_target_properties(
   VERSION ${PROJECT_VERSION}
   SOVERSION 1
 )
-
-# Find libs
-if(NOT EMSCRIPTEN)
-  find_library(SDL_LIBRARY NAMES SDL2 REQUIRED)
-  find_library(SDL_MIXER_LIBRARY NAMES SDL2_mixer REQUIRED)
-  find_library(SDL_IMAGE_LIBRARY NAMES SDL2_image REQUIRED)
-  find_library(SDL_TTF_LIBRARY NAMES SDL2_ttf REQUIRED)
-  find_library(SDL_MAIN_LIBRARY NAMES SDL2main REQUIRED)
-endif(NOT EMSCRIPTEN)
 
 # Link Libs
 # Emscripten support
@@ -85,11 +118,10 @@ else(EMSCRIPTEN)
   target_link_libraries(
     ${PROJECT_NAME}
     -lm
-    ${SDL_MAIN_LIBRARY}
-    ${SDL_LIBRARY}
-    ${SDL_MIXER_LIBRARY}
-    ${SDL_IMAGE_LIBRARY}
-    ${SDL_TTF_LIBRARY}
+    SDL3::SDL3-static 
+    SDL3_image::SDL3_image-static
+    SDL3_mixer::SDL3_mixer-static
+    SDL3_ttf::SDL3_ttf-static
   )
 endif(EMSCRIPTEN)
 

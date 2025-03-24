@@ -2,7 +2,7 @@
 
 A.D.S. Games SDL Wrapper.
 
-This project started as a way to easily port allegro4 games to SDL2. Now it intends to make it easier to use SDL2 in C++. A primary focus is to allow easy compilation of games using emscripten as well, and has been throughly tested with it.
+This project started as a way to easily port allegro4 games to SDL3. Now it intends to make it easier to use SDL3 in C++. A primary focus is to allow easy compilation of games using emscripten as well, and has been throughly tested with it.
 
 ## Usage (CMAKE)
 

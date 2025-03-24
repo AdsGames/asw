@@ -10,7 +10,7 @@
 #ifndef ASW_INPUT_MOUSE_BUTTONS_H
 #define ASW_INPUT_MOUSE_BUTTONS_H
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 
 namespace asw::input {
   constexpr int ASW_NUM_MOUSE_BUTTONS = 5;

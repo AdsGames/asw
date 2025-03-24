@@ -10,7 +10,7 @@
 #ifndef ASW_INPUT_H
 #define ASW_INPUT_H
 
-#include <SDL2/SDL.h>
+#include <SDL3/SDL.h>
 #include <array>
 
 #include "./input_keys.h"

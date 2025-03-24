@@ -1,6 +1,6 @@
 #include "./asw/modules/sound.h"
 
-#include <SDL2/SDL_mixer.h>
+#include <SDL3_mixer/SDL_mixer.h>
 
 void asw::sound::play(asw::Sample sample,
                       int volume,

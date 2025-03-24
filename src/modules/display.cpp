@@ -1,7 +1,7 @@
 #include "./asw/modules/display.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
 
 asw::Renderer* asw::display::renderer = nullptr;
 asw::Window* asw::display::window = nullptr;
@@ -40,13 +40,14 @@ SDL_Point asw::display::getSize() {
 
 SDL_Point asw::display::getLogicalSize() {
   SDL_Point size;
-  SDL_RenderGetLogicalSize(asw::display::renderer, &size.x, &size.y);
+  SDL_GetRenderLogicalPresentation(asw::display::renderer, &size.x, &size.y,
+                                   nullptr);
   return size;
 }
 
 SDL_FPoint asw::display::getScale() {
   SDL_FPoint scale;
-  SDL_RenderGetScale(asw::display::renderer, &scale.x, &scale.y);
+  SDL_GetRenderScale(asw::display::renderer, &scale.x, &scale.y);
   return scale;
 }
 
