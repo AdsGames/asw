@@ -126,6 +126,13 @@ namespace asw::scene {
      */
     void draw();
 
+    /**
+     * @brief Get the current FPS. Only applies to the managed loop.
+     *
+     * @return The current FPS.
+     */
+    int getFPS() const;
+
    private:
     /**
      * @brief Emscripten loop function.
@@ -150,6 +157,9 @@ namespace asw::scene {
 
     /// @brief Collection of all scenes registered in the scene engine.
     std::unordered_map<T, Scene<T>*> scenes;
+
+    /// @breif FPS Counter for managed loop;
+    int fps{0};
   };
 
 }  // namespace asw::scene

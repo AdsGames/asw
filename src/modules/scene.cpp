@@ -29,7 +29,7 @@ void asw::scene::SceneManager<T>::update(const float deltaTime) {
     return;
   }
 
-  activeScene->update();
+  activeScene->update(deltaTime);
 }
 
 template <typename T>
@@ -70,7 +70,6 @@ void asw::scene::SceneManager<T>::start() {
   auto time_start = std::chrono::high_resolution_clock::now();
   auto last_second = std::chrono::high_resolution_clock::now();
   int frames = 0;
-  int fps = 0;
 
   while (!asw::core::exit) {
     auto delta_time = std::chrono::high_resolution_clock::now() - time_start;
@@ -103,4 +102,9 @@ template <typename T>
 void asw::scene::SceneManager<T>::loopEmscripten() {
   update(timestep / 1ms);
   draw();
+}
+
+template <typename T>
+int asw::scene::SceneManager<T>::getFPS() const {
+  return fps;
 }
