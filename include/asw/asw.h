@@ -11,6 +11,7 @@
 #include "./modules/input_keys.h"
 #include "./modules/input_mouse_buttons.h"
 #include "./modules/random.h"
+#include "./modules/scene.h"
 #include "./modules/sound.h"
 #include "./modules/types.h"
 #include "./modules/util.h"
