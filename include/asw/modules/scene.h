@@ -96,14 +96,19 @@ namespace asw::scene {
      * @param sceneId The unique identifier for the scene.
      * @param scene Pointer to the Scene object to be registered.
      */
-    void registerScene(const T sceneId, Scene<T>* scene);
+    void registerScene(const T sceneId, Scene<T>* scene) {
+      scenes[sceneId] = scene;
+    }
 
     /**
      * @brief Set the next scene
      *
      * @param sceneId The unique identifier for the scene.
      */
-    void setNextScene(const T sceneId);
+    void setNextScene(const T sceneId) {
+      nextScene = sceneId;
+      hasNextScene = true;
+    }
 
     /**
      * @brief Main loop for the scene engine. If this is not enough, or you want
@@ -112,39 +117,108 @@ namespace asw::scene {
      *
      * This function is called to start the main loop of the scene engine.
      */
-    void start();
+    void start() {
+#ifdef __EMSCRIPTEN__
+      emscripten_set_main_loop(loopEmscripten, 0, 1);
+#else
+      std::chrono::nanoseconds lag(0ns);
+      auto time_start = std::chrono::high_resolution_clock::now();
+      auto last_second = std::chrono::high_resolution_clock::now();
+      int frames = 0;
+
+      while (!asw::core::exit) {
+        auto delta_time =
+            std::chrono::high_resolution_clock::now() - time_start;
+        time_start = std::chrono::high_resolution_clock::now();
+        lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
+
+        while (lag >= timestep) {
+          asw::core::update();
+          update(timestep / 1ms);
+          lag -= timestep;
+        }
+
+        // Clear screen
+        asw::display::clear();
+        draw();
+        asw::display::present();
+
+        frames++;
+
+        if (std::chrono::high_resolution_clock::now() - last_second >= 1s) {
+          fps = frames;
+          frames = 0;
+          last_second = last_second + 1s;
+        }
+      }
+#endif
+    }
 
     /**
      * @brief Update the current scene.
      *
      */
-    void update(const float deltaTime);
+    void update(const float deltaTime) {
+      changeScene();
+
+      if (activeScene == nullptr) {
+        return;
+      }
+
+      activeScene->update(deltaTime);
+    }
 
     /**
      * @brief Draw the current scene.
      *
      */
-    void draw();
+    void draw() {
+      if (activeScene == nullptr) {
+        return;
+      }
+
+      activeScene->draw();
+    }
 
     /**
      * @brief Get the current FPS. Only applies to the managed loop.
      *
      * @return The current FPS.
      */
-    int getFPS() const;
+    int getFPS() const { return fps; }
 
    private:
     /**
      * @brief Emscripten loop function.
      *
      */
-    void loopEmscripten();
+    void loopEmscripten() {
+      update(timestep / 1ms);
+      draw();
+    }
 
     /**
      * @brief Change the current scene to the next scene.
      *
      */
-    void changeScene();
+    void changeScene() {
+      if (!hasNextScene) {
+        return;
+      }
+
+      if (activeScene != nullptr) {
+        activeScene->cleanup();
+      }
+
+      if (scenes.find(nextScene) == scenes.end()) {
+        hasNextScene = false;
+        return;
+      }
+
+      activeScene = scenes[nextScene];
+      activeScene->init();
+      hasNextScene = false;
+    }
 
     /// @brief The current scene of the scene engine.
     Scene<T>* activeScene{nullptr};
