@@ -66,11 +66,12 @@ void asw::core::update() {
       }
 
       case SDL_EVENT_MOUSE_MOTION: {
-        auto scale = asw::display::getScale();
-        mouse.xChange = e.motion.x * scale.x;
-        mouse.yChange = e.motion.y * scale.y;
-        mouse.x = e.motion.x * scale.x;
-        mouse.y = e.motion.y * scale.y;
+        // Ensure scale is applied to mouse coordinates
+        SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
+        mouse.xChange = e.motion.xrel;
+        mouse.yChange = e.motion.yrel;
+        mouse.x = e.motion.x;
+        mouse.y = e.motion.y;
         break;
       }
 
@@ -100,11 +101,11 @@ void asw::core::init(int width, int height, int scale) {
   }
 
   // Initialize SDL_mixer
-  auto spec = SDL_AudioSpec{
-      .freq = 44100,
-      .format = SDL_AUDIO_S16LE,
-      .channels = 2,
-  };
+  SDL_AudioSpec spec;
+  spec.format = SDL_AUDIO_S16LE;
+  spec.freq = 44100;
+  spec.channels = 2;
+
   if (!Mix_OpenAudio(0, &spec)) {
     asw::util::abortOnError("Mix_OpenAudio");
   }
