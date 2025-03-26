@@ -6,6 +6,10 @@
 #include <memory>
 #include <string>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 namespace asw::scene {
   using namespace std::chrono_literals;
 
@@ -88,7 +92,11 @@ namespace asw::scene {
     /**
      * @brief Constructor for the SceneManager class.
      */
-    SceneManager() = default;
+    SceneManager() {
+#ifdef __EMSCRIPTEN__
+      instance = this;
+#endif
+    }
 
     /**
      * @brief Register a scene to be managed by the scene engine.
@@ -119,7 +127,7 @@ namespace asw::scene {
      */
     void start() {
 #ifdef __EMSCRIPTEN__
-      emscripten_set_main_loop(loopEmscripten, 0, 1);
+      emscripten_set_main_loop(SceneManager::loopEmscripten, 0, 1);
 #else
       std::chrono::nanoseconds lag(0ns);
       auto time_start = std::chrono::high_resolution_clock::now();
@@ -133,15 +141,12 @@ namespace asw::scene {
         lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
         while (lag >= timestep) {
-          asw::core::update();
           update(timestep / 1ms);
           lag -= timestep;
         }
 
-        // Clear screen
-        asw::display::clear();
+        // Draw
         draw();
-        asw::display::present();
 
         frames++;
 
@@ -159,6 +164,8 @@ namespace asw::scene {
      *
      */
     void update(const float deltaTime) {
+      asw::core::update();
+
       changeScene();
 
       if (activeScene == nullptr) {
@@ -177,7 +184,9 @@ namespace asw::scene {
         return;
       }
 
+      asw::display::clear();
       activeScene->draw();
+      asw::display::present();
     }
 
     /**
@@ -188,15 +197,6 @@ namespace asw::scene {
     int getFPS() const { return fps; }
 
    private:
-    /**
-     * @brief Emscripten loop function.
-     *
-     */
-    void loopEmscripten() {
-      update(timestep / 1ms);
-      draw();
-    }
-
     /**
      * @brief Change the current scene to the next scene.
      *
@@ -234,7 +234,25 @@ namespace asw::scene {
 
     /// @breif FPS Counter for managed loop;
     int fps{0};
+
+#ifdef __EMSCRIPTEN__
+    /// @brief Pointer to the current instance of the scene manager.
+    static SceneManager<T>* instance;
+
+    /// @brief Emscripten loop function.
+    static void loopEmscripten() {
+      if (instance != nullptr) {
+        instance->update(timestep / 1ms);
+        instance->draw();
+      }
+    }
+#endif
   };
+
+#ifdef __EMSCRIPTEN__
+  template <typename T>
+  SceneManager<T>* SceneManager<T>::instance = nullptr;
+#endif
 
 }  // namespace asw::scene
 

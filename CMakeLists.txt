@@ -78,52 +78,24 @@ set_target_properties(
 )
 
 # Link Libs
-# Emscripten support
-if(EMSCRIPTEN)
-  set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "index")
-  set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE
-    -sUSE_SDL=2
-    -sUSE_SDL_IMAGE=2
-    -sUSE_SDL_TTF=2
-    -sUSE_SDL_MIXER=2
-    -sSDL2_IMAGE_FORMATS=["png"]
-  )
+if(MINGW)
+  target_link_libraries(${PROJECT_NAME} -lmingw32)
+endif(MINGW)
+
+target_link_libraries(
+  ${PROJECT_NAME}
+  SDL3::SDL3-static
+  SDL3_image::SDL3_image-static
+  SDL3_mixer::SDL3_mixer-static
+  SDL3_ttf::SDL3_ttf-static
+)
+
+if(DEFINED EMSCRIPTEN) 
   target_link_libraries(
     ${PROJECT_NAME}
-    -sWASM=1
-    -sUSE_SDL=2
-    -sUSE_SDL_IMAGE=2
-    -sUSE_SDL_TTF=2
-    -sUSE_SDL_MIXER=2
-    -sSDL2_IMAGE_FORMATS=["png"]
-    -sDEMANGLE_SUPPORT=1
-    -sTOTAL_MEMORY=512MB
+    z # Zlib for SDL3_ttf
   )
-  set_target_properties(
-    ${PROJECT_NAME}
-    PROPERTIES
-    LINK_FLAGS
-    "--preload-file ${CMAKE_CURRENT_LIST_DIR}/assets@/assets --use-preload-plugins"
-  )
-
-# Run of the mill executable
-else(EMSCRIPTEN)
-  if(MINGW)
-    target_link_libraries(${PROJECT_NAME} -lmingw32)
-  endif(MINGW)
-
-  target_link_libraries(
-    ${PROJECT_NAME}
-    -lm
-    SDL3::SDL3-static 
-    SDL3_image::SDL3_image-static
-    SDL3_mixer::SDL3_mixer-static
-    SDL3_ttf::SDL3_ttf-static
-  )
-endif(EMSCRIPTEN)
+endif()
 
 # Install
 include(CMakePackageConfigHelpers)
