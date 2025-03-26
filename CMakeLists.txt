@@ -35,7 +35,7 @@ FetchContent_Declare(
     GIT_TAG release-3.2.8
     GIT_SHALLOW    TRUE
 )
-FetchContent_MakeAvailable(SDL3_image)
+FetchContent_MakeAvailable(SDL3)
 
 FetchContent_Declare(
     SDL3_image
@@ -43,7 +43,7 @@ FetchContent_Declare(
     GIT_TAG release-3.2.4
     GIT_SHALLOW    TRUE
 )
-FetchContent_MakeAvailable(SDL3)
+FetchContent_MakeAvailable(SDL3_image)
 
 FetchContent_Declare(
     SDL3_mixer
