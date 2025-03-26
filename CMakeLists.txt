@@ -29,37 +29,46 @@ set(SDL_STATIC ON)
 # Fetch SDL3
 message(STATUS "Fetching SDL3")
 
-FetchContent_Declare(
-    SDL3
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL
-    GIT_TAG release-3.2.8
-    GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL3)
+option(ASW_VENDORED "Use vendored libraries" ON)
 
-FetchContent_Declare(
-    SDL3_image
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
-    GIT_TAG release-3.2.4
-    GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL3_image)
+if(ASW_VENDORED)
+  FetchContent_Declare(
+      SDL3
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL
+      GIT_TAG release-3.2.8
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3)
 
-FetchContent_Declare(
-    SDL3_mixer
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
-    GIT_TAG origin/main
-    GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL3_mixer)
+  FetchContent_Declare(
+      SDL3_image
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
+      GIT_TAG release-3.2.4
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3_image)
 
-FetchContent_Declare(
-    SDL3_ttf
-    GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
-    GIT_TAG release-3.2.0
-    GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL3_ttf)
+  FetchContent_Declare(
+      SDL3_mixer
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
+      GIT_TAG origin/main
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3_mixer)
+
+  FetchContent_Declare(
+      SDL3_ttf
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
+      GIT_TAG release-3.2.0
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3_ttf)
+else()
+  find_package(SDL3 REQUIRED)
+  find_package(SDL3_image REQUIRED)
+  find_package(SDL3_mixer REQUIRED)
+  find_package(SDL3_ttf REQUIRED)
+endif()
 
 # Add include
 target_include_directories(
