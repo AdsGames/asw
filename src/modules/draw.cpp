@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <cmath>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
@@ -31,7 +32,13 @@ void asw::draw::spriteFlip(asw::Texture tex,
                            bool flipX,
                            bool flipY) {
   SDL_FPoint size = asw::util::getTextureSize(tex);
-  SDL_FRect dest = {.x = float(x), .y = float(y), .w = size.x, .h = size.y};
+
+  SDL_FRect dest;
+  dest.x = float(x);
+  dest.y = float(y);
+  dest.w = size.x;
+  dest.h = size.y;
+
   SDL_FlipMode flip = SDL_FLIP_NONE;
 
   if (flipX) {
@@ -203,7 +210,8 @@ void asw::draw::circle(int x, int y, int r, asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
   for (int i = 0; i < 360; i++) {
-    SDL_RenderPoint(asw::display::renderer, x + r * cos(i), y + r * sin(i));
+    SDL_RenderPoint(asw::display::renderer, x + r * std::cos(i),
+                    y + r * std::sin(i));
   }
 }
 
@@ -211,8 +219,8 @@ void asw::draw::circleFill(int x, int y, int r, asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
   for (int i = 0; i < 360; i++) {
-    SDL_RenderLine(asw::display::renderer, x, y, x + r * cos(i),
-                   y + r * sin(i));
+    SDL_RenderLine(asw::display::renderer, x, y, x + r * std::cos(i),
+                   y + r * std::sin(i));
   }
 }
 
