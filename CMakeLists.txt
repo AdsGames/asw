@@ -27,11 +27,20 @@ set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 
 # Fetch SDL3
-message(STATUS "Fetching SDL3")
+option(ASW_VENDORED "Use vendored libraries" OFF)
 
-option(ASW_VENDORED "Use vendored libraries" ON)
+# Always vendored
+FetchContent_Declare(
+  SDL3_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
+  GIT_TAG origin/main
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(SDL3_mixer)
 
 if(ASW_VENDORED)
+  message(STATUS "Fetching Vendored Libraries")
+
   FetchContent_Declare(
       SDL3
       GIT_REPOSITORY https://github.com/libsdl-org/SDL
@@ -49,14 +58,6 @@ if(ASW_VENDORED)
   FetchContent_MakeAvailable(SDL3_image)
 
   FetchContent_Declare(
-      SDL3_mixer
-      GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
-      GIT_TAG origin/main
-      GIT_SHALLOW    TRUE
-  )
-  FetchContent_MakeAvailable(SDL3_mixer)
-
-  FetchContent_Declare(
       SDL3_ttf
       GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
       GIT_TAG release-3.2.0
@@ -66,7 +67,6 @@ if(ASW_VENDORED)
 else()
   find_package(SDL3 REQUIRED)
   find_package(SDL3_image REQUIRED)
-  find_package(SDL3_mixer REQUIRED)
   find_package(SDL3_ttf REQUIRED)
 endif()
 
@@ -90,13 +90,23 @@ if(MINGW)
   target_link_libraries(${PROJECT_NAME} -lmingw32)
 endif(MINGW)
 
-target_link_libraries(
-  ${PROJECT_NAME}
-  SDL3::SDL3-static
-  SDL3_image::SDL3_image-static
-  SDL3_mixer::SDL3_mixer-static
-  SDL3_ttf::SDL3_ttf-static
-)
+if(ASW_VENDORED)
+  target_link_libraries(
+    ${PROJECT_NAME}
+    SDL3::SDL3-static
+    SDL3_image::SDL3_image-static
+    SDL3_mixer::SDL3_mixer-static
+    SDL3_ttf::SDL3_ttf-static
+  )
+else()
+  target_link_libraries(
+    ${PROJECT_NAME}
+    SDL3::SDL3
+    SDL3_image::SDL3_image
+    SDL3_mixer::SDL3_mixer
+    SDL3_ttf::SDL3_ttf
+  )
+endif()
 
 if(DEFINED EMSCRIPTEN) 
   target_link_libraries(
