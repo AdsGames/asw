@@ -66,10 +66,11 @@ void asw::core::update() {
       }
 
       case SDL_EVENT_MOUSE_MOTION:
-        mouse.xChange = e.motion.xrel;
-        mouse.yChange = e.motion.yrel;
-        mouse.x = e.motion.x;
-        mouse.y = e.motion.y;
+        auto scale = asw::display::getScale();
+        mouse.xChange = e.motion.x * scale.x;
+        mouse.yChange = e.motion.y * scale.y;
+        mouse.x = e.motion.x * scale.x;
+        mouse.y = e.motion.y * scale.y;
         break;
 
       case SDL_EVENT_MOUSE_WHEEL:

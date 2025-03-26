@@ -41,3 +41,4 @@ compile_commands.json
 Makefile
 docs/
 _deps/
+.DS_Store

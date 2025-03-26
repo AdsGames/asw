@@ -15,6 +15,8 @@ asw::Texture asw::assets::loadTexture(const std::string& filename) {
     asw::util::abortOnError("Failed to load texture: " + filename);
   }
 
+  SDL_SetTextureScaleMode(temp, SDL_SCALEMODE_NEAREST);
+
   return std::shared_ptr<SDL_Texture>(temp, SDL_DestroyTexture);
 }
 

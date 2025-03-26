@@ -34,32 +34,35 @@ FetchContent_Declare(
     GIT_REPOSITORY https://github.com/libsdl-org/SDL
     GIT_TAG release-3.2.8
     OVERRIDE_FIND_PACKAGE
+    GIT_SHALLOW 1
 )
+FetchContent_MakeAvailable(SDL3_image)
 
 FetchContent_Declare(
     SDL3_image
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
     GIT_TAG release-3.2.4
     OVERRIDE_FIND_PACKAGE
+    GIT_SHALLOW 1
 )
+FetchContent_MakeAvailable(SDL3)
 
 FetchContent_Declare(
     SDL3_mixer
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
     GIT_TAG origin/main
     OVERRIDE_FIND_PACKAGE
-)  
+    GIT_SHALLOW 1
+)
+FetchContent_MakeAvailable(SDL3_mixer)
 
 FetchContent_Declare(
     SDL3_ttf
     GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
     GIT_TAG release-3.2.0
     OVERRIDE_FIND_PACKAGE
+    GIT_SHALLOW 1
 )
-
-FetchContent_MakeAvailable(SDL3)
-FetchContent_MakeAvailable(SDL3_image)
-FetchContent_MakeAvailable(SDL3_mixer)
 FetchContent_MakeAvailable(SDL3_ttf)
 
 # Add include
