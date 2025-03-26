@@ -27,16 +27,7 @@ set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 
 # Fetch SDL3
-option(ASW_VENDORED "Use vendored libraries" OFF)
-
-# Always vendored
-FetchContent_Declare(
-  SDL3_mixer
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
-  GIT_TAG origin/main
-  GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL3_mixer)
+option(ASW_VENDORED "Use vendored libraries" ON)
 
 if(ASW_VENDORED)
   message(STATUS "Fetching Vendored Libraries")
@@ -69,6 +60,15 @@ else()
   find_package(SDL3_image REQUIRED)
   find_package(SDL3_ttf REQUIRED)
 endif()
+
+# Always vendored
+FetchContent_Declare(
+  SDL3_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
+  GIT_TAG origin/main
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(SDL3_mixer)
 
 # Add include
 target_include_directories(
