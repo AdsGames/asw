@@ -31,6 +31,10 @@ void asw::display::setResolution(int w, int h) {
   SDL_SetWindowSize(asw::display::window, w, h);
 }
 
+void asw::display::setResizable(bool resizable) {
+  SDL_SetWindowResizable(asw::display::window, resizable);
+}
+
 SDL_Point asw::display::getSize() {
   SDL_Point size;
   SDL_GetWindowSize(asw::display::window, &size.x, &size.y);

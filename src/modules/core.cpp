@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <algorithm>
 #include <iostream>
 
 #include "./asw/modules/display.h"
@@ -22,20 +23,29 @@ void asw::core::update() {
     switch (e.type) {
       case SDL_EVENT_WINDOW_RESIZED: {
         // Maintain aspect ratio
-        SDL_FPoint scale;
-        SDL_GetRenderScale(asw::display::renderer, &scale.x, &scale.y);
+        SDL_Point window_size;
+        SDL_GetRenderOutputSize(asw::display::renderer, &window_size.x,
+                                &window_size.y);
 
-        SDL_Point size;
-        SDL_GetRenderLogicalPresentation(asw::display::renderer, &size.x,
-                                         &size.y, nullptr);
+        SDL_Point render_size;
+        SDL_GetRenderLogicalPresentation(asw::display::renderer, &render_size.x,
+                                         &render_size.y, nullptr);
+
+        const auto x_scale = static_cast<float>(window_size.x) /
+                             static_cast<float>(render_size.x);
+
+        const auto y_scale = static_cast<float>(window_size.y) /
+                             static_cast<float>(render_size.y);
+
+        const auto scale = std::min(x_scale, y_scale);
 
         SDL_SetWindowSize(asw::display::window,
-                          size.x * static_cast<int>(scale.x),
-                          size.y * static_cast<int>(scale.y));
+                          static_cast<float>(render_size.x) * scale,
+                          static_cast<float>(render_size.y) * scale);
         break;
       }
 
-      case SDL_EVENT_KEY_DOWN:
+      case SDL_EVENT_KEY_DOWN: {
         if (!e.key.repeat) {
           keyboard.pressed[e.key.scancode] = true;
           keyboard.down[e.key.scancode] = true;
@@ -43,13 +53,15 @@ void asw::core::update() {
           keyboard.lastPressed = e.key.scancode;
         }
         break;
+      }
 
-      case SDL_EVENT_KEY_UP:
+      case SDL_EVENT_KEY_UP: {
         if (!e.key.repeat) {
           keyboard.released[e.key.scancode] = true;
           keyboard.down[e.key.scancode] = false;
         }
         break;
+      }
 
       case SDL_EVENT_MOUSE_BUTTON_DOWN: {
         const auto button = static_cast<int>(e.button.button);
@@ -126,7 +138,7 @@ void asw::core::init(int width, int height, int scale) {
   asw::display::renderer = SDL_CreateRenderer(asw::display::window, nullptr);
 
   SDL_SetRenderLogicalPresentation(asw::display::renderer, width, height,
-                                   SDL_LOGICAL_PRESENTATION_STRETCH);
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
 }
 
 void asw::core::print_info() {

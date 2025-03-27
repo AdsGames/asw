@@ -47,6 +47,12 @@ namespace asw::display {
   ///
   void setResolution(int w, int h);
 
+  /// @brief Set resizable flag of the window.
+  ///
+  /// @param resizable Whether or not the window is resizable.
+  ///
+  void setResizable(bool resizable);
+
   /// @brief Get the size of the window.
   ///
   /// @return The size of the window.
