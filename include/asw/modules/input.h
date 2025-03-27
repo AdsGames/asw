@@ -23,12 +23,12 @@ namespace asw::input {
     bool anyPressed{false};
     int lastPressed{-1};
 
-    int xChange{0};
-    int yChange{0};
+    float xChange{0};
+    float yChange{0};
 
-    int x{0};
-    int y{0};
-    int z{0};
+    float x{0};
+    float y{0};
+    float z{0};
 
     std::array<bool, ASW_NUM_MOUSE_BUTTONS> pressed{false};
     std::array<bool, ASW_NUM_MOUSE_BUTTONS> released{false};

@@ -70,15 +70,15 @@ void asw::core::update() {
       case SDL_EVENT_MOUSE_MOTION: {
         // Ensure scale is applied to mouse coordinates
         SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
-        mouse.xChange = static_cast<int>(e.motion.xrel);
-        mouse.yChange = static_cast<int>(e.motion.yrel);
-        mouse.x = static_cast<int>(e.motion.x);
-        mouse.y = static_cast<int>(e.motion.y);
+        mouse.xChange = e.motion.xrel;
+        mouse.yChange = e.motion.yrel;
+        mouse.x = e.motion.x;
+        mouse.y = e.motion.y;
         break;
       }
 
       case SDL_EVENT_MOUSE_WHEEL: {
-        mouse.z = static_cast<int>(e.wheel.y);
+        mouse.z = e.wheel.y;
         break;
       }
 
