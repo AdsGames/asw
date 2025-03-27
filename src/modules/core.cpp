@@ -1,7 +1,8 @@
 #include "./asw/modules/core.h"
 
 #include <SDL3/SDL.h>
-#include <SDL3_image/SDL_image.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <iostream>
 
 #include "./asw/modules/display.h"
@@ -28,13 +29,14 @@ void asw::core::update() {
         SDL_GetRenderLogicalPresentation(asw::display::renderer, &size.x,
                                          &size.y, nullptr);
 
-        SDL_SetWindowSize(asw::display::window, size.x * scale.x,
-                          size.y * scale.y);
+        SDL_SetWindowSize(asw::display::window,
+                          size.x * static_cast<int>(scale.x),
+                          size.y * static_cast<int>(scale.y));
         break;
       }
 
       case SDL_EVENT_KEY_DOWN:
-        if (e.key.repeat == 0) {
+        if (!e.key.repeat) {
           keyboard.pressed[e.key.scancode] = true;
           keyboard.down[e.key.scancode] = true;
           keyboard.anyPressed = true;
@@ -43,14 +45,14 @@ void asw::core::update() {
         break;
 
       case SDL_EVENT_KEY_UP:
-        if (e.key.repeat == 0) {
+        if (!e.key.repeat) {
           keyboard.released[e.key.scancode] = true;
           keyboard.down[e.key.scancode] = false;
         }
         break;
 
       case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-        auto button = static_cast<int>(e.button.button);
+        const auto button = static_cast<int>(e.button.button);
         mouse.pressed[button] = true;
         mouse.down[button] = true;
         mouse.anyPressed = true;
@@ -68,15 +70,15 @@ void asw::core::update() {
       case SDL_EVENT_MOUSE_MOTION: {
         // Ensure scale is applied to mouse coordinates
         SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
-        mouse.xChange = e.motion.xrel;
-        mouse.yChange = e.motion.yrel;
-        mouse.x = e.motion.x;
-        mouse.y = e.motion.y;
+        mouse.xChange = static_cast<int>(e.motion.xrel);
+        mouse.yChange = static_cast<int>(e.motion.yrel);
+        mouse.x = static_cast<int>(e.motion.x);
+        mouse.y = static_cast<int>(e.motion.y);
         break;
       }
 
       case SDL_EVENT_MOUSE_WHEEL: {
-        mouse.z = e.wheel.y;
+        mouse.z = static_cast<int>(e.wheel.y);
         break;
       }
 
@@ -113,7 +115,7 @@ void asw::core::init(int width, int height, int scale) {
   asw::display::window =
       SDL_CreateWindow("", width * scale, height * scale, SDL_WINDOW_RESIZABLE);
 
-  if (!asw::display::window) {
+  if (asw::display::window == nullptr) {
     asw::util::abortOnError("WINDOW");
   }
 
@@ -125,23 +127,22 @@ void asw::core::init(int width, int height, int scale) {
 }
 
 void asw::core::print_info() {
-  std::cout << "ASW Info" << std::endl;
-  std::cout << "========" << std::endl;
+  std::cout << "ASW Info\n";
+  std::cout << "========\n";
 
-  auto renderer_name = SDL_GetRendererName(asw::display::renderer);
+  const auto* const renderer_name = SDL_GetRendererName(asw::display::renderer);
 
-  bool is_software = false;  // info.flags & SDL_SOFTWARE_RENDERER;
-  bool is_accelerated = !is_software;
-  bool is_target_texture = true;
-  bool is_vsync = true;  // info.flags & SDL_RENDERER_PRESENTVSYNC;
+  const bool is_software = false;  // info.flags & SDL_SOFTWARE_RENDERER;
+  const bool is_accelerated = !is_software;
+  const bool is_target_texture = true;
+  const bool is_vsync = true;  // info.flags & SDL_RENDERER_PRESENTVSYNC;
 
-  std::cout << "SDL Version: " << static_cast<int>(SDL_MAJOR_VERSION) << "."
-            << static_cast<int>(SDL_MINOR_VERSION) << "."
-            << static_cast<int>(SDL_MICRO_VERSION) << std::endl;
+  std::cout << "SDL Version: " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION
+            << "." << SDL_MICRO_VERSION << "\n";
 
-  std::cout << "Renderer: " << renderer_name << std::endl;
-  std::cout << "Accelerated: " << is_accelerated << std::endl;
-  std::cout << "Software: " << is_software << std::endl;
-  std::cout << "Target Texture: " << is_target_texture << std::endl;
-  std::cout << "Vsync: " << is_vsync << std::endl;
+  std::cout << "Renderer: " << renderer_name << "\n";
+  std::cout << "Accelerated: " << is_accelerated << "\n";
+  std::cout << "Software: " << is_software << "\n";
+  std::cout << "Target Texture: " << is_target_texture << "\n";
+  std::cout << "Vsync: " << is_vsync << "\n";
 }

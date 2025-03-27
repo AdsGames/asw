@@ -27,15 +27,16 @@ asw::Color asw::util::makeColor(int r, int g, int b, int a) {
   return color;
 }
 
-SDL_FPoint asw::util::getTextureSize(asw::Texture tex) {
-  SDL_FPoint size;
+asw::Vec2<float> asw::util::getTextureSize(const asw::Texture& tex) {
+  asw::Vec2<float> size;
   SDL_GetTextureSize(tex.get(), &size.x, &size.y);
   return size;
 }
 
-SDL_Point asw::util::getTextSize(asw::Font font, const std::string& text) {
+asw::Vec2<int> asw::util::getTextSize(const asw::Font& font,
+                                      const std::string& text) {
   TTF_Text* ttf_text = TTF_CreateText(nullptr, font.get(), text.c_str(), 0);
-  SDL_Point size;
+  asw::Vec2<int> size;
   TTF_GetTextSize(ttf_text, &size.x, &size.y);
   return size;
 }

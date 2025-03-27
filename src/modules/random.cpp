@@ -1,18 +1,13 @@
-/**
- * @file random.cpp
- * @author
- * @brief Implementation of the random module for the ASW library
- * @date 2025-03-24
- */
-
 #include "./asw/modules/random.h"
 
 #include <random>
 
 namespace asw::random {
-  // Random number generator
-  static std::random_device rd;
-  static std::mt19937 rng(rd());
+  namespace {
+    // Random number generator
+    std::random_device rd;
+    std::mt19937 rng(rd());
+  }  // namespace
 
   int random(int max) {
     std::uniform_int_distribution<int> dist(0, max);
@@ -25,7 +20,7 @@ namespace asw::random {
   }
 
   float random(float max) {
-    std::uniform_real_distribution<float> dist(0.0f, max);
+    std::uniform_real_distribution<float> dist(0.0F, max);
     return dist(rng);
   }
 
@@ -40,7 +35,7 @@ namespace asw::random {
   }
 
   bool chance(float chance) {
-    std::uniform_real_distribution<float> dist(0.0f, 1.0f);
+    std::uniform_real_distribution<float> dist(0.0F, 1.0F);
     return dist(rng) < chance;
   }
 }  // namespace asw::random

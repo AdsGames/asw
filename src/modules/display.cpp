@@ -2,6 +2,9 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <string>
+
+#include "./asw/modules/types.h"
 
 asw::Renderer* asw::display::renderer = nullptr;
 asw::Window* asw::display::window = nullptr;
@@ -13,7 +16,7 @@ void asw::display::setTitle(const std::string& title) {
 void asw::display::setIcon(const std::string& path) {
   SDL_Surface* icon = IMG_Load(path.c_str());
 
-  if (!icon) {
+  if (icon == nullptr) {
     return;
   }
 
@@ -21,11 +24,7 @@ void asw::display::setIcon(const std::string& path) {
 }
 
 void asw::display::setFullscreen(bool fullscreen) {
-  if (fullscreen) {
-    SDL_SetWindowFullscreen(asw::display::window, SDL_WINDOW_FULLSCREEN);
-  } else {
-    SDL_SetWindowFullscreen(asw::display::window, 0);
-  }
+  SDL_SetWindowFullscreen(asw::display::window, fullscreen);
 }
 
 void asw::display::setResolution(int w, int h) {
@@ -51,7 +50,7 @@ SDL_FPoint asw::display::getScale() {
   return scale;
 }
 
-void asw::display::setRenderTarget(asw::Texture texture) {
+void asw::display::setRenderTarget(const asw::Texture& texture) {
   SDL_SetRenderTarget(asw::display::renderer, texture.get());
 }
 

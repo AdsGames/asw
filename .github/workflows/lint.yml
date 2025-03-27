@@ -1,0 +1,31 @@
+name: Lint
+
+on:
+  pull_request:
+    paths:
+      - "**/*.c"
+      - "**/*.h"
+      - "**/*.cpp"
+      - "**/*.hpp"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  docs:
+    name: Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: awalsh128/cache-apt-pkgs-action@latest
+        with:
+          packages: libharfbuzz-dev libfreetype-dev libasound2-dev
+          version: 1.0
+
+      - run: cmake .
+
+      - uses: ZedThree/clang-tidy-review@v0.14.0
+        id: review
