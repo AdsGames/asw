@@ -119,6 +119,9 @@ void asw::core::init(int width, int height, int scale) {
     asw::util::abortOnError("WINDOW");
   }
 
+  // Hints
+  SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+
   // Get window surface
   asw::display::renderer = SDL_CreateRenderer(asw::display::window, nullptr);
 

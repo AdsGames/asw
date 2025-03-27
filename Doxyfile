@@ -1,6 +1,6 @@
 DOXYFILE_ENCODING      = UTF-8
 PROJECT_NAME           = "ASW Lib"
-PROJECT_BRIEF          = "A.D.S. Games SDL Wrapper Library. A library targeted at Allegro4 users who want to switch to SDL2 and use modern c++."
+PROJECT_BRIEF          = "A.D.S. Games SDL Wrapper Library. A library targeted at Allegro4 users who want to switch to SDL3 and use modern c++."
 TAB_SIZE               = 2
 EXTRACT_PRIVATE        = YES
 EXTRACT_PRIV_VIRTUAL   = YES
