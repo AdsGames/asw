@@ -208,6 +208,24 @@ namespace asw {
              other.position.y + other.size.y <= position.y + size.y;
     }
 
+    /// @brief Add a vector to the rectangle.
+    ///
+    /// @param vec The vector to add.
+    /// @return Quad The rectangle with the vector added.
+    ///
+    Quad operator+(const Quad<T>& quad) const {
+      return Quad(position + quad.position, size + quad.size);
+    }
+
+    /// @brief Subtract a vector from the rectangle.
+    ///
+    /// @param vec The vector to subtract.
+    /// @return Quad The rectangle with the vector subtracted.
+    ///
+    Quad operator-(const Quad<T>& quad) const {
+      return Quad(position - quad.position, size - quad.size);
+    }
+
     /// @brief The position of the rectangle.
     Vec2<T> position;
 
