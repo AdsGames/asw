@@ -19,8 +19,8 @@ void asw::draw::sprite(const asw::Texture& tex,
   auto size = asw::util::getTextureSize(tex);
 
   SDL_FRect dest;
-  dest.x = float(position.x);
-  dest.y = float(position.y);
+  dest.x = position.x;
+  dest.y = position.y;
   dest.w = size.x;
   dest.h = size.y;
 
@@ -225,4 +225,8 @@ void asw::draw::circleFill(const asw::Vec2<float>& position,
 
 void asw::draw::setBlendMode(const asw::Texture& texture, asw::BlendMode mode) {
   SDL_SetTextureBlendMode(texture.get(), static_cast<SDL_BlendMode>(mode));
+}
+
+void asw::draw::setAlpha(const asw::Texture& texture, float alpha) {
+  SDL_SetTextureAlphaModFloat(texture.get(), alpha);
 }

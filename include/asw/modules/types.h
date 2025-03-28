@@ -34,6 +34,9 @@ namespace asw {
   /// @brief Alias for an SDL_Color
   using Color = SDL_Color;
 
+  /// @brief Entity IDS
+  using EntityId = std::uint32_t;
+
   /// @brief Mappings from SDL_BLENDMODE to ASW BlendMode
   enum class BlendMode {
     NONE = SDL_BLENDMODE_NONE,

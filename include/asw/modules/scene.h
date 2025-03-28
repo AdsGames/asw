@@ -10,10 +10,14 @@
 #define ASW_SCENE_H
 
 #include <chrono>
+#include <iostream>
+#include <memory>
 #include <unordered_map>
+#include <vector>
 
 #include "./core.h"
 #include "./display.h"
+#include "./game.h"
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
@@ -56,13 +60,32 @@ namespace asw::scene {
     /// @param deltaTime The time since the last update.
     /// @details This function is called every frame to update the scene.
     ///
-    virtual void update(float deltaTime) = 0;
+    virtual void update(float deltaTime) {
+      for (auto& obj : objects) {
+        if (obj->active) {
+          obj->update(deltaTime);
+        }
+      }
+    };
 
     /// @brief Draw the game scene.
     ///
     /// @details This function is called every frame to draw the scene.
     ///
-    virtual void draw() = 0;
+    virtual void draw() {
+      // Sort objects by z-index
+      std::sort(objects.begin(), objects.end(),
+                [](const std::shared_ptr<game::GameObject>& a,
+                   const std::shared_ptr<game::GameObject>& b) {
+                  return a->zIndex < b->zIndex;
+                });
+
+      for (auto& obj : objects) {
+        if (obj->active) {
+          obj->draw();
+        }
+      }
+    };
 
     /// @brief Handle input for the game scene.
     ///
@@ -71,8 +94,21 @@ namespace asw::scene {
     ///
     virtual void cleanup() = 0;
 
+    /// @brief Add a game object to the scene.
+    ///
+    /// @param gameObject The game object to add to the scene.
+    ///
+    void registerObject(const std::shared_ptr<game::GameObject> obj) {
+      objects.push_back(obj);
+    }
+
    protected:
+    /// @brief Reference to the scene manager.
     SceneManager<T>& sceneManager;
+
+   private:
+    /// @brief Collection of game objects in the scene.
+    std::vector<std::shared_ptr<game::GameObject>> objects;
   };
 
   /// @brief SceneManager class for managing game scenes.

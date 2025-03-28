@@ -7,6 +7,7 @@
 #include "./modules/core.h"
 #include "./modules/display.h"
 #include "./modules/draw.h"
+#include "./modules/game.h"
 #include "./modules/geometry.h"
 #include "./modules/input.h"
 #include "./modules/input_keys.h"

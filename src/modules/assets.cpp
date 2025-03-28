@@ -18,6 +18,7 @@ asw::Texture asw::assets::loadTexture(const std::string& filename) {
   }
 
   SDL_SetTextureScaleMode(temp, SDL_SCALEMODE_NEAREST);
+  SDL_SetTextureBlendMode(temp, SDL_BLENDMODE_BLEND);
 
   return {temp, SDL_DestroyTexture};
 }

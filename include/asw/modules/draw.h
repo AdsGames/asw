@@ -174,6 +174,12 @@ namespace asw::draw {
   ///
   void setBlendMode(const asw::Texture& texture, asw::BlendMode mode);
 
+  /// @brief Set the alpha of a texture.
+  ///
+  /// @param texture The texture to set the alpha of.
+  /// @param alpha The alpha to set.
+  ///
+  void setAlpha(const asw::Texture& texture, float alpha);
 }  // namespace asw::draw
 
 #endif  // ASW_DRAW_H
