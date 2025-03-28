@@ -26,15 +26,14 @@ jobs:
           path: "_deps"
           key: deps-${{ runner.os }}
 
-      - uses: awalsh128/cache-apt-pkgs-action@latest
-        with:
-          packages: libharfbuzz-dev libfreetype-dev libasound2-dev
-          version: 1.0
-
       - uses: mymindstorm/setup-emsdk@v14
         with:
           version: 4.0.6
           actions-cache-folder: "emsdk-cache"
+
+      - name: Download ports
+        run: |
+          embuilder build harfbuzz
 
       - name: Run CMake
         run: emcmake cmake -G "Unix Makefiles" .
