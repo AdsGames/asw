@@ -102,6 +102,25 @@ namespace asw::scene {
       objects.push_back(obj);
     }
 
+    /// @brief Create a new game object in the scene.
+    ///
+    /// @param gameObject The game object to add to the scene.
+    ///
+    template <typename ObjectType, typename... Args>
+    std::shared_ptr<ObjectType> createObject(const T sceneId, Args&&... args) {
+      static_assert(std::is_base_of_v<game::GameObject, ObjectType>,
+                    "ObjectType must be derived from Scene<T>");
+      static_assert(
+          std::is_constructible_v<ObjectType, Args...>,
+          "ObjectType must be constructible with the given arguments");
+
+      auto obj = std::make_shared<ObjectType>(std::forward<Args>(args)...);
+
+      objects.push_back(obj);
+
+      return obj;
+    }
+
    protected:
     /// @brief Reference to the scene manager.
     SceneManager<T>& sceneManager;
@@ -133,8 +152,15 @@ namespace asw::scene {
     /// @param sceneId The unique identifier for the scene.
     /// @param scene Pointer to the Scene object to be registered.
     ///
-    void registerScene(const T sceneId, Scene<T>* scene) {
-      scenes[sceneId] = scene;
+    template <typename SceneType, typename... Args>
+    void registerScene(const T sceneId, Args&&... args) {
+      static_assert(std::is_base_of_v<Scene<T>, SceneType>,
+                    "SceneType must be derived from Scene<T>");
+      static_assert(std::is_constructible_v<SceneType, Args...>,
+                    "SceneType must be constructible with the given arguments");
+
+      scenes[sceneId] =
+          std::make_unique<SceneType>(std::forward<Args>(args)...);
     }
 
     /// @brief Set the next scene
@@ -251,7 +277,7 @@ namespace asw::scene {
     bool hasNextScene{false};
 
     /// @brief Collection of all scenes registered in the scene engine.
-    std::unordered_map<T, Scene<T>*> scenes;
+    std::unordered_map<T, std::unique_ptr<Scene<T>>> scenes;
 
     /// @breif FPS Counter for managed loop;
     int fps{0};
