@@ -19,14 +19,6 @@ namespace asw::game {
   /// Components
   ///
 
-  /// @brief Transform Component
-  ///
-  class Transform {
-   public:
-    asw::Quad<float> transform;
-    float rotation{0};
-  };
-
   /// @brief Physics Component
   ///
   class Physics {
@@ -116,15 +108,13 @@ namespace asw::game {
     ///
     /// @param deltaTime The time since the last update.
     ///
-    virtual void update(float deltaTime) override {
-      GameObject::update(deltaTime);
-    }
+    void update(float deltaTime) override { GameObject::update(deltaTime); }
 
     /// @brief Draw the sprite to the screen.
     /// @details If a rotation is set, the sprite will be rotated around its
     /// center.
     ///
-    virtual void draw() override {
+    void draw() override {
       if (texture == nullptr) {
         return;
       }
@@ -169,11 +159,9 @@ namespace asw::game {
       return *this;
     }
 
-    virtual void update(float deltaTime) override {
-      GameObject::update(deltaTime);
-    }
+    void update(float deltaTime) override { GameObject::update(deltaTime); }
 
-    virtual void draw() override {
+    void draw() override {
       asw::draw::text(font, text, transform.position, color);
     }
 

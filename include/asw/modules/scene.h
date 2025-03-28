@@ -56,7 +56,7 @@ namespace asw::scene {
     /// @details This function is called when the scene is registered and
     /// initialized.
     ///
-    virtual void init() = 0;
+    virtual void init() {};
 
     /// @brief Update the game scene.
     ///
@@ -95,7 +95,7 @@ namespace asw::scene {
     /// @details This function is called every frame to handle input for the
     /// scene.
     ///
-    virtual void cleanup() = 0;
+    virtual void cleanup() { objects.clear(); };
 
     /// @brief Add a game object to the scene.
     ///
