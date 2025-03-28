@@ -1,8 +1,9 @@
 #include "./asw/modules/draw.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
-#include <SDL2/SDL_ttf.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
+#include <cmath>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
@@ -13,156 +14,219 @@ void asw::draw::clearColor(asw::Color color) {
   SDL_RenderClear(asw::display::renderer);
 }
 
-void asw::draw::sprite(asw::Texture tex, int x, int y) {
-  SDL_Point size = asw::util::getTextureSize(tex);
-  SDL_Rect dest = {x, y, size.x, size.y};
-  SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
+void asw::draw::sprite(const asw::Texture& tex,
+                       const asw::Vec2<float>& position) {
+  auto size = asw::util::getTextureSize(tex);
+
+  SDL_FRect dest;
+  dest.x = position.x;
+  dest.y = position.y;
+  dest.w = size.x;
+  dest.h = size.y;
+
+  SDL_RenderTexture(asw::display::renderer, tex.get(), nullptr, &dest);
 }
 
-void asw::draw::spriteFlip(asw::Texture tex,
-                           int x,
-                           int y,
+void asw::draw::spriteFlip(const asw::Texture& tex,
+                           const asw::Vec2<float>& position,
                            bool flipX,
                            bool flipY) {
-  SDL_Point size = asw::util::getTextureSize(tex);
-  SDL_Rect dest = {x, y, size.x, size.y};
-  SDL_RendererFlip flip = SDL_FLIP_NONE;
+  auto size = asw::util::getTextureSize(tex);
+
+  SDL_FRect dest;
+  dest.x = position.x;
+  dest.y = position.y;
+  dest.w = size.x;
+  dest.h = size.y;
+
+  SDL_FlipMode flip = SDL_FLIP_NONE;
 
   if (flipX) {
-    flip = static_cast<SDL_RendererFlip>(flip | SDL_FLIP_HORIZONTAL);
+    flip = static_cast<SDL_FlipMode>(flip | SDL_FLIP_HORIZONTAL);
   }
 
   if (flipY) {
-    flip = static_cast<SDL_RendererFlip>(flip | SDL_FLIP_VERTICAL);
+    flip = static_cast<SDL_FlipMode>(flip | SDL_FLIP_VERTICAL);
   }
 
-  SDL_RenderCopyEx(asw::display::renderer, tex.get(), nullptr, &dest, 0,
-                   nullptr, flip);
+  SDL_RenderTextureRotated(asw::display::renderer, tex.get(), nullptr, &dest, 0,
+                           nullptr, flip);
 }
 
-void asw::draw::stretchSprite(asw::Texture tex, int x, int y, int w, int h) {
-  SDL_Rect dest = {x, y, w, h};
-  SDL_RenderCopy(asw::display::renderer, tex.get(), nullptr, &dest);
+void asw::draw::stretchSprite(const asw::Texture& tex,
+                              const asw::Quad<float>& position) {
+  SDL_FRect dest;
+  dest.x = position.position.x;
+  dest.y = position.position.y;
+  dest.w = position.size.x;
+  dest.h = position.size.y;
+
+  SDL_RenderTexture(asw::display::renderer, tex.get(), nullptr, &dest);
 }
 
-void asw::draw::rotateSprite(asw::Texture tex, int x, int y, int angleDeg) {
-  SDL_Point size = asw::util::getTextureSize(tex);
-  SDL_Rect dest = {x, y, size.x, size.y};
-  SDL_RenderCopyEx(asw::display::renderer, tex.get(), nullptr, &dest, angleDeg,
-                   nullptr, SDL_FLIP_NONE);
+void asw::draw::rotateSprite(const asw::Texture& tex,
+                             const asw::Vec2<float>& position,
+                             double angle) {
+  auto size = asw::util::getTextureSize(tex);
+
+  SDL_FRect dest;
+  dest.x = position.x;
+  dest.y = position.y;
+  dest.w = size.x;
+  dest.h = size.y;
+
+  SDL_RenderTextureRotated(asw::display::renderer, tex.get(), nullptr, &dest,
+                           angle, nullptr, SDL_FLIP_NONE);
 }
 
-void asw::draw::stretchSpriteBlit(asw::Texture tex,
-                                  int x1,
-                                  int y1,
-                                  int w1,
-                                  int h1,
-                                  int x2,
-                                  int y2,
-                                  int w2,
-                                  int h2) {
-  const SDL_Rect src = {x1, y1, w1, h1};
-  SDL_Rect dest = {x2, y2, w2, h2};
-  SDL_RenderCopy(asw::display::renderer, tex.get(), &src, &dest);
+void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
+                                  const asw::Quad<float>& source,
+                                  const asw::Quad<float>& dest) {
+  SDL_FRect r_src;
+  r_src.x = source.position.x;
+  r_src.y = source.position.y;
+  r_src.w = source.size.x;
+  r_src.h = source.size.y;
+
+  SDL_FRect r_dest;
+  r_dest.x = dest.position.x;
+  r_dest.y = dest.position.y;
+  r_dest.w = dest.size.x;
+  r_dest.h = dest.size.y;
+
+  SDL_RenderTexture(asw::display::renderer, tex.get(), &r_src, &r_dest);
 }
 
-void asw::draw::stretchSpriteRotateBlit(asw::Texture tex,
-                                        int x1,
-                                        int y1,
-                                        int w1,
-                                        int h1,
-                                        int x2,
-                                        int y2,
-                                        int w2,
-                                        int h2,
-                                        int angleDeg) {
-  const SDL_Rect src = {x1, y1, w1, h1};
-  SDL_Rect dest = {x2, y2, w2, h2};
-  SDL_RenderCopyEx(asw::display::renderer, tex.get(), &src, &dest, angleDeg,
-                   nullptr, SDL_FLIP_NONE);
+void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
+                                        const asw::Quad<float>& source,
+                                        const asw::Quad<float>& dest,
+                                        double angle) {
+  SDL_FRect r_src;
+  r_src.x = source.position.x;
+  r_src.y = source.position.y;
+  r_src.w = source.size.x;
+  r_src.h = source.size.y;
+
+  SDL_FRect r_dest;
+  r_dest.x = dest.position.x;
+  r_dest.y = dest.position.y;
+  r_dest.w = dest.size.x;
+  r_dest.h = dest.size.y;
+
+  SDL_RenderTextureRotated(asw::display::renderer, tex.get(), &r_src, &r_dest,
+                           angle, nullptr, SDL_FLIP_NONE);
 }
 
-void asw::draw::text(asw::Font font,
+void asw::draw::text(const asw::Font& font,
                      const std::string& text,
-                     int x,
-                     int y,
+                     const asw::Vec2<float>& position,
                      asw::Color color) {
-  if (!text.size()) {
+  if (text.empty()) {
     return;
   }
 
-  SDL_Color sdlColor = {color.r, color.g, color.b, color.a};
+  const SDL_Color sdlColor =
+      asw::util::makeColor(color.r, color.g, color.b, color.a);
   SDL_Surface* textSurface =
-      TTF_RenderText_Solid(font.get(), text.c_str(), sdlColor);
+      TTF_RenderText_Solid(font.get(), text.c_str(), 0, sdlColor);
   SDL_Texture* textTexture =
       SDL_CreateTextureFromSurface(asw::display::renderer, textSurface);
-  SDL_Rect dest = {x, y, textSurface->w, textSurface->h};
-  SDL_RenderCopy(asw::display::renderer, textTexture, nullptr, &dest);
-  SDL_FreeSurface(textSurface);
+
+  SDL_FRect dest;
+  dest.x = position.x;
+  dest.y = position.y;
+  dest.w = float(textSurface->w);
+  dest.h = float(textSurface->h);
+
+  SDL_RenderTexture(asw::display::renderer, textTexture, nullptr, &dest);
+  SDL_DestroySurface(textSurface);
   SDL_DestroyTexture(textTexture);
 }
 
-void asw::draw::textCenter(asw::Font font,
+void asw::draw::textCenter(const asw::Font& font,
                            const std::string& text,
-                           int x,
-                           int y,
+                           const asw::Vec2<float>& position,
                            asw::Color color) {
   auto size = asw::util::getTextSize(font, text);
-  asw::draw::text(font, text, x - size.x / 2, y, color);
+  asw::draw::text(font, text, position - asw::Vec2<float>(size.x / 2, 0),
+                  color);
 }
 
-void asw::draw::textRight(asw::Font font,
+void asw::draw::textRight(const asw::Font& font,
                           const std::string& text,
-                          int x,
-                          int y,
+                          const asw::Vec2<float>& position,
                           asw::Color color) {
   auto size = asw::util::getTextSize(font, text);
-  asw::draw::text(font, text, x - size.x, y, color);
+  asw::draw::text(font, text, position - asw::Vec2<float>(size.x, 0), color);
 }
 
-void asw::draw::point(int x, int y, asw::Color color) {
+void asw::draw::point(const asw::Vec2<float>& position, asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  SDL_RenderDrawPoint(asw::display::renderer, x, y);
+  SDL_RenderPoint(asw::display::renderer, position.x, position.y);
 }
 
-void asw::draw::line(int x1, int y1, int x2, int y2, asw::Color color) {
+void asw::draw::line(const asw::Vec2<float>& position1,
+                     const asw::Vec2<float>& position2,
+                     asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  SDL_RenderDrawLine(asw::display::renderer, x1, y1, x2, y2);
+  SDL_RenderLine(asw::display::renderer, position1.x, position1.y, position2.x,
+                 position2.y);
 }
 
-void asw::draw::rect(int x, int y, int w, int h, asw::Color color) {
+void asw::draw::rect(const asw::Quad<float>& position, asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  SDL_Rect rect = {x, y, w, h};
-  SDL_RenderDrawRect(asw::display::renderer, &rect);
+  SDL_FRect rect;
+  rect.x = position.position.x;
+  rect.y = position.position.y;
+  rect.w = position.size.x;
+  rect.h = position.size.y;
+
+  SDL_RenderRect(asw::display::renderer, &rect);
 }
 
-void asw::draw::rectFill(int x, int y, int w, int h, asw::Color color) {
+void asw::draw::rectFill(const asw::Quad<float>& position, asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  SDL_Rect rect = {x, y, w, h};
+  SDL_FRect rect;
+  rect.x = position.position.x;
+  rect.y = position.position.y;
+  rect.w = position.size.x;
+  rect.h = position.size.y;
+
   SDL_RenderFillRect(asw::display::renderer, &rect);
 }
 
-void asw::draw::circle(int x, int y, int r, asw::Color color) {
+void asw::draw::circle(const asw::Vec2<float>& position,
+                       float radius,
+                       asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
   for (int i = 0; i < 360; i++) {
-    SDL_RenderDrawPoint(asw::display::renderer, x + r * cos(i), y + r * sin(i));
+    SDL_RenderPoint(asw::display::renderer,
+                    position.x + static_cast<float>(radius * std::cos(i)),
+                    position.y + static_cast<float>(radius * std::sin(i)));
   }
 }
 
-void asw::draw::circleFill(int x, int y, int r, asw::Color color) {
+void asw::draw::circleFill(const asw::Vec2<float>& position,
+                           float radius,
+                           asw::Color color) {
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
   for (int i = 0; i < 360; i++) {
-    SDL_RenderDrawLine(asw::display::renderer, x, y, x + r * cos(i),
-                       y + r * sin(i));
+    SDL_RenderLine(asw::display::renderer, position.x, position.y,
+                   position.x + static_cast<float>(radius * std::cos(i)),
+                   position.y + static_cast<float>(radius * std::sin(i)));
   }
 }
 
-void asw::draw::setBlendMode(asw::Texture texture, asw::BlendMode mode) {
+void asw::draw::setBlendMode(const asw::Texture& texture, asw::BlendMode mode) {
   SDL_SetTextureBlendMode(texture.get(), static_cast<SDL_BlendMode>(mode));
+}
+
+void asw::draw::setAlpha(const asw::Texture& texture, float alpha) {
+  SDL_SetTextureAlphaModFloat(texture.get(), alpha);
 }

@@ -1,7 +1,10 @@
 #include "./asw/modules/display.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL3/SDL.h>
+#include <SDL3_image/SDL_image.h>
+#include <string>
+
+#include "./asw/modules/types.h"
 
 asw::Renderer* asw::display::renderer = nullptr;
 asw::Window* asw::display::window = nullptr;
@@ -13,7 +16,7 @@ void asw::display::setTitle(const std::string& title) {
 void asw::display::setIcon(const std::string& path) {
   SDL_Surface* icon = IMG_Load(path.c_str());
 
-  if (!icon) {
+  if (icon == nullptr) {
     return;
   }
 
@@ -21,15 +24,15 @@ void asw::display::setIcon(const std::string& path) {
 }
 
 void asw::display::setFullscreen(bool fullscreen) {
-  if (fullscreen) {
-    SDL_SetWindowFullscreen(asw::display::window, SDL_WINDOW_FULLSCREEN);
-  } else {
-    SDL_SetWindowFullscreen(asw::display::window, 0);
-  }
+  SDL_SetWindowFullscreen(asw::display::window, fullscreen);
 }
 
 void asw::display::setResolution(int w, int h) {
   SDL_SetWindowSize(asw::display::window, w, h);
+}
+
+void asw::display::setResizable(bool resizable) {
+  SDL_SetWindowResizable(asw::display::window, resizable);
 }
 
 SDL_Point asw::display::getSize() {
@@ -40,17 +43,18 @@ SDL_Point asw::display::getSize() {
 
 SDL_Point asw::display::getLogicalSize() {
   SDL_Point size;
-  SDL_RenderGetLogicalSize(asw::display::renderer, &size.x, &size.y);
+  SDL_GetRenderLogicalPresentation(asw::display::renderer, &size.x, &size.y,
+                                   nullptr);
   return size;
 }
 
 SDL_FPoint asw::display::getScale() {
   SDL_FPoint scale;
-  SDL_RenderGetScale(asw::display::renderer, &scale.x, &scale.y);
+  SDL_GetRenderScale(asw::display::renderer, &scale.x, &scale.y);
   return scale;
 }
 
-void asw::display::setRenderTarget(asw::Texture texture) {
+void asw::display::setRenderTarget(const asw::Texture& texture) {
   SDL_SetRenderTarget(asw::display::renderer, texture.get());
 }
 

@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
 project(asw VERSION 0.3.5 LANGUAGES CXX)
+include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,6 +21,55 @@ add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 # Add compile options
 target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall -Wextra -pedantic)
 
+# SDL Flags
+set(BUILD_SHARED_LIBS OFF)
+set(SDL_SHARED OFF)
+set(SDL_STATIC ON)
+
+# Fetch SDL3
+option(ASW_VENDORED "Use vendored libraries" ON)
+
+if(ASW_VENDORED)
+  message(STATUS "Fetching Vendored Libraries")
+
+  FetchContent_Declare(
+      SDL3
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL
+      GIT_TAG release-3.2.8
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3)
+
+  FetchContent_Declare(
+      SDL3_image
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
+      GIT_TAG release-3.2.4
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3_image)
+
+  FetchContent_Declare(
+      SDL3_ttf
+      GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
+      GIT_TAG release-3.2.0
+      GIT_SHALLOW    TRUE
+  )
+  FetchContent_MakeAvailable(SDL3_ttf)
+else()
+  find_package(SDL3 REQUIRED)
+  find_package(SDL3_image REQUIRED)
+  find_package(SDL3_ttf REQUIRED)
+endif()
+
+# Always vendored
+FetchContent_Declare(
+  SDL3_mixer
+  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
+  GIT_TAG origin/main
+  GIT_SHALLOW    TRUE
+)
+FetchContent_MakeAvailable(SDL3_mixer)
+
 # Add include
 target_include_directories(
   ${PROJECT_NAME} PUBLIC
@@ -35,63 +85,35 @@ set_target_properties(
   SOVERSION 1
 )
 
-# Find libs
-if(NOT EMSCRIPTEN)
-  find_library(SDL_LIBRARY NAMES SDL2 REQUIRED)
-  find_library(SDL_MIXER_LIBRARY NAMES SDL2_mixer REQUIRED)
-  find_library(SDL_IMAGE_LIBRARY NAMES SDL2_image REQUIRED)
-  find_library(SDL_TTF_LIBRARY NAMES SDL2_ttf REQUIRED)
-  find_library(SDL_MAIN_LIBRARY NAMES SDL2main REQUIRED)
-endif(NOT EMSCRIPTEN)
-
 # Link Libs
-# Emscripten support
-if(EMSCRIPTEN)
-  set_target_properties(${PROJECT_NAME} PROPERTIES OUTPUT_NAME "index")
-  set(CMAKE_EXECUTABLE_SUFFIX ".html")
-  target_compile_options(
-    ${PROJECT_NAME}
-    PRIVATE
-    -sUSE_SDL=2
-    -sUSE_SDL_IMAGE=2
-    -sUSE_SDL_TTF=2
-    -sUSE_SDL_MIXER=2
-    -sSDL2_IMAGE_FORMATS=["png"]
-  )
+if(MINGW)
+  target_link_libraries(${PROJECT_NAME} -lmingw32)
+endif(MINGW)
+
+if(ASW_VENDORED)
   target_link_libraries(
     ${PROJECT_NAME}
-    -sWASM=1
-    -sUSE_SDL=2
-    -sUSE_SDL_IMAGE=2
-    -sUSE_SDL_TTF=2
-    -sUSE_SDL_MIXER=2
-    -sSDL2_IMAGE_FORMATS=["png"]
-    -sDEMANGLE_SUPPORT=1
-    -sTOTAL_MEMORY=512MB
+    SDL3::SDL3-static
+    SDL3_image::SDL3_image-static
+    SDL3_mixer::SDL3_mixer-static
+    SDL3_ttf::SDL3_ttf-static
   )
-  set_target_properties(
-    ${PROJECT_NAME}
-    PROPERTIES
-    LINK_FLAGS
-    "--preload-file ${CMAKE_CURRENT_LIST_DIR}/assets@/assets --use-preload-plugins"
-  )
-
-# Run of the mill executable
-else(EMSCRIPTEN)
-  if(MINGW)
-    target_link_libraries(${PROJECT_NAME} -lmingw32)
-  endif(MINGW)
-
+else()
   target_link_libraries(
     ${PROJECT_NAME}
-    -lm
-    ${SDL_MAIN_LIBRARY}
-    ${SDL_LIBRARY}
-    ${SDL_MIXER_LIBRARY}
-    ${SDL_IMAGE_LIBRARY}
-    ${SDL_TTF_LIBRARY}
+    SDL3::SDL3
+    SDL3_image::SDL3_image
+    SDL3_mixer::SDL3_mixer
+    SDL3_ttf::SDL3_ttf
   )
-endif(EMSCRIPTEN)
+endif()
+
+if(DEFINED EMSCRIPTEN) 
+  target_link_libraries(
+    ${PROJECT_NAME}
+    z # Zlib for SDL3_ttf
+  )
+endif()
 
 # Install
 include(CMakePackageConfigHelpers)

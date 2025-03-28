@@ -1,7 +1,9 @@
 #include "./asw/modules/core.h"
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_image.h>
+#include <SDL3/SDL.h>
+#include <SDL3_mixer/SDL_mixer.h>
+#include <SDL3_ttf/SDL_ttf.h>
+#include <algorithm>
 #include <iostream>
 
 #include "./asw/modules/display.h"
@@ -19,44 +21,50 @@ void asw::core::update() {
 
   while (SDL_PollEvent(&e)) {
     switch (e.type) {
-      case SDL_WINDOWEVENT:
-        switch (e.window.event) {
-          case SDL_WINDOWEVENT_RESIZED: {
-            // Maintain aspect ratio
-            SDL_FPoint scale;
-            SDL_RenderGetScale(asw::display::renderer, &scale.x, &scale.y);
+      case SDL_EVENT_WINDOW_RESIZED: {
+        // Maintain aspect ratio
+        SDL_Point window_size;
+        SDL_GetRenderOutputSize(asw::display::renderer, &window_size.x,
+                                &window_size.y);
 
-            SDL_Point size;
-            SDL_RenderGetLogicalSize(asw::display::renderer, &size.x, &size.y);
+        SDL_Point render_size;
+        SDL_GetRenderLogicalPresentation(asw::display::renderer, &render_size.x,
+                                         &render_size.y, nullptr);
 
-            SDL_SetWindowSize(asw::display::window, size.x * scale.x,
-                              size.y * scale.y);
-            break;
-          }
+        const auto x_scale = static_cast<float>(window_size.x) /
+                             static_cast<float>(render_size.x);
 
-          default:
-            break;
-        }
+        const auto y_scale = static_cast<float>(window_size.y) /
+                             static_cast<float>(render_size.y);
+
+        const auto scale = std::min(x_scale, y_scale);
+
+        SDL_SetWindowSize(asw::display::window,
+                          static_cast<float>(render_size.x) * scale,
+                          static_cast<float>(render_size.y) * scale);
         break;
+      }
 
-      case SDL_KEYDOWN:
-        if (e.key.repeat == 0) {
-          keyboard.pressed[e.key.keysym.scancode] = true;
-          keyboard.down[e.key.keysym.scancode] = true;
+      case SDL_EVENT_KEY_DOWN: {
+        if (!e.key.repeat) {
+          keyboard.pressed[e.key.scancode] = true;
+          keyboard.down[e.key.scancode] = true;
           keyboard.anyPressed = true;
-          keyboard.lastPressed = e.key.keysym.scancode;
+          keyboard.lastPressed = e.key.scancode;
         }
         break;
+      }
 
-      case SDL_KEYUP:
-        if (e.key.repeat == 0) {
-          keyboard.released[e.key.keysym.scancode] = true;
-          keyboard.down[e.key.keysym.scancode] = false;
+      case SDL_EVENT_KEY_UP: {
+        if (!e.key.repeat) {
+          keyboard.released[e.key.scancode] = true;
+          keyboard.down[e.key.scancode] = false;
         }
         break;
+      }
 
-      case SDL_MOUSEBUTTONDOWN: {
-        auto button = static_cast<int>(e.button.button);
+      case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+        const auto button = static_cast<int>(e.button.button);
         mouse.pressed[button] = true;
         mouse.down[button] = true;
         mouse.anyPressed = true;
@@ -64,27 +72,32 @@ void asw::core::update() {
         break;
       }
 
-      case SDL_MOUSEBUTTONUP: {
+      case SDL_EVENT_MOUSE_BUTTON_UP: {
         auto button = static_cast<int>(e.button.button);
         mouse.released[button] = true;
         mouse.down[button] = false;
         break;
       }
 
-      case SDL_MOUSEMOTION:
+      case SDL_EVENT_MOUSE_MOTION: {
+        // Ensure scale is applied to mouse coordinates
+        SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
         mouse.xChange = e.motion.xrel;
         mouse.yChange = e.motion.yrel;
         mouse.x = e.motion.x;
         mouse.y = e.motion.y;
         break;
+      }
 
-      case SDL_MOUSEWHEEL:
+      case SDL_EVENT_MOUSE_WHEEL: {
         mouse.z = e.wheel.y;
         break;
+      }
 
-      case SDL_QUIT:
+      case SDL_EVENT_QUIT: {
         exit = true;
         break;
+      }
 
       default:
         break;
@@ -93,63 +106,58 @@ void asw::core::update() {
 }
 
 void asw::core::init(int width, int height, int scale) {
-  if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) != 0) {
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
     asw::util::abortOnError("SDL_Init");
   }
 
-  // Initialize PNG loading
-  int imgFlags = IMG_INIT_PNG;
-  if (!(IMG_Init(imgFlags) & imgFlags)) {
-    asw::util::abortOnError("IMG_Init");
-  }
-
-  if (TTF_Init()) {
+  if (!TTF_Init()) {
     asw::util::abortOnError("TTF_Init");
   }
 
   // Initialize SDL_mixer
-  if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0) {
+  SDL_AudioSpec spec;
+  spec.format = SDL_AUDIO_S16LE;
+  spec.freq = 44100;
+  spec.channels = 2;
+
+  if (!Mix_OpenAudio(0, &spec)) {
     asw::util::abortOnError("Mix_OpenAudio");
   }
 
-  asw::display::window = SDL_CreateWindow(
-      "", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width * scale,
-      height * scale, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE);
+  asw::display::window =
+      SDL_CreateWindow("", width * scale, height * scale, SDL_WINDOW_RESIZABLE);
 
-  if (!asw::display::window) {
+  if (asw::display::window == nullptr) {
     asw::util::abortOnError("WINDOW");
   }
 
-  // Get window surface
-  asw::display::renderer =
-      SDL_CreateRenderer(asw::display::window, -1,
-                         SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+  // Hints
+  SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
 
-  SDL_RenderSetLogicalSize(asw::display::renderer, width, height);
+  // Get window surface
+  asw::display::renderer = SDL_CreateRenderer(asw::display::window, nullptr);
+
+  SDL_SetRenderLogicalPresentation(asw::display::renderer, width, height,
+                                   SDL_LOGICAL_PRESENTATION_LETTERBOX);
 }
 
 void asw::core::print_info() {
-  std::cout << "ASW Info" << std::endl;
-  std::cout << "========" << std::endl;
+  std::cout << "ASW Info\n";
+  std::cout << "========\n";
 
-  SDL_version compiled;
-  SDL_GetVersion(&compiled);
+  const auto* const renderer_name = SDL_GetRendererName(asw::display::renderer);
 
-  SDL_RendererInfo info;
-  SDL_GetRendererInfo(asw::display::renderer, &info);
+  const bool is_software = false;  // info.flags & SDL_SOFTWARE_RENDERER;
+  const bool is_accelerated = !is_software;
+  const bool is_target_texture = true;
+  const bool is_vsync = true;  // info.flags & SDL_RENDERER_PRESENTVSYNC;
 
-  bool is_accelerated = info.flags & SDL_RENDERER_ACCELERATED;
-  bool is_software = info.flags & SDL_RENDERER_SOFTWARE;
-  bool is_target_texture = info.flags & SDL_RENDERER_TARGETTEXTURE;
-  bool is_vsync = info.flags & SDL_RENDERER_PRESENTVSYNC;
+  std::cout << "SDL Version: " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION
+            << "." << SDL_MICRO_VERSION << "\n";
 
-  std::cout << "SDL Version: " << static_cast<int>(compiled.major) << "."
-            << static_cast<int>(compiled.minor) << "."
-            << static_cast<int>(compiled.patch) << std::endl;
-
-  std::cout << "Renderer: " << info.name << std::endl;
-  std::cout << "Accelerated: " << is_accelerated << std::endl;
-  std::cout << "Software: " << is_software << std::endl;
-  std::cout << "Target Texture: " << is_target_texture << std::endl;
-  std::cout << "Vsync: " << is_vsync << std::endl;
+  std::cout << "Renderer: " << renderer_name << "\n";
+  std::cout << "Accelerated: " << is_accelerated << "\n";
+  std::cout << "Software: " << is_software << "\n";
+  std::cout << "Target Texture: " << is_target_texture << "\n";
+  std::cout << "Vsync: " << is_vsync << "\n";
 }
