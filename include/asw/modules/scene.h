@@ -48,6 +48,9 @@ namespace asw::scene {
     explicit Scene(SceneManager<T>& sceneManager)
         : sceneManager(sceneManager) {}
 
+    /// @brief Destructor for the Scene class.
+    virtual ~Scene() = default;
+
     /// @brief Initialize the game scene.
     ///
     /// @details This function is called when the scene is registered and
@@ -107,7 +110,7 @@ namespace asw::scene {
     /// @param gameObject The game object to add to the scene.
     ///
     template <typename ObjectType, typename... Args>
-    std::shared_ptr<ObjectType> createObject(const T sceneId, Args&&... args) {
+    std::shared_ptr<ObjectType> createObject(Args&&... args) {
       static_assert(std::is_base_of_v<game::GameObject, ObjectType>,
                     "ObjectType must be derived from Scene<T>");
       static_assert(
@@ -115,9 +118,7 @@ namespace asw::scene {
           "ObjectType must be constructible with the given arguments");
 
       auto obj = std::make_shared<ObjectType>(std::forward<Args>(args)...);
-
-      objects.push_back(obj);
-
+      objects.emplace_back(obj);
       return obj;
     }
 
@@ -159,8 +160,8 @@ namespace asw::scene {
       static_assert(std::is_constructible_v<SceneType, Args...>,
                     "SceneType must be constructible with the given arguments");
 
-      scenes[sceneId] =
-          std::make_unique<SceneType>(std::forward<Args>(args)...);
+      auto scene = std::make_shared<SceneType>(std::forward<Args>(args)...);
+      scenes[sceneId] = scene;
     }
 
     /// @brief Set the next scene
@@ -217,26 +218,21 @@ namespace asw::scene {
     ///
     void update(const float deltaTime) {
       asw::core::update();
-
       changeScene();
 
-      if (activeScene == nullptr) {
-        return;
+      if (activeScene != nullptr) {
+        activeScene->update(deltaTime);
       }
-
-      activeScene->update(deltaTime);
     }
 
     /// @brief Draw the current scene.
     ///
     void draw() {
-      if (activeScene == nullptr) {
-        return;
+      if (activeScene != nullptr) {
+        asw::display::clear();
+        activeScene->draw();
+        asw::display::present();
       }
-
-      asw::display::clear();
-      activeScene->draw();
-      asw::display::present();
     }
 
     /// @brief Get the current FPS. Only applies to the managed loop.
@@ -257,18 +253,16 @@ namespace asw::scene {
         activeScene->cleanup();
       }
 
-      if (scenes.find(nextScene) == scenes.end()) {
-        hasNextScene = false;
-        return;
+      if (auto it = scenes.find(nextScene); it != scenes.end()) {
+        activeScene = it->second;
+        activeScene->init();
       }
 
-      activeScene = scenes[nextScene];
-      activeScene->init();
       hasNextScene = false;
     }
 
     /// @brief The current scene of the scene engine.
-    Scene<T>* activeScene{nullptr};
+    std::shared_ptr<Scene<T>> activeScene;
 
     /// @brief The next scene of the scene engine.
     T nextScene;
@@ -277,7 +271,7 @@ namespace asw::scene {
     bool hasNextScene{false};
 
     /// @brief Collection of all scenes registered in the scene engine.
-    std::unordered_map<T, std::unique_ptr<Scene<T>>> scenes;
+    std::unordered_map<T, std::shared_ptr<Scene<T>>> scenes;
 
     /// @breif FPS Counter for managed loop;
     int fps{0};
