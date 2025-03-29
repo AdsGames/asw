@@ -25,6 +25,9 @@ namespace asw {
   /// @brief Alias for a shared pointer to an Mix_Chunk
   using Sample = std::shared_ptr<Mix_Chunk>;
 
+  /// @brief Alias for a shared pointer to an Mix_Music
+  using Music = std::shared_ptr<Mix_Music>;
+
   /// @brief Alias for a shared pointer to an SDL_Renderer
   using Renderer = SDL_Renderer;
 

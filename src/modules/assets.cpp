@@ -43,6 +43,16 @@ asw::Sample asw::assets::loadSample(const std::string& filename) {
   return {temp, Mix_FreeChunk};
 }
 
+asw::Music asw::assets::loadMusic(const std::string& filename) {
+  Mix_Music* temp = Mix_LoadMUS(filename.c_str());
+
+  if (temp == nullptr) {
+    asw::util::abortOnError("Failed to load music: " + filename);
+  }
+
+  return {temp, Mix_FreeMusic};
+}
+
 asw::Texture asw::assets::createTexture(int w, int h) {
   SDL_Texture* text =
       SDL_CreateTexture(asw::display::renderer, SDL_PIXELFORMAT_RGBA8888,

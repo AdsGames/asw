@@ -23,6 +23,18 @@ namespace asw::sound {
             int volume = 255,
             unsigned char pan = 128,
             int loop = 0);
+
+  /// @brief Play a music sample.
+  ///
+  /// @param sample Sample to play
+  /// @param volume Playback volume
+  ///
+  void playMusic(const asw::Music& sample, int volume = 255);
+
+  /// @brief Stop the currently playing music.
+  ///
+  void stopMusic();
+
 }  // namespace asw::sound
 
 #endif  // ASW_SOUND_H
