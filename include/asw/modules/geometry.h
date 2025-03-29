@@ -196,16 +196,29 @@ namespace asw {
              point.y >= position.y && point.y <= position.y + size.y;
     }
 
+    /// @brief Check if coordinates are inside the rectangle.
+    ///
+    /// @param point The point to check.
+    /// @return bool True if the point is inside the rectangle.
+    ///
+    bool contains(T x, T y) const {
+      return x >= position.x && x <= position.x + size.x && y >= position.y &&
+             y <= position.y + size.y;
+    }
+
     /// @brief Check if a rectangle is inside the rectangle.
     ///
     /// @param other The rectangle to check.
     /// @return bool True if the rectangle is inside the rectangle.
     ///
     bool contains(const Quad& other) const {
-      return other.position.x >= position.x &&
-             other.position.x + other.size.x <= position.x + size.x &&
-             other.position.y >= position.y &&
-             other.position.y + other.size.y <= position.y + size.y;
+      bool is_outside =
+          position.x + size.x <= other.position.x ||        // a is left of b
+          other.position.x + other.size.x <= position.x ||  // b is left of a
+          position.y + size.y <= other.position.y ||        // a is above b
+          other.position.y + other.size.y <= position.y;    // b is above a
+
+      return !is_outside;
     }
 
     /// @brief Add a vector to the rectangle.
@@ -224,6 +237,24 @@ namespace asw {
     ///
     Quad operator-(const Quad<T>& quad) const {
       return Quad(position - quad.position, size - quad.size);
+    }
+
+    /// @brief Multiply the rectangle by a scalar.
+    ///
+    /// @param scalar The scalar to multiply by.
+    /// @return Quad The rectangle multiplied by the scalar.
+    ///
+    Quad operator*(const T scalar) const {
+      return Quad(position * scalar, size * scalar);
+    }
+
+    /// @brief Divide the rectangle by a scalar.
+    ///
+    /// @param scalar The scalar to divide by.
+    /// @return Quad The rectangle divided by the scalar.
+    ///
+    Quad operator/(const T scalar) const {
+      return Quad(position / scalar, size / scalar);
     }
 
     /// @brief The position of the rectangle.
