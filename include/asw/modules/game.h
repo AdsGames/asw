@@ -55,6 +55,40 @@ namespace asw::game {
     ///
     virtual void draw() {};
 
+    /// @brief Set position
+    ///
+    /// @param x The x position of the object.
+    /// @param y The y position of the object.
+    ///
+    void setPosition(float x, float y) {
+      transform.position.x = x;
+      transform.position.y = y;
+    }
+
+    /// @brief Set position
+    ///
+    /// @param position The position of the object.
+    ///
+    void setPosition(const asw::Vec2<float>& position) {
+      transform.position = position;
+    }
+
+    /// @brief Set size
+    ///
+    /// @param width The width of the object.
+    /// @param height The height of the object.
+    ///
+    void setSize(float width, float height) {
+      transform.size.x = width;
+      transform.size.y = height;
+    }
+
+    /// @brief Set size
+    ///
+    /// @param size The size of the object.
+    ///
+    void setSize(const asw::Vec2<float>& size) { transform.size = size; }
+
     /// @brief The transform of the object.
     ///
     asw::Quad<float> transform;
@@ -92,16 +126,13 @@ namespace asw::game {
     /// @param texture The texture to set.
     /// @param autoSize Whether or not to automatically set the size of the
     /// sprite based on the texture dimensions.
-    /// @return Sprite& The sprite object.
     ///
-    Sprite& setTexture(const asw::Texture& texture, bool autoSize = true) {
+    void setTexture(const asw::Texture& texture, bool autoSize = true) {
       this->texture = texture;
 
       if (autoSize) {
         transform.size = asw::util::getTextureSize(texture);
       }
-
-      return *this;
     }
 
     /// @brief Update the sprite.
@@ -144,21 +175,28 @@ namespace asw::game {
   ///
   class Text : public GameObject {
    public:
-    Text& setFont(const asw::Font& font) {
-      this->font = font;
-      return *this;
-    }
+    /// @brief Set the font of the text.
+    ///
+    /// @param font The font to set.
+    ///
+    void setFont(const asw::Font& font) { this->font = font; }
 
-    Text& setText(const std::string& text) {
-      this->text = text;
-      return *this;
-    }
+    /// @brief Set the text of the text object.
+    ///
+    /// @param text The text to set.
+    ///
+    void setText(const std::string& text) { this->text = text; }
 
-    Text& setColor(const asw::Color& color) {
-      this->color = color;
-      return *this;
-    }
+    /// @brief Set the color of the text.
+    ///
+    /// @param color The color to set.
+    ///
+    void setColor(const asw::Color& color) { this->color = color; }
 
+    /// @brief Set the size of the text.
+    ///
+    /// @param size The size of the text.
+    ///
     void update(float deltaTime) override { GameObject::update(deltaTime); }
 
     void draw() override {
