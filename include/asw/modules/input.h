@@ -269,6 +269,9 @@ namespace asw::input {
     NUM_SCANCODES = ASW_NUM_KEYS
   };
 
+  /// @brief Cursor count
+  constexpr int ASW_NUM_CURSORS = SDL_SYSTEM_CURSOR_COUNT;
+
   /// @brief System cursor Ids
   enum class CursorId {
     DEFAULT = SDL_SYSTEM_CURSOR_DEFAULT,
@@ -291,13 +294,13 @@ namespace asw::input {
     S_RESIZE = SDL_SYSTEM_CURSOR_S_RESIZE,
     SW_RESIZE = SDL_SYSTEM_CURSOR_SW_RESIZE,
     W_RESIZE = SDL_SYSTEM_CURSOR_W_RESIZE,
-    COUNT = SDL_SYSTEM_CURSOR_COUNT
+    COUNT = ASW_NUM_CURSORS
   };
 
   namespace {
     /// @brief Active cursor stores the current active cursor. It is updated by
     /// the core.
-    SDL_Cursor* activeCursor{nullptr};
+    std::array<SDL_Cursor*, ASW_NUM_CURSORS> cursors{nullptr};
   }  // namespace
 
   /// @brief Reset the input state.
