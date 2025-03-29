@@ -60,14 +60,16 @@ bool asw::input::wasKeyReleased(asw::input::Key key) {
 }
 
 void asw::input::setCursor(asw::input::CursorId cursor) {
-  if (activeCursor != nullptr) {
-    SDL_SetCursor(nullptr);
-  }
+  auto cursor_int = static_cast<int>(cursor);
 
-  activeCursor = SDL_CreateSystemCursor(static_cast<SDL_SystemCursor>(cursor));
-  if (activeCursor == nullptr) {
+  if (cursor_int < 0 || cursor_int >= cursors.size()) {
     return;
   }
 
-  SDL_SetCursor(activeCursor);
+  if (cursors[cursor_int] == nullptr) {
+    cursors[cursor_int] =
+        SDL_CreateSystemCursor(static_cast<SDL_SystemCursor>(cursor_int));
+  }
+
+  SDL_SetCursor(cursors[cursor_int]);
 }
