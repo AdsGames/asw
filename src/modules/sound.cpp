@@ -11,3 +11,12 @@ void asw::sound::play(const asw::Sample& sample,
   Mix_SetPanning(channel, pan, 255 - pan);
   Mix_PlayChannel(-1, sample.get(), loop);
 }
+
+void asw::sound::playMusic(const asw::Music& sample, int volume) {
+  Mix_VolumeMusic(volume);
+  Mix_PlayMusic(sample.get(), -1);
+}
+
+void asw::sound::stopMusic() {
+  Mix_HaltMusic();
+}

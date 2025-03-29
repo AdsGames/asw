@@ -42,6 +42,14 @@ namespace asw::assets {
   ///
   asw::Sample loadSample(const std::string& filename);
 
+  /// @brief Loads a music file from a file. Formats supported are WAV, AIFF,
+  /// RIFF, OGG and VOC. This will abort if the file is not found.
+  ///
+  /// @param filename
+  /// @return The loaded music.
+  ///
+  asw::Music loadMusic(const std::string& filename);
+
   /// @brief Create a Texture given the specified dimensions.
   ///
   /// @param w The width of the texture.
