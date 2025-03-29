@@ -10,8 +10,6 @@
 #include "./modules/game.h"
 #include "./modules/geometry.h"
 #include "./modules/input.h"
-#include "./modules/input_keys.h"
-#include "./modules/input_mouse_buttons.h"
 #include "./modules/random.h"
 #include "./modules/scene.h"
 #include "./modules/sound.h"
