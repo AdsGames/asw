@@ -58,3 +58,16 @@ bool asw::input::wasKeyPressed(asw::input::Key key) {
 bool asw::input::wasKeyReleased(asw::input::Key key) {
   return keyboard.released[static_cast<int>(key)];
 }
+
+void asw::input::setCursor(asw::input::CursorId cursor) {
+  if (activeCursor != nullptr) {
+    SDL_SetCursor(nullptr);
+  }
+
+  activeCursor = SDL_CreateSystemCursor(static_cast<SDL_SystemCursor>(cursor));
+  if (activeCursor == nullptr) {
+    return;
+  }
+
+  SDL_SetCursor(activeCursor);
+}
