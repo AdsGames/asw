@@ -14,8 +14,10 @@ bool asw::core::exit = false;
 
 void asw::core::update() {
   asw::input::reset();
+
   auto& mouse = asw::input::mouse;
   auto& keyboard = asw::input::keyboard;
+  auto& controller = asw::input::controller;
 
   SDL_Event e;
 
@@ -94,6 +96,76 @@ void asw::core::update() {
         break;
       }
 
+      case SDL_EVENT_GAMEPAD_AXIS_MOTION: {
+        if (e.gaxis.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto motion = e.gaxis.value / 32768.0f;
+        auto& current = controller[e.gaxis.which];
+
+        if (motion > current.deadZone) {
+          current.axis[e.gaxis.axis] = motion;
+        } else if (motion < -current.deadZone) {
+          current.axis[e.gaxis.axis] = motion;
+        } else {
+          current.axis[e.gaxis.axis] = 0.0f;
+        }
+
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
+        if (e.gbutton.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto button = static_cast<int>(e.gbutton.button);
+        controller[e.gbutton.which].pressed[button] = true;
+        controller[e.gbutton.which].down[button] = true;
+        controller[e.gbutton.which].anyPressed = true;
+        controller[e.gbutton.which].lastPressed = button;
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_BUTTON_UP: {
+        if (e.gbutton.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto button = static_cast<int>(e.gbutton.button);
+        controller[e.gbutton.which].released[button] = true;
+        controller[e.gbutton.which].down[button] = false;
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_ADDED: {
+        if (e.gdevice.which >= asw::input::MAX_CONTROLLERS ||
+            !SDL_IsGamepad(e.gdevice.which) ||
+            SDL_OpenGamepad(e.gdevice.which) == nullptr) {
+          // TODO: Log error
+          break;
+        }
+
+        SDL_OpenGamepad(e.gdevice.which);
+
+        break;
+      }
+
+      case SDL_EVENT_GAMEPAD_REMOVED: {
+        if (e.gdevice.which >= asw::input::MAX_CONTROLLERS) {
+          break;
+        }
+
+        auto* controller = SDL_GetGamepadFromID(e.gdevice.which);
+
+        if (controller) {
+          SDL_CloseGamepad(controller);
+        }
+
+        break;
+      }
+
       case SDL_EVENT_QUIT: {
         exit = true;
         break;
@@ -106,7 +178,7 @@ void asw::core::update() {
 }
 
 void asw::core::init(int width, int height, int scale) {
-  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)) {
+  if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
     asw::util::abortOnError("SDL_Init");
   }
 

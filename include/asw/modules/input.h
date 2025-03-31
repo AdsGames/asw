@@ -11,14 +11,15 @@
 
 #include <SDL3/SDL.h>
 #include <array>
+#include <string>
 
 namespace asw::input {
   /// Type defs
   /// @brief Number of mouse buttons in the ASW library.
-  constexpr int ASW_NUM_MOUSE_BUTTONS = 5;
+  constexpr int NUM_MOUSE_BUTTONS = 5;
 
   /// @brief Number of keys in the ASW library.
-  constexpr int ASW_NUM_KEYS = SDL_SCANCODE_COUNT;
+  constexpr int NUM_KEYS = SDL_SCANCODE_COUNT;
 
   /// @brief Enumeration of mouse buttons in the ASW library.
   enum class MouseButton {
@@ -27,7 +28,7 @@ namespace asw::input {
     RIGHT = SDL_BUTTON_RIGHT,
     X1 = SDL_BUTTON_X1,
     X2 = SDL_BUTTON_X2,
-    MAX = ASW_NUM_MOUSE_BUTTONS
+    MAX = NUM_MOUSE_BUTTONS
   };
 
   /// @brief Enumeration of keys in the ASW library.
@@ -266,11 +267,11 @@ namespace asw::input {
     SOFT_RIGHT = SDL_SCANCODE_SOFTRIGHT,
     CALL = SDL_SCANCODE_CALL,
     ENDCALL = SDL_SCANCODE_ENDCALL,
-    NUM_SCANCODES = ASW_NUM_KEYS
+    NUM_SCANCODES = NUM_KEYS
   };
 
   /// @brief Cursor count
-  constexpr int ASW_NUM_CURSORS = SDL_SYSTEM_CURSOR_COUNT;
+  constexpr int NUM_CURSORS = SDL_SYSTEM_CURSOR_COUNT;
 
   /// @brief System cursor Ids
   enum class CursorId {
@@ -294,17 +295,14 @@ namespace asw::input {
     S_RESIZE = SDL_SYSTEM_CURSOR_S_RESIZE,
     SW_RESIZE = SDL_SYSTEM_CURSOR_SW_RESIZE,
     W_RESIZE = SDL_SYSTEM_CURSOR_W_RESIZE,
-    COUNT = ASW_NUM_CURSORS
+    COUNT = NUM_CURSORS
   };
 
   namespace {
     /// @brief Active cursor stores the current active cursor. It is updated by
     /// the core.
-    std::array<SDL_Cursor*, ASW_NUM_CURSORS> cursors{nullptr};
+    std::array<SDL_Cursor*, NUM_CURSORS> cursors{nullptr};
   }  // namespace
-
-  /// @brief Reset the input state.
-  void reset();
 
   /// @brief Mouse state stores the current state of the mouse. It is updated by
   /// the core.
@@ -319,9 +317,9 @@ namespace asw::input {
     float y{0};
     float z{0};
 
-    std::array<bool, ASW_NUM_MOUSE_BUTTONS> pressed{false};
-    std::array<bool, ASW_NUM_MOUSE_BUTTONS> released{false};
-    std::array<bool, ASW_NUM_MOUSE_BUTTONS> down{false};
+    std::array<bool, NUM_MOUSE_BUTTONS> pressed{false};
+    std::array<bool, NUM_MOUSE_BUTTONS> released{false};
+    std::array<bool, NUM_MOUSE_BUTTONS> down{false};
   };
 
   /// @brief Global mouse state.
@@ -355,9 +353,9 @@ namespace asw::input {
   /// updated by the core.
   ///
   using KeyState = struct KeyState {
-    std::array<bool, ASW_NUM_KEYS> pressed{false};
-    std::array<bool, ASW_NUM_KEYS> released{false};
-    std::array<bool, ASW_NUM_KEYS> down{false};
+    std::array<bool, NUM_KEYS> pressed{false};
+    std::array<bool, NUM_KEYS> released{false};
+    std::array<bool, NUM_KEYS> down{false};
 
     bool anyPressed{false};
     int lastPressed{-1};
@@ -399,6 +397,144 @@ namespace asw::input {
   /// @return false - If the cursor was not changed.
   ///
   void setCursor(asw::input::CursorId cursor);
+
+  /**
+   * @brief Number of buttons on a game controller
+   */
+  constexpr int NUM_CONTROLLER_BUTTONS = SDL_GAMEPAD_BUTTON_COUNT;
+
+  /**
+   * @brief Mappings from SDL game controller buttons to ASW buttons
+   */
+  enum class ControllerButton {
+    A = SDL_GAMEPAD_BUTTON_SOUTH,
+    B = SDL_GAMEPAD_BUTTON_EAST,
+    X = SDL_GAMEPAD_BUTTON_WEST,
+    Y = SDL_GAMEPAD_BUTTON_NORTH,
+    BACK = SDL_GAMEPAD_BUTTON_BACK,
+    GUIDE = SDL_GAMEPAD_BUTTON_GUIDE,
+    START = SDL_GAMEPAD_BUTTON_START,
+    LEFT_STICK = SDL_GAMEPAD_BUTTON_LEFT_STICK,
+    RIGHT_STICK = SDL_GAMEPAD_BUTTON_RIGHT_STICK,
+    LEFT_SHOULDER = SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+    RIGHT_SHOULDER = SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+    DPAD_UP = SDL_GAMEPAD_BUTTON_DPAD_UP,
+    DPAD_DOWN = SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+    DPAD_LEFT = SDL_GAMEPAD_BUTTON_DPAD_LEFT,
+    DPAD_RIGHT = SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+    MISC_1 = SDL_GAMEPAD_BUTTON_MISC1,
+    RIGHT_PADDLE_1 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1,
+    LEFT_PADDLE_2 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE1,
+    RIGHT_PADDLE_3 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2,
+    LEFT_PADDLE_4 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE2,
+    TOUCH_PAD = SDL_GAMEPAD_BUTTON_TOUCHPAD,
+    MAX = NUM_CONTROLLER_BUTTONS
+  };
+
+  /**
+   * @breif Number of axes on a game controller
+   */
+  constexpr int NUM_CONTROLLER_AXES = SDL_GAMEPAD_AXIS_COUNT;
+
+  /**
+   * @brief Mappings from SDL game controller axes to ASW axes
+   */
+  enum class ControllerAxis {
+    LEFT_X = SDL_GAMEPAD_AXIS_LEFTX,
+    LEFT_Y = SDL_GAMEPAD_AXIS_LEFTY,
+    RIGHT_X = SDL_GAMEPAD_AXIS_RIGHTX,
+    RIGHT_Y = SDL_GAMEPAD_AXIS_RIGHTY,
+    LEFT_TRIGGER = SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+    RIGHT_TRIGGER = SDL_GAMEPAD_AXIS_RIGHT_TRIGGER,
+    MAX = NUM_CONTROLLER_AXES
+  };
+
+  /**
+   * @brief Controller state stores the current state of a controller. It is
+   * updated by the core.
+   */
+  using ControllerState = struct ControllerState {
+    std::array<bool, NUM_CONTROLLER_BUTTONS> pressed{false};
+    std::array<bool, NUM_CONTROLLER_BUTTONS> released{false};
+    std::array<bool, NUM_CONTROLLER_BUTTONS> down{false};
+
+    bool anyPressed{false};
+    int lastPressed{-1};
+    float deadZone{0.25F};
+
+    std::array<float, NUM_CONTROLLER_AXES> axis{0};
+  };
+
+  /**
+   * @brief Maximum number of controllers supported
+   */
+  constexpr int MAX_CONTROLLERS = 8;
+
+  /**
+   * @brief Global controller state.
+   */
+  extern std::array<ControllerState, MAX_CONTROLLERS> controller;
+
+  /**
+   * @brief Check if a controller button is down.
+   *
+   * @param index The index of the controller to check.
+   * @param button The button to check.
+   * @return true - If the button is down.
+   * @return false - If the button is not down.
+   */
+  bool isControllerButtonDown(int index, asw::input::ControllerButton button);
+
+  /**
+   * @brief Check if a controller button was pressed since the last update.
+   *
+   * @param index The index of the controller to check.
+   * @param button The button to check.
+   * @return true - If the button was pressed.
+   * @return false - If the button was not pressed.
+   */
+  bool wasControllerButtonPressed(int index,
+                                  asw::input::ControllerButton button);
+
+  /**
+   * @brief Check if a controller button was released since the last update.
+   *
+   * @param index The index of the controller to check.
+   * @param button The button to check.
+   * @return true - If the button was released.
+   * @return false - If the button was not released.
+   */
+  bool wasControllerButtonReleased(int index,
+                                   asw::input::ControllerButton button);
+
+  /**
+   * @brief Get the value of a controller axis.
+   *
+   * @param index The index of the controller to check.
+   * @param axis The axis to check.
+   * @return float - The value of the axis between -1.0f and 1.0f.
+   */
+  float getControllerAxis(int index, asw::input::ControllerAxis axis);
+
+  /**
+   * @breif Set the joystick deadzone for a controller.
+   */
+  void setControllerDeadZone(int index, float deadZone);
+
+  /**
+   * @breif Get the number of controllers connected.
+   */
+  int getControllerCount();
+
+  /**
+   * @breif Get the name of a controller.
+   */
+  std::string getControllerName(int index);
+
+  /**
+   * @brief Reset all input states. Called by the core.
+   */
+  void reset();
 }  // namespace asw::input
 
 #endif  // ASW_INPUT_H

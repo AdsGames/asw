@@ -1,5 +1,4 @@
 {
-  "sonarlint.pathToCompileCommands": "${workspaceFolder}/compile_commands.json",
   "files.associations": {
     "array": "cpp",
     "atomic": "cpp",
@@ -94,9 +93,13 @@
     "shared_mutex": "cpp",
     "stop_token": "cpp",
     "thread": "cpp",
-    "future": "cpp",
     "__verbose_abort": "cpp",
     "execution": "cpp",
-    "text_encoding": "cpp"
-  }
+    "text_encoding": "cpp",
+    "any": "cpp",
+    "source_location": "cpp",
+    "future": "cpp",
+    "stdfloat": "cpp"
+  },
+  "sonarlint.pathToCompileCommands": "${workspaceFolder}/compile_commands.json"
 }
