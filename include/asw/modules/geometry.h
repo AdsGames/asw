@@ -32,6 +32,22 @@ namespace asw {
     ///
     Vec2(T x, T y) : x(x), y(y) {}
 
+    /// @brief Get angle of two vectors
+    ///
+    /// @return The angle of the vector in radians.
+    ///
+    T angle(const Vec2& other) const {
+      return std::atan2f(y - other.y, x - other.x);
+    }
+
+    /// @brief Get distance between two vectors
+    ///
+    /// @return The distance between the vectors.
+    ///
+    T distance(const Vec2& other) const {
+      return std::hypotf(x - other.x, y - other.y);
+    }
+
     /// @brief Addition operator for the Vec2 class.
     ///
     /// @param other The vector to add.
@@ -186,6 +202,29 @@ namespace asw {
     ///
     Quad(T x, T y, T width, T height) : position(x, y), size(width, height) {}
 
+    /// @brief Set the position of the rectangle.
+    ///
+    /// @param x The x position of the rectangle.
+    /// @param y The y position of the rectangle.
+    ///
+    void setPosition(T x, T y) { position = Vec2<T>(x, y); }
+
+    /// @brief Set the size of the rectangle.
+    ///
+    /// @param width The width of the rectangle.
+    /// @param height The height of the rectangle.
+    ///
+    void setSize(T width, T height) { size = Vec2<T>(width, height); }
+
+    /// @brief Get center of the rectangle.
+    ///
+    /// @return Vec2 The center of the rectangle.
+    ///
+    Vec2<T> getCenter() const {
+      return Vec2<T>(position.x + (size.x / 2.0F),
+                     position.y + (size.y / 2.0F));
+    }
+
     /// @brief Check if a point is inside the rectangle.
     ///
     /// @param point The point to check.
@@ -211,7 +250,7 @@ namespace asw {
     /// @param other The rectangle to check.
     /// @return bool True if the rectangle is inside the rectangle.
     ///
-    bool contains(const Quad& other) const {
+    bool collides(const Quad& other) const {
       bool is_outside =
           position.x + size.x <= other.position.x ||        // a is left of b
           other.position.x + other.size.x <= position.x ||  // b is left of a
@@ -219,6 +258,27 @@ namespace asw {
           other.position.y + other.size.y <= position.y;    // b is above a
 
       return !is_outside;
+    }
+
+    // Collision
+    bool collidesBottom(const Quad& other) {
+      return position.y < other.position.y + other.size.y &&
+             position.y + size.y > other.position.y + other.size.y;
+    }
+
+    bool collidesTop(const Quad& other) {
+      return position.y + size.y > other.position.y &&
+             position.y < other.position.y;
+    }
+
+    bool collidesLeft(const Quad& other) {
+      return position.x + size.x > other.position.x &&
+             position.x < other.position.x;
+    }
+
+    bool collidesRight(const Quad& other) {
+      return position.x < other.position.x + other.size.x &&
+             position.x + size.x > other.position.x + other.size.x;
     }
 
     /// @brief Add a vector to the rectangle.
