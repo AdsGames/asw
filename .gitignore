@@ -33,6 +33,7 @@
 
 CMakeFiles
 *.cmake
+!cmake/get_cpm.cmake
 *.ninja
 CMakeCache.txt
 compile_commands.json

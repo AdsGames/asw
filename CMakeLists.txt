@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.24)
+
 project(asw VERSION 0.3.5 LANGUAGES CXX)
-include(FetchContent)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -26,49 +26,13 @@ set(BUILD_SHARED_LIBS OFF)
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 
-# Fetch SDL3
-option(ASW_VENDORED "Use vendored libraries" ON)
-
-if(ASW_VENDORED)
-  message(STATUS "Fetching Vendored Libraries")
-
-  FetchContent_Declare(
-      SDL3
-      GIT_REPOSITORY https://github.com/libsdl-org/SDL
-      GIT_TAG release-3.2.8
-      GIT_SHALLOW    TRUE
-  )
-  FetchContent_MakeAvailable(SDL3)
-
-  FetchContent_Declare(
-      SDL3_image
-      GIT_REPOSITORY https://github.com/libsdl-org/SDL_image
-      GIT_TAG release-3.2.4
-      GIT_SHALLOW    TRUE
-  )
-  FetchContent_MakeAvailable(SDL3_image)
-
-  FetchContent_Declare(
-      SDL3_ttf
-      GIT_REPOSITORY https://github.com/libsdl-org/SDL_ttf
-      GIT_TAG release-3.2.0
-      GIT_SHALLOW    TRUE
-  )
-  FetchContent_MakeAvailable(SDL3_ttf)
-else()
-  find_package(SDL3 REQUIRED)
-  find_package(SDL3_image REQUIRED)
-  find_package(SDL3_ttf REQUIRED)
-endif()
-
-# Always vendored
-FetchContent_Declare(
-  SDL3_mixer
-  GIT_REPOSITORY https://github.com/libsdl-org/SDL_mixer
-  GIT_TAG origin/main
-  GIT_SHALLOW    TRUE
-)
-FetchContent_MakeAvailable(SDL3_mixer)
+# Fetch deps
+include(cmake/get_cpm.cmake)
+CPMAddPackage("gh:libsdl-org/SDL#release-3.2.8")
+CPMAddPackage("gh:libsdl-org/SDL_image#release-3.2.4")
+CPMAddPackage("gh:libsdl-org/SDL_ttf#release-3.2.0")
+# V3 not released yet
+CPMAddPackage("gh:libsdl-org/SDL_mixer#a83eb9c59c55b48da72dc7b062c78d8dc52ec322")
 
 # Add include
 target_include_directories(
@@ -86,27 +50,13 @@ set_target_properties(
 )
 
 # Link Libs
-if(MINGW)
-  target_link_libraries(${PROJECT_NAME} -lmingw32)
-endif(MINGW)
-
-if(ASW_VENDORED)
-  target_link_libraries(
-    ${PROJECT_NAME}
-    SDL3::SDL3-static
-    SDL3_image::SDL3_image-static
-    SDL3_mixer::SDL3_mixer-static
-    SDL3_ttf::SDL3_ttf-static
-  )
-else()
-  target_link_libraries(
-    ${PROJECT_NAME}
-    SDL3::SDL3
-    SDL3_image::SDL3_image
-    SDL3_mixer::SDL3_mixer
-    SDL3_ttf::SDL3_ttf
-  )
-endif()
+target_link_libraries(
+  ${PROJECT_NAME}
+  SDL3::SDL3-static
+  SDL3_image::SDL3_image-static
+  SDL3_mixer::SDL3_mixer-static
+  SDL3_ttf::SDL3_ttf-static
+)
 
 if(DEFINED EMSCRIPTEN) 
   target_link_libraries(
