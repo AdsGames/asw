@@ -166,6 +166,17 @@ namespace asw {
     ///
     T magnitude() const { return std::sqrt((x * x) + (y * y)); }
 
+    /// @brief Calculate the angle of the vector.
+    ///
+    /// @return T The angle of the vector in radians.
+    ///
+    T angle() const {
+      if (x == 0 && y == 0) {
+        return 0;
+      }
+      return std::atan2(y, x);
+    }
+
     /// @brief The x component of the vector.
     T x{0};
 

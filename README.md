@@ -20,3 +20,12 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(asw)
 ```
+
+## Developing
+
+### Building
+
+```sh
+cmake -B build .
+cmake --build build
+```

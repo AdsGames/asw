@@ -43,3 +43,4 @@ Makefile
 docs/
 _deps/
 .DS_Store
+build/
