@@ -40,6 +40,17 @@ namespace asw {
       return std::atan2f(y - other.y, x - other.x);
     }
 
+    /// @brief Calculate the angle of the vector.
+    ///
+    /// @return T The angle of the vector in radians.
+    ///
+    T angle() const {
+      if (x == 0 && y == 0) {
+        return 0;
+      }
+      return std::atan2(y, x);
+    }
+
     /// @brief Get distance between two vectors
     ///
     /// @return The distance between the vectors.
@@ -47,6 +58,26 @@ namespace asw {
     T distance(const Vec2& other) const {
       return std::hypotf(x - other.x, y - other.y);
     }
+
+    /// @brief Calculate the dot product of two vectors.
+    ///
+    /// @param other The vector to dot with.
+    /// @return T The dot product of the vectors.
+    ///
+    T dot(const Vec2& other) const { return (x * other.x) + (y * other.y); }
+
+    /// @brief Calculate the cross product of two vectors.
+    ///
+    /// @param other The vector to cross with.
+    /// @return T The cross product of the vectors.
+    ///
+    T cross(const Vec2& other) const { return (x * other.y) - (y * other.x); }
+
+    /// @brief Calculate the magnitude of the vector.
+    ///
+    /// @return T The magnitude of the vector.
+    ///
+    T magnitude() const { return std::sqrt((x * x) + (y * y)); }
 
     /// @brief Addition operator for the Vec2 class.
     ///
@@ -145,26 +176,6 @@ namespace asw {
     bool operator!=(const Vec2& other) const {
       return x != other.x || y != other.y;
     }
-
-    /// @brief Calculate the dot product of two vectors.
-    ///
-    /// @param other The vector to dot with.
-    /// @return T The dot product of the vectors.
-    ///
-    T dot(const Vec2& other) const { return (x * other.x) + (y * other.y); }
-
-    /// @brief Calculate the cross product of two vectors.
-    ///
-    /// @param other The vector to cross with.
-    /// @return T The cross product of the vectors.
-    ///
-    T cross(const Vec2& other) const { return (x * other.y) - (y * other.x); }
-
-    /// @brief Calculate the magnitude of the vector.
-    ///
-    /// @return T The magnitude of the vector.
-    ///
-    T magnitude() const { return std::sqrt((x * x) + (y * y)); }
 
     /// @brief The x component of the vector.
     T x{0};
