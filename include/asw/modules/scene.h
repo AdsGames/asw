@@ -64,11 +64,28 @@ namespace asw::scene {
     /// @details This function is called every frame to update the scene.
     ///
     virtual void update(float deltaTime) {
+      // Erase inactive objects
+      objects.erase(
+          std::remove_if(objects.begin(), objects.end(),
+                         [](const std::shared_ptr<game::GameObject>& obj) {
+                           return !obj->alive;
+                         }),
+          objects.end());
+
+      // Update all objects in the scene
       for (auto& obj : objects) {
-        if (obj->active) {
+        if (obj->active && obj->alive) {
           obj->update(deltaTime);
         }
       }
+
+      // Create new objects
+      for (auto& obj : objectsToCreate) {
+        objects.push_back(obj);
+      }
+
+      // Clear the objects to create
+      objectsToCreate.clear();
     };
 
     /// @brief Draw the game scene.
@@ -118,8 +135,36 @@ namespace asw::scene {
           "ObjectType must be constructible with the given arguments");
 
       auto obj = std::make_shared<ObjectType>(std::forward<Args>(args)...);
-      objects.emplace_back(obj);
+      objectsToCreate.emplace_back(obj);
       return obj;
+    }
+
+    /// @brief Get game objects in the scene.
+    ///
+    /// @return A vector of shared pointers to game objects in the scene.
+    ///
+    std::vector<std::shared_ptr<game::GameObject>> getObjects() {
+      return objects;
+    }
+
+    /// @brief Get game objects of a specific type in the scene.
+    ///
+    /// @tparam ObjectType The type of the game object to get.
+    /// @return A vector of shared pointers to game objects of the specified
+    /// type in the scene.
+    ///
+    template <typename ObjectType>
+    std::vector<std::shared_ptr<ObjectType>> getObjectView() {
+      static_assert(std::is_base_of_v<game::GameObject, ObjectType>,
+                    "ObjectType must be derived from Scene<T>");
+
+      std::vector<std::shared_ptr<ObjectType>> result;
+      for (const auto& obj : objects) {
+        if (auto castedObj = std::dynamic_pointer_cast<ObjectType>(obj)) {
+          result.push_back(castedObj);
+        }
+      }
+      return result;
     }
 
    protected:
@@ -129,6 +174,9 @@ namespace asw::scene {
    private:
     /// @brief Collection of game objects in the scene.
     std::vector<std::shared_ptr<game::GameObject>> objects;
+
+    /// @brief Objects to be created in the next frame.
+    std::vector<std::shared_ptr<game::GameObject>> objectsToCreate;
   };
 
   /// @brief SceneManager class for managing game scenes.

@@ -55,39 +55,11 @@ namespace asw::game {
     ///
     virtual void draw() {};
 
-    /// @brief Set position
+    /// @brief Get transform
     ///
-    /// @param x The x position of the object.
-    /// @param y The y position of the object.
+    /// @return The position of the object.
     ///
-    void setPosition(float x, float y) {
-      transform.position.x = x;
-      transform.position.y = y;
-    }
-
-    /// @brief Set position
-    ///
-    /// @param position The position of the object.
-    ///
-    void setPosition(const asw::Vec2<float>& position) {
-      transform.position = position;
-    }
-
-    /// @brief Set size
-    ///
-    /// @param width The width of the object.
-    /// @param height The height of the object.
-    ///
-    void setSize(float width, float height) {
-      transform.size.x = width;
-      transform.size.y = height;
-    }
-
-    /// @brief Set size
-    ///
-    /// @param size The size of the object.
-    ///
-    void setSize(const asw::Vec2<float>& size) { transform.size = size; }
+    const asw::Quad<float>& getTransform() const { return transform; }
 
     /// @brief The transform of the object.
     ///
@@ -115,6 +87,10 @@ namespace asw::game {
     /// @brief Physics body of the object.
     ///
     Physics body;
+
+    /// @brief Alive state
+    ///
+    bool alive{true};
   };
 
   /// @brief Sprite Object
