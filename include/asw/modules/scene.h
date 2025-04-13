@@ -193,6 +193,7 @@ namespace asw::scene {
     SceneManager() {
 #ifdef __EMSCRIPTEN__
       instance = this;
+      em_time = std::chrono::high_resolution_clock::now();
 #endif
     }
 
@@ -328,10 +329,17 @@ namespace asw::scene {
     /// @brief Pointer to the current instance of the scene manager.
     static SceneManager<T>* instance;
 
+    /// @brief The time of the last frame.
+    static std::chrono::high_resolution_clock::time_point em_time;
+
     /// @brief Emscripten loop function.
     static void loopEmscripten() {
       if (instance != nullptr) {
-        instance->update(timestep / 1ms);
+        auto delta_time =
+            std::chrono::high_resolution_clock::now() - SceneManager::em_time;
+        SceneManager::em_time = std::chrono::high_resolution_clock::now();
+
+        instance->update(delta_time / 1ms);
         instance->draw();
       }
     }
@@ -341,6 +349,11 @@ namespace asw::scene {
 #ifdef __EMSCRIPTEN__
   template <typename T>
   SceneManager<T>* SceneManager<T>::instance = nullptr;
+
+  // Start time
+  template <typename T>
+  auto SceneManager<T>::em_time = std::chrono::high_resolution_clock::now();
+
 #endif
 
 }  // namespace asw::scene
