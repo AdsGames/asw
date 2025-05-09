@@ -37,7 +37,7 @@ namespace asw {
     /// @return The angle of the vector in radians.
     ///
     T angle(const Vec2& other) const {
-      return std::atan2f(y - other.y, x - other.x);
+      return std::atan2(y - other.y, x - other.x);
     }
 
     /// @brief Calculate the angle of the vector.
