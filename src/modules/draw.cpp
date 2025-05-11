@@ -132,6 +132,9 @@ void asw::draw::text(const asw::Font& font,
   SDL_Texture* textTexture =
       SDL_CreateTextureFromSurface(asw::display::renderer, textSurface);
 
+  SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
+  SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_NEAREST);
+  
   SDL_FRect dest;
   dest.x = position.x;
   dest.y = position.y;
