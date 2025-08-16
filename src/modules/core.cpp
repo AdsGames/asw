@@ -24,6 +24,10 @@ void asw::core::update() {
   while (SDL_PollEvent(&e)) {
     switch (e.type) {
       case SDL_EVENT_WINDOW_RESIZED: {
+        if (!asw::display::renderer) {
+          break;
+        }
+
         // Maintain aspect ratio
         SDL_Point window_size;
         SDL_GetRenderOutputSize(asw::display::renderer, &window_size.x,
@@ -217,7 +221,10 @@ void asw::core::print_info() {
   std::cout << "ASW Info\n";
   std::cout << "========\n";
 
-  const auto* const renderer_name = SDL_GetRendererName(asw::display::renderer);
+  const char* renderer_name = "None";
+  if (asw::display::renderer) {
+    renderer_name = SDL_GetRendererName(asw::display::renderer);
+  }
 
   const bool is_software = false;  // info.flags & SDL_SOFTWARE_RENDERER;
   const bool is_accelerated = !is_software;

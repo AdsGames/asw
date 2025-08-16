@@ -43,6 +43,11 @@ SDL_Point asw::display::getSize() {
 
 SDL_Point asw::display::getLogicalSize() {
   SDL_Point size;
+
+  if (!asw::display::renderer) {
+    return size;
+  }
+
   SDL_GetRenderLogicalPresentation(asw::display::renderer, &size.x, &size.y,
                                    nullptr);
   return size;
@@ -50,22 +55,43 @@ SDL_Point asw::display::getLogicalSize() {
 
 SDL_FPoint asw::display::getScale() {
   SDL_FPoint scale;
+
+  if (!asw::display::renderer) {
+    return scale;
+  }
+
   SDL_GetRenderScale(asw::display::renderer, &scale.x, &scale.y);
   return scale;
 }
 
 void asw::display::setRenderTarget(const asw::Texture& texture) {
+  if (!asw::display::renderer) {
+    return;
+  }
+
   SDL_SetRenderTarget(asw::display::renderer, texture.get());
 }
 
 void asw::display::resetRenderTarget() {
+  if (!asw::display::renderer) {
+    return;
+  }
+
   SDL_SetRenderTarget(asw::display::renderer, nullptr);
 }
 
 void asw::display::clear() {
+  if (!asw::display::renderer) {
+    return;
+  }
+
   SDL_RenderClear(asw::display::renderer);
 }
 
 void asw::display::present() {
+  if (!asw::display::renderer) {
+    return;
+  }
+
   SDL_RenderPresent(asw::display::renderer);
 }

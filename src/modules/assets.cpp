@@ -54,6 +54,10 @@ asw::Music asw::assets::loadMusic(const std::string& filename) {
 }
 
 asw::Texture asw::assets::createTexture(int w, int h) {
+  if (!asw::display::renderer) {
+    asw::util::abortOnError("Renderer not initialized");
+  }
+
   SDL_Texture* text =
       SDL_CreateTexture(asw::display::renderer, SDL_PIXELFORMAT_RGBA8888,
                         SDL_TEXTUREACCESS_TARGET, w, h);
