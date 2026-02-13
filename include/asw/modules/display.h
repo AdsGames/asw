@@ -85,9 +85,22 @@ namespace asw::display {
   ///
   void clear();
 
+  /// @brief Clear to colour
+  ///
+  /// @param color The color to clear to.
+  ///
+  void clear(const asw::Color& color);
+
   /// @brief Present the window.
   ///
   void present();
+
+  /// @brief Set the blend mode of a texture.
+  ///
+  /// @param texture The texture to set the blend mode of.
+  /// @param mode The blend mode to set.
+  ///
+  void setBlendMode(asw::BlendMode mode);
 
 }  // namespace asw::display
 

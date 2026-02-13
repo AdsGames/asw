@@ -54,7 +54,7 @@ asw::Music asw::assets::loadMusic(const std::string& filename) {
 }
 
 asw::Texture asw::assets::createTexture(int w, int h) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     asw::util::abortOnError("Renderer not initialized");
   }
 

@@ -16,6 +16,17 @@
 
 namespace asw {
 
+  /// @brief Mappings from SDL_BLENDMODE to ASW BlendMode
+  enum class BlendMode {
+    NONE = SDL_BLENDMODE_NONE,
+    BLEND = SDL_BLENDMODE_BLEND,
+    BLEND_PREMULTIPLIED = SDL_BLENDMODE_BLEND_PREMULTIPLIED,
+    ADD = SDL_BLENDMODE_ADD,
+    ADD_PREMULTIPLIED = SDL_BLENDMODE_ADD_PREMULTIPLIED,
+    MODULATE = SDL_BLENDMODE_MOD,
+    MULTIPLY = SDL_BLENDMODE_MUL,
+  };
+
   /// @brief Alias for a shared pointer to an SDL_Texture
   using Texture = std::shared_ptr<SDL_Texture>;
 
@@ -37,16 +48,6 @@ namespace asw {
   /// @brief Alias for an SDL_Color
   using Color = SDL_Color;
 
-  /// @brief Mappings from SDL_BLENDMODE to ASW BlendMode
-  enum class BlendMode {
-    NONE = SDL_BLENDMODE_NONE,
-    BLEND = SDL_BLENDMODE_BLEND,
-    BLEND_PREMULTIPLIED = SDL_BLENDMODE_BLEND_PREMULTIPLIED,
-    ADD = SDL_BLENDMODE_ADD,
-    ADD_PREMULTIPLIED = SDL_BLENDMODE_ADD_PREMULTIPLIED,
-    MODULATE = SDL_BLENDMODE_MOD,
-    MULTIPLY = SDL_BLENDMODE_MUL,
-  };
 }  // namespace asw
 
 #endif  // ASW_TYPES_H

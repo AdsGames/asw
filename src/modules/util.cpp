@@ -3,7 +3,10 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 
+#include "./asw/modules/log.h"
+
 void asw::util::abortOnError(const std::string& message) {
+  asw::log::error(message);
   SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(),
                            nullptr);
   exit(-1);

@@ -53,27 +53,27 @@ void asw::input::reset() {
   }
 }
 
-bool asw::input::isButtonDown(asw::input::MouseButton button) {
+bool asw::input::getMouseButton(asw::input::MouseButton button) {
   return mouse.down[static_cast<int>(button)];
 }
 
-bool asw::input::wasButtonPressed(asw::input::MouseButton button) {
+bool asw::input::getMouseButtonDown(asw::input::MouseButton button) {
   return mouse.pressed[static_cast<int>(button)];
 }
 
-bool asw::input::wasButtonReleased(asw::input::MouseButton button) {
+bool asw::input::getMouseButtonUp(asw::input::MouseButton button) {
   return mouse.released[static_cast<int>(button)];
 }
 
-bool asw::input::isKeyDown(asw::input::Key key) {
+bool asw::input::getKey(asw::input::Key key) {
   return keyboard.down[static_cast<int>(key)];
 }
 
-bool asw::input::wasKeyPressed(asw::input::Key key) {
+bool asw::input::getKeyDown(asw::input::Key key) {
   return keyboard.pressed[static_cast<int>(key)];
 }
 
-bool asw::input::wasKeyReleased(asw::input::Key key) {
+bool asw::input::getKeyUp(asw::input::Key key) {
   return keyboard.released[static_cast<int>(key)];
 }
 
@@ -92,20 +92,18 @@ void asw::input::setCursor(asw::input::CursorId cursor) {
   SDL_SetCursor(cursors[cursor_int]);
 }
 
-bool asw::input::isControllerButtonDown(int index,
-                                        asw::input::ControllerButton button) {
+bool asw::input::getControllerButton(int index,
+                                     asw::input::ControllerButton button) {
   return controller[index].down[static_cast<int>(button)];
 }
 
-bool asw::input::wasControllerButtonPressed(
-    int index,
-    asw::input::ControllerButton button) {
+bool asw::input::getControllerButtonDown(int index,
+                                         asw::input::ControllerButton button) {
   return controller[index].pressed[static_cast<int>(button)];
 }
 
-bool asw::input::wasControllerButtonReleased(
-    int index,
-    asw::input::ControllerButton button) {
+bool asw::input::getControllerButtonUp(int index,
+                                       asw::input::ControllerButton button) {
   return controller[index].released[static_cast<int>(button)];
 }
 

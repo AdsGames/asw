@@ -4,10 +4,10 @@
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <algorithm>
-#include <iostream>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
+#include "./asw/modules/log.h"
 #include "./asw/modules/util.h"
 
 bool asw::core::exit = false;
@@ -24,7 +24,7 @@ void asw::core::update() {
   while (SDL_PollEvent(&e)) {
     switch (e.type) {
       case SDL_EVENT_WINDOW_RESIZED: {
-        if (!asw::display::renderer) {
+        if (asw::display::renderer == nullptr) {
           break;
         }
 
@@ -90,8 +90,8 @@ void asw::core::update() {
         SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
         mouse.xChange = e.motion.xrel;
         mouse.yChange = e.motion.yrel;
-        mouse.x = e.motion.x;
-        mouse.y = e.motion.y;
+        mouse.position.x = e.motion.x;
+        mouse.position.y = e.motion.y;
         break;
       }
 
@@ -105,7 +105,7 @@ void asw::core::update() {
           break;
         }
 
-        auto motion = e.gaxis.value / 32768.0f;
+        auto motion = static_cast<float>(e.gaxis.value) / 32768.0F;
         auto& current = controller[e.gaxis.which];
 
         if (motion > current.deadZone) {
@@ -113,7 +113,7 @@ void asw::core::update() {
         } else if (motion < -current.deadZone) {
           current.axis[e.gaxis.axis] = motion;
         } else {
-          current.axis[e.gaxis.axis] = 0.0f;
+          current.axis[e.gaxis.axis] = 0.0F;
         }
 
         break;
@@ -218,11 +218,11 @@ void asw::core::init(int width, int height, int scale) {
 }
 
 void asw::core::print_info() {
-  std::cout << "ASW Info\n";
-  std::cout << "========\n";
+  asw::log::info("ASW Info");
+  asw::log::info("========");
 
   const char* renderer_name = "None";
-  if (asw::display::renderer) {
+  if (asw::display::renderer != nullptr) {
     renderer_name = SDL_GetRendererName(asw::display::renderer);
   }
 
@@ -231,12 +231,14 @@ void asw::core::print_info() {
   const bool is_target_texture = true;
   const bool is_vsync = true;  // info.flags & SDL_RENDERER_PRESENTVSYNC;
 
-  std::cout << "SDL Version: " << SDL_MAJOR_VERSION << "." << SDL_MINOR_VERSION
-            << "." << SDL_MICRO_VERSION << "\n";
+  const std::string sdl_version = std::to_string(SDL_MAJOR_VERSION) + "." +
+                                  std::to_string(SDL_MINOR_VERSION) + "." +
+                                  std::to_string(SDL_MICRO_VERSION);
 
-  std::cout << "Renderer: " << renderer_name << "\n";
-  std::cout << "Accelerated: " << is_accelerated << "\n";
-  std::cout << "Software: " << is_software << "\n";
-  std::cout << "Target Texture: " << is_target_texture << "\n";
-  std::cout << "Vsync: " << is_vsync << "\n";
+  asw::log::info("SDL Version: " + sdl_version);
+  asw::log::info("Renderer: " + std::string(renderer_name));
+  asw::log::info("Accelerated: " + std::to_string(is_accelerated));
+  asw::log::info("Software: " + std::to_string(is_software));
+  asw::log::info("Target Texture: " + std::to_string(is_target_texture));
+  asw::log::info("Vsync: " + std::to_string(is_vsync));
 }

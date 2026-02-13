@@ -13,27 +13,29 @@
 #include <array>
 #include <string>
 
+#include "./geometry.h"
+
 namespace asw::input {
   /// Type defs
   /// @brief Number of mouse buttons in the ASW library.
-  constexpr int NUM_MOUSE_BUTTONS = 5;
+  constexpr int NUM_MOUSE_BUTTONS = 6;
 
   /// @brief Number of keys in the ASW library.
   constexpr int NUM_KEYS = SDL_SCANCODE_COUNT;
 
   /// @brief Enumeration of mouse buttons in the ASW library.
   enum class MouseButton {
-    LEFT = SDL_BUTTON_LEFT,
-    MIDDLE = SDL_BUTTON_MIDDLE,
-    RIGHT = SDL_BUTTON_RIGHT,
+    Left = SDL_BUTTON_LEFT,
+    Middle = SDL_BUTTON_MIDDLE,
+    Right = SDL_BUTTON_RIGHT,
     X1 = SDL_BUTTON_X1,
     X2 = SDL_BUTTON_X2,
-    MAX = NUM_MOUSE_BUTTONS
+    NumMouseButtons = NUM_MOUSE_BUTTONS
   };
 
   /// @brief Enumeration of keys in the ASW library.
   enum class Key {
-    UNKNOWN = SDL_SCANCODE_UNKNOWN,
+    Unknown = SDL_SCANCODE_UNKNOWN,
     A = SDL_SCANCODE_A,
     B = SDL_SCANCODE_B,
     C = SDL_SCANCODE_C,
@@ -60,34 +62,34 @@ namespace asw::input {
     X = SDL_SCANCODE_X,
     Y = SDL_SCANCODE_Y,
     Z = SDL_SCANCODE_Z,
-    NUM_1 = SDL_SCANCODE_1,
-    NUM_2 = SDL_SCANCODE_2,
-    NUM_3 = SDL_SCANCODE_3,
-    NUM_4 = SDL_SCANCODE_4,
-    NUM_5 = SDL_SCANCODE_5,
-    NUM_6 = SDL_SCANCODE_6,
-    NUM_7 = SDL_SCANCODE_7,
-    NUM_8 = SDL_SCANCODE_8,
-    NUM_9 = SDL_SCANCODE_9,
-    NUM_0 = SDL_SCANCODE_0,
-    RETURN = SDL_SCANCODE_RETURN,
-    ESCAPE = SDL_SCANCODE_ESCAPE,
-    BACKSPACE = SDL_SCANCODE_BACKSPACE,
-    TAB = SDL_SCANCODE_TAB,
-    SPACE = SDL_SCANCODE_SPACE,
-    MINUS = SDL_SCANCODE_MINUS,
-    EQUALS = SDL_SCANCODE_EQUALS,
-    LEFT_BRACKET = SDL_SCANCODE_LEFTBRACKET,
-    RIGHT_BRACKET = SDL_SCANCODE_RIGHTBRACKET,
-    BACKSLASH = SDL_SCANCODE_BACKSLASH,
-    NONUSHASH = SDL_SCANCODE_NONUSHASH,
-    SEMICOLON = SDL_SCANCODE_SEMICOLON,
-    APOSTROPHE = SDL_SCANCODE_APOSTROPHE,
-    GRAVE = SDL_SCANCODE_GRAVE,
-    COMMA = SDL_SCANCODE_COMMA,
-    PERIOD = SDL_SCANCODE_PERIOD,
-    SLASH = SDL_SCANCODE_SLASH,
-    CAPSLOCK = SDL_SCANCODE_CAPSLOCK,
+    Num1 = SDL_SCANCODE_1,
+    Num2 = SDL_SCANCODE_2,
+    Num3 = SDL_SCANCODE_3,
+    Num4 = SDL_SCANCODE_4,
+    Num5 = SDL_SCANCODE_5,
+    Num6 = SDL_SCANCODE_6,
+    Num7 = SDL_SCANCODE_7,
+    Num8 = SDL_SCANCODE_8,
+    Num9 = SDL_SCANCODE_9,
+    Num0 = SDL_SCANCODE_0,
+    Return = SDL_SCANCODE_RETURN,
+    Escape = SDL_SCANCODE_ESCAPE,
+    Backspace = SDL_SCANCODE_BACKSPACE,
+    Tab = SDL_SCANCODE_TAB,
+    Space = SDL_SCANCODE_SPACE,
+    Minux = SDL_SCANCODE_MINUS,
+    Equals = SDL_SCANCODE_EQUALS,
+    LeftBracket = SDL_SCANCODE_LEFTBRACKET,
+    RightBracket = SDL_SCANCODE_RIGHTBRACKET,
+    Backslash = SDL_SCANCODE_BACKSLASH,
+    Nonoshash = SDL_SCANCODE_NONUSHASH,
+    Semicolon = SDL_SCANCODE_SEMICOLON,
+    Apostrophe = SDL_SCANCODE_APOSTROPHE,
+    Grave = SDL_SCANCODE_GRAVE,
+    Comma = SDL_SCANCODE_COMMA,
+    Period = SDL_SCANCODE_PERIOD,
+    Slash = SDL_SCANCODE_SLASH,
+    Capslock = SDL_SCANCODE_CAPSLOCK,
     F1 = SDL_SCANCODE_F1,
     F2 = SDL_SCANCODE_F2,
     F3 = SDL_SCANCODE_F3,
@@ -100,40 +102,40 @@ namespace asw::input {
     F10 = SDL_SCANCODE_F10,
     F11 = SDL_SCANCODE_F11,
     F12 = SDL_SCANCODE_F12,
-    PRINT_SCREEN = SDL_SCANCODE_PRINTSCREEN,
-    SCROL_LLOCK = SDL_SCANCODE_SCROLLLOCK,
-    PAUSE = SDL_SCANCODE_PAUSE,
-    INSERT = SDL_SCANCODE_INSERT,
-    HOME = SDL_SCANCODE_HOME,
-    PAGE_UP = SDL_SCANCODE_PAGEUP,
-    DELETE = SDL_SCANCODE_DELETE,
-    END = SDL_SCANCODE_END,
-    PAGE_DOWN = SDL_SCANCODE_PAGEDOWN,
-    RIGHT = SDL_SCANCODE_RIGHT,
-    LEFT = SDL_SCANCODE_LEFT,
-    DOWN = SDL_SCANCODE_DOWN,
-    UP = SDL_SCANCODE_UP,
-    NUM_LOCK_CLEAR = SDL_SCANCODE_NUMLOCKCLEAR,
-    KP_DIVIDE = SDL_SCANCODE_KP_DIVIDE,
-    KP_MULTIPLY = SDL_SCANCODE_KP_MULTIPLY,
-    KP_MINUS = SDL_SCANCODE_KP_MINUS,
-    KP_PLUS = SDL_SCANCODE_KP_PLUS,
-    KP_ENTER = SDL_SCANCODE_KP_ENTER,
-    KP_1 = SDL_SCANCODE_KP_1,
-    KP_2 = SDL_SCANCODE_KP_2,
-    KP_3 = SDL_SCANCODE_KP_3,
-    KP_4 = SDL_SCANCODE_KP_4,
-    KP_5 = SDL_SCANCODE_KP_5,
-    KP_6 = SDL_SCANCODE_KP_6,
-    KP_7 = SDL_SCANCODE_KP_7,
-    KP_8 = SDL_SCANCODE_KP_8,
-    KP_9 = SDL_SCANCODE_KP_9,
-    KP_0 = SDL_SCANCODE_KP_0,
-    KP_PERIOD = SDL_SCANCODE_KP_PERIOD,
-    NONUS_BACKSLASH = SDL_SCANCODE_NONUSBACKSLASH,
-    APPLICATION = SDL_SCANCODE_APPLICATION,
-    POWER = SDL_SCANCODE_POWER,
-    KP_EQUALS = SDL_SCANCODE_KP_EQUALS,
+    PrintScreen = SDL_SCANCODE_PRINTSCREEN,
+    ScrollLock = SDL_SCANCODE_SCROLLLOCK,
+    Pause = SDL_SCANCODE_PAUSE,
+    Insert = SDL_SCANCODE_INSERT,
+    Home = SDL_SCANCODE_HOME,
+    PageUp = SDL_SCANCODE_PAGEUP,
+    Delete = SDL_SCANCODE_DELETE,
+    End = SDL_SCANCODE_END,
+    PageDown = SDL_SCANCODE_PAGEDOWN,
+    Right = SDL_SCANCODE_RIGHT,
+    Left = SDL_SCANCODE_LEFT,
+    Down = SDL_SCANCODE_DOWN,
+    Up = SDL_SCANCODE_UP,
+    NumLockClear = SDL_SCANCODE_NUMLOCKCLEAR,
+    KpDivide = SDL_SCANCODE_KP_DIVIDE,
+    KpMultiply = SDL_SCANCODE_KP_MULTIPLY,
+    KpMinus = SDL_SCANCODE_KP_MINUS,
+    KpPlus = SDL_SCANCODE_KP_PLUS,
+    KpEnter = SDL_SCANCODE_KP_ENTER,
+    Kp1 = SDL_SCANCODE_KP_1,
+    Kp2 = SDL_SCANCODE_KP_2,
+    Kp3 = SDL_SCANCODE_KP_3,
+    Kp4 = SDL_SCANCODE_KP_4,
+    Kp5 = SDL_SCANCODE_KP_5,
+    Kp6 = SDL_SCANCODE_KP_6,
+    Kp7 = SDL_SCANCODE_KP_7,
+    Kp8 = SDL_SCANCODE_KP_8,
+    Kp9 = SDL_SCANCODE_KP_9,
+    Kp0 = SDL_SCANCODE_KP_0,
+    KpPeriod = SDL_SCANCODE_KP_PERIOD,
+    NonusBackslash = SDL_SCANCODE_NONUSBACKSLASH,
+    Application = SDL_SCANCODE_APPLICATION,
+    Power = SDL_SCANCODE_POWER,
+    KpEquals = SDL_SCANCODE_KP_EQUALS,
     F13 = SDL_SCANCODE_F13,
     F14 = SDL_SCANCODE_F14,
     F15 = SDL_SCANCODE_F15,
@@ -146,128 +148,128 @@ namespace asw::input {
     F22 = SDL_SCANCODE_F22,
     F23 = SDL_SCANCODE_F23,
     F24 = SDL_SCANCODE_F24,
-    EXECUTE = SDL_SCANCODE_EXECUTE,
-    HELP = SDL_SCANCODE_HELP,
-    MENU = SDL_SCANCODE_MENU,
-    SELECT = SDL_SCANCODE_SELECT,
-    STOP = SDL_SCANCODE_STOP,
-    AGAIN = SDL_SCANCODE_AGAIN,
-    UNDO = SDL_SCANCODE_UNDO,
-    CUT = SDL_SCANCODE_CUT,
-    COPY = SDL_SCANCODE_COPY,
-    PASTE = SDL_SCANCODE_PASTE,
-    FIND = SDL_SCANCODE_FIND,
-    MUTE = SDL_SCANCODE_MUTE,
-    VOLUME_UP = SDL_SCANCODE_VOLUMEUP,
-    VOLUME_DOWN = SDL_SCANCODE_VOLUMEDOWN,
-    KP_COMMA = SDL_SCANCODE_KP_COMMA,
-    KP_EQUALSAS_400 = SDL_SCANCODE_KP_EQUALSAS400,
-    INTERNATIONAL_1 = SDL_SCANCODE_INTERNATIONAL1,
-    INTERNATIONAL_2 = SDL_SCANCODE_INTERNATIONAL2,
-    INTERNATIONAL_3 = SDL_SCANCODE_INTERNATIONAL3,
-    INTERNATIONAL_4 = SDL_SCANCODE_INTERNATIONAL4,
-    INTERNATIONAL_5 = SDL_SCANCODE_INTERNATIONAL5,
-    INTERNATIONAL_6 = SDL_SCANCODE_INTERNATIONAL6,
-    INTERNATIONAL_7 = SDL_SCANCODE_INTERNATIONAL7,
-    INTERNATIONAL_8 = SDL_SCANCODE_INTERNATIONAL8,
-    INTERNATIONAL_9 = SDL_SCANCODE_INTERNATIONAL9,
-    LANG_1 = SDL_SCANCODE_LANG1,
-    LANG_2 = SDL_SCANCODE_LANG2,
-    LANG_3 = SDL_SCANCODE_LANG3,
-    LANG_4 = SDL_SCANCODE_LANG4,
-    LANG_5 = SDL_SCANCODE_LANG5,
-    LANG_6 = SDL_SCANCODE_LANG6,
-    LANG_7 = SDL_SCANCODE_LANG7,
-    LANG_8 = SDL_SCANCODE_LANG8,
-    LANG_9 = SDL_SCANCODE_LANG9,
-    ALT_ERASE = SDL_SCANCODE_ALTERASE,
-    SYS_REQ = SDL_SCANCODE_SYSREQ,
-    CANCEL = SDL_SCANCODE_CANCEL,
-    CLEAR = SDL_SCANCODE_CLEAR,
-    PRIOR = SDL_SCANCODE_PRIOR,
-    RETURN_2 = SDL_SCANCODE_RETURN2,
-    SEPARATOR = SDL_SCANCODE_SEPARATOR,
-    OUT = SDL_SCANCODE_OUT,
-    OPER = SDL_SCANCODE_OPER,
-    CLEAR_AGAIN = SDL_SCANCODE_CLEARAGAIN,
-    CRSEL = SDL_SCANCODE_CRSEL,
-    EXSEL = SDL_SCANCODE_EXSEL,
-    KP_00 = SDL_SCANCODE_KP_00,
-    KP_000 = SDL_SCANCODE_KP_000,
-    THOUSANDS_SEPARATOR = SDL_SCANCODE_THOUSANDSSEPARATOR,
-    DECIMAL_SEPARATOR = SDL_SCANCODE_DECIMALSEPARATOR,
-    CURRENCY_UNIT = SDL_SCANCODE_CURRENCYUNIT,
-    CURRENCY_SUBUNIT = SDL_SCANCODE_CURRENCYSUBUNIT,
-    KP_LEFT_PAREN = SDL_SCANCODE_KP_LEFTPAREN,
-    KP_RIGHT_PAREN = SDL_SCANCODE_KP_RIGHTPAREN,
-    KP_LEFT_BRACE = SDL_SCANCODE_KP_LEFTBRACE,
-    KP_RIGHT_BRACE = SDL_SCANCODE_KP_RIGHTBRACE,
-    KP_TAB = SDL_SCANCODE_KP_TAB,
-    KP_BACKSPACE = SDL_SCANCODE_KP_BACKSPACE,
-    KP_A = SDL_SCANCODE_KP_A,
-    KP_B = SDL_SCANCODE_KP_B,
-    KP_C = SDL_SCANCODE_KP_C,
-    KP_D = SDL_SCANCODE_KP_D,
-    KP_E = SDL_SCANCODE_KP_E,
-    KP_F = SDL_SCANCODE_KP_F,
-    KP_XOR = SDL_SCANCODE_KP_XOR,
-    KP_POWER = SDL_SCANCODE_KP_POWER,
-    KP_PERCENT = SDL_SCANCODE_KP_PERCENT,
-    KP_LESS = SDL_SCANCODE_KP_LESS,
-    KP_GREATER = SDL_SCANCODE_KP_GREATER,
-    KP_AMPERSAND = SDL_SCANCODE_KP_AMPERSAND,
-    KP_DOUBLE_AMPERSAND = SDL_SCANCODE_KP_DBLAMPERSAND,
-    KP_VERTICAL_BAR = SDL_SCANCODE_KP_VERTICALBAR,
-    KP_DOUBLE_VERTICAL_BAR = SDL_SCANCODE_KP_DBLVERTICALBAR,
-    KP_COLON = SDL_SCANCODE_KP_COLON,
-    KP_HASH = SDL_SCANCODE_KP_HASH,
-    KP_SPACE = SDL_SCANCODE_KP_SPACE,
-    KP_AT = SDL_SCANCODE_KP_AT,
-    KP_EXCLAMATION = SDL_SCANCODE_KP_EXCLAM,
-    KP_MEM_STORE = SDL_SCANCODE_KP_MEMSTORE,
-    KP_MEM_RECALL = SDL_SCANCODE_KP_MEMRECALL,
-    KP_MEM_CLEAR = SDL_SCANCODE_KP_MEMCLEAR,
-    KP_MEM_ADD = SDL_SCANCODE_KP_MEMADD,
-    KP_MEM_SUBTRACT = SDL_SCANCODE_KP_MEMSUBTRACT,
-    KP_MEM_MULTIPLY = SDL_SCANCODE_KP_MEMMULTIPLY,
-    KP_MEM_DIVIDE = SDL_SCANCODE_KP_MEMDIVIDE,
-    KP_PLUS_MINUS = SDL_SCANCODE_KP_PLUSMINUS,
-    KP_CLEAR = SDL_SCANCODE_KP_CLEAR,
-    KP_CLEAR_ENTRY = SDL_SCANCODE_KP_CLEARENTRY,
-    KP_BINARY = SDL_SCANCODE_KP_BINARY,
-    KP_OCTAL = SDL_SCANCODE_KP_OCTAL,
-    KP_DECIMAL = SDL_SCANCODE_KP_DECIMAL,
-    KP_HEXADECIMAL = SDL_SCANCODE_KP_HEXADECIMAL,
-    LCTRL = SDL_SCANCODE_LCTRL,
-    LSHIFT = SDL_SCANCODE_LSHIFT,
-    LALT = SDL_SCANCODE_LALT,
-    LGUI = SDL_SCANCODE_LGUI,
-    RCTRL = SDL_SCANCODE_RCTRL,
-    RSHIFT = SDL_SCANCODE_RSHIFT,
-    RALT = SDL_SCANCODE_RALT,
-    RGUI = SDL_SCANCODE_RGUI,
-    MODE = SDL_SCANCODE_MODE,
-    AUDIO_NEXT = SDL_SCANCODE_MEDIA_NEXT_TRACK,
-    AUDIO_PREV = SDL_SCANCODE_MEDIA_PREVIOUS_TRACK,
-    AUDIO_STOP = SDL_SCANCODE_MEDIA_STOP,
-    AUDIO_PLAY = SDL_SCANCODE_MEDIA_PLAY,
-    MEDIA_SELECT = SDL_SCANCODE_MEDIA_SELECT,
-    AC_SEARCH = SDL_SCANCODE_AC_SEARCH,
-    AC_HOME = SDL_SCANCODE_AC_HOME,
-    AC_BACK = SDL_SCANCODE_AC_BACK,
-    AC_FORWARD = SDL_SCANCODE_AC_FORWARD,
-    AC_STOP = SDL_SCANCODE_AC_STOP,
-    AC_REFRESH = SDL_SCANCODE_AC_REFRESH,
-    AC_BOOKMARKS = SDL_SCANCODE_AC_BOOKMARKS,
-    EJECT = SDL_SCANCODE_MEDIA_EJECT,
-    SLEEP = SDL_SCANCODE_SLEEP,
-    AUDIO_REWIND = SDL_SCANCODE_MEDIA_REWIND,
-    AUDIO_FAST_FORWARD = SDL_SCANCODE_MEDIA_FAST_FORWARD,
-    SOFT_LEFT = SDL_SCANCODE_SOFTLEFT,
-    SOFT_RIGHT = SDL_SCANCODE_SOFTRIGHT,
-    CALL = SDL_SCANCODE_CALL,
-    ENDCALL = SDL_SCANCODE_ENDCALL,
-    NUM_SCANCODES = NUM_KEYS
+    Execute = SDL_SCANCODE_EXECUTE,
+    Help = SDL_SCANCODE_HELP,
+    Menu = SDL_SCANCODE_MENU,
+    Select = SDL_SCANCODE_SELECT,
+    Stop = SDL_SCANCODE_STOP,
+    Again = SDL_SCANCODE_AGAIN,
+    Undo = SDL_SCANCODE_UNDO,
+    Cut = SDL_SCANCODE_CUT,
+    Copy = SDL_SCANCODE_COPY,
+    Paste = SDL_SCANCODE_PASTE,
+    Find = SDL_SCANCODE_FIND,
+    Mute = SDL_SCANCODE_MUTE,
+    VolumeUp = SDL_SCANCODE_VOLUMEUP,
+    VolumeDown = SDL_SCANCODE_VOLUMEDOWN,
+    KpComma = SDL_SCANCODE_KP_COMMA,
+    KpEqualsSas400 = SDL_SCANCODE_KP_EQUALSAS400,
+    International1 = SDL_SCANCODE_INTERNATIONAL1,
+    International2 = SDL_SCANCODE_INTERNATIONAL2,
+    International3 = SDL_SCANCODE_INTERNATIONAL3,
+    International4 = SDL_SCANCODE_INTERNATIONAL4,
+    International5 = SDL_SCANCODE_INTERNATIONAL5,
+    International6 = SDL_SCANCODE_INTERNATIONAL6,
+    International7 = SDL_SCANCODE_INTERNATIONAL7,
+    International8 = SDL_SCANCODE_INTERNATIONAL8,
+    International9 = SDL_SCANCODE_INTERNATIONAL9,
+    Lang1 = SDL_SCANCODE_LANG1,
+    Lang2 = SDL_SCANCODE_LANG2,
+    Lang3 = SDL_SCANCODE_LANG3,
+    Lang4 = SDL_SCANCODE_LANG4,
+    Lang5 = SDL_SCANCODE_LANG5,
+    Lang6 = SDL_SCANCODE_LANG6,
+    Lang7 = SDL_SCANCODE_LANG7,
+    Lang8 = SDL_SCANCODE_LANG8,
+    Lang9 = SDL_SCANCODE_LANG9,
+    AltErase = SDL_SCANCODE_ALTERASE,
+    SysReq = SDL_SCANCODE_SYSREQ,
+    Cancel = SDL_SCANCODE_CANCEL,
+    Clear = SDL_SCANCODE_CLEAR,
+    Prior = SDL_SCANCODE_PRIOR,
+    Return2 = SDL_SCANCODE_RETURN2,
+    Separator = SDL_SCANCODE_SEPARATOR,
+    Out = SDL_SCANCODE_OUT,
+    Oper = SDL_SCANCODE_OPER,
+    ClearAgain = SDL_SCANCODE_CLEARAGAIN,
+    Crsel = SDL_SCANCODE_CRSEL,
+    Exsel = SDL_SCANCODE_EXSEL,
+    Kp00 = SDL_SCANCODE_KP_00,
+    Kp000 = SDL_SCANCODE_KP_000,
+    ThousandsSeparator = SDL_SCANCODE_THOUSANDSSEPARATOR,
+    DecimalSeparator = SDL_SCANCODE_DECIMALSEPARATOR,
+    CurrencyUnit = SDL_SCANCODE_CURRENCYUNIT,
+    CurrencySubunit = SDL_SCANCODE_CURRENCYSUBUNIT,
+    KpLeftParen = SDL_SCANCODE_KP_LEFTPAREN,
+    KpRightParan = SDL_SCANCODE_KP_RIGHTPAREN,
+    KpLeftBrace = SDL_SCANCODE_KP_LEFTBRACE,
+    KpRightBrace = SDL_SCANCODE_KP_RIGHTBRACE,
+    KpTab = SDL_SCANCODE_KP_TAB,
+    KpBackspace = SDL_SCANCODE_KP_BACKSPACE,
+    KpA = SDL_SCANCODE_KP_A,
+    KpB = SDL_SCANCODE_KP_B,
+    KpC = SDL_SCANCODE_KP_C,
+    KpD = SDL_SCANCODE_KP_D,
+    KpE = SDL_SCANCODE_KP_E,
+    KpF = SDL_SCANCODE_KP_F,
+    KpXor = SDL_SCANCODE_KP_XOR,
+    KpPower = SDL_SCANCODE_KP_POWER,
+    KpPercent = SDL_SCANCODE_KP_PERCENT,
+    KpLess = SDL_SCANCODE_KP_LESS,
+    KpGreater = SDL_SCANCODE_KP_GREATER,
+    KpAmpersand = SDL_SCANCODE_KP_AMPERSAND,
+    KpDoubleAmpersand = SDL_SCANCODE_KP_DBLAMPERSAND,
+    KpVerticalBar = SDL_SCANCODE_KP_VERTICALBAR,
+    KpDoubleVerticalBar = SDL_SCANCODE_KP_DBLVERTICALBAR,
+    KpColon = SDL_SCANCODE_KP_COLON,
+    KpHash = SDL_SCANCODE_KP_HASH,
+    KpSpace = SDL_SCANCODE_KP_SPACE,
+    KpAt = SDL_SCANCODE_KP_AT,
+    KpExclam = SDL_SCANCODE_KP_EXCLAM,
+    KpMemStore = SDL_SCANCODE_KP_MEMSTORE,
+    KpMemRecall = SDL_SCANCODE_KP_MEMRECALL,
+    KpMemClear = SDL_SCANCODE_KP_MEMCLEAR,
+    KpMemAdd = SDL_SCANCODE_KP_MEMADD,
+    KpMemSubtract = SDL_SCANCODE_KP_MEMSUBTRACT,
+    KpMemMultiply = SDL_SCANCODE_KP_MEMMULTIPLY,
+    KpMemDivide = SDL_SCANCODE_KP_MEMDIVIDE,
+    KpPlusMinus = SDL_SCANCODE_KP_PLUSMINUS,
+    KpClear = SDL_SCANCODE_KP_CLEAR,
+    KpClearEntry = SDL_SCANCODE_KP_CLEARENTRY,
+    KpBinary = SDL_SCANCODE_KP_BINARY,
+    KpOctal = SDL_SCANCODE_KP_OCTAL,
+    KpDecimal = SDL_SCANCODE_KP_DECIMAL,
+    KpHexadecimal = SDL_SCANCODE_KP_HEXADECIMAL,
+    LCtrl = SDL_SCANCODE_LCTRL,
+    LShift = SDL_SCANCODE_LSHIFT,
+    LAlt = SDL_SCANCODE_LALT,
+    LGui = SDL_SCANCODE_LGUI,
+    RCtrl = SDL_SCANCODE_RCTRL,
+    RShift = SDL_SCANCODE_RSHIFT,
+    RAlt = SDL_SCANCODE_RALT,
+    RGui = SDL_SCANCODE_RGUI,
+    Mode = SDL_SCANCODE_MODE,
+    MediaNextTrack = SDL_SCANCODE_MEDIA_NEXT_TRACK,
+    MediaPreviousTrack = SDL_SCANCODE_MEDIA_PREVIOUS_TRACK,
+    MediaStop = SDL_SCANCODE_MEDIA_STOP,
+    MediaPlay = SDL_SCANCODE_MEDIA_PLAY,
+    MediaSelect = SDL_SCANCODE_MEDIA_SELECT,
+    AcSearch = SDL_SCANCODE_AC_SEARCH,
+    AcHome = SDL_SCANCODE_AC_HOME,
+    AcBack = SDL_SCANCODE_AC_BACK,
+    AcForward = SDL_SCANCODE_AC_FORWARD,
+    AcStop = SDL_SCANCODE_AC_STOP,
+    AcRefresh = SDL_SCANCODE_AC_REFRESH,
+    AcBookmarks = SDL_SCANCODE_AC_BOOKMARKS,
+    Eject = SDL_SCANCODE_MEDIA_EJECT,
+    Sleep = SDL_SCANCODE_SLEEP,
+    AudioRewind = SDL_SCANCODE_MEDIA_REWIND,
+    AudioFastForward = SDL_SCANCODE_MEDIA_FAST_FORWARD,
+    SoftLeft = SDL_SCANCODE_SOFTLEFT,
+    SoftRight = SDL_SCANCODE_SOFTRIGHT,
+    Call = SDL_SCANCODE_CALL,
+    EndCall = SDL_SCANCODE_ENDCALL,
+    NumKeys = NUM_KEYS
   };
 
   /// @brief Cursor count
@@ -275,27 +277,27 @@ namespace asw::input {
 
   /// @brief System cursor Ids
   enum class CursorId {
-    DEFAULT = SDL_SYSTEM_CURSOR_DEFAULT,
-    TEXT = SDL_SYSTEM_CURSOR_TEXT,
-    WAIT = SDL_SYSTEM_CURSOR_WAIT,
-    CROSSHAIR = SDL_SYSTEM_CURSOR_CROSSHAIR,
-    PROGRESS = SDL_SYSTEM_CURSOR_PROGRESS,
-    NWSE_RESIZE = SDL_SYSTEM_CURSOR_NWSE_RESIZE,
-    NESW_RESIZE = SDL_SYSTEM_CURSOR_NESW_RESIZE,
-    EW_RESIZE = SDL_SYSTEM_CURSOR_EW_RESIZE,
-    NS_RESIZE = SDL_SYSTEM_CURSOR_NS_RESIZE,
-    MOVE = SDL_SYSTEM_CURSOR_MOVE,
-    NOT_ALLOWED = SDL_SYSTEM_CURSOR_NOT_ALLOWED,
-    POINTER = SDL_SYSTEM_CURSOR_POINTER,
-    NW_RESIZE = SDL_SYSTEM_CURSOR_NW_RESIZE,
-    N_RESIZE = SDL_SYSTEM_CURSOR_N_RESIZE,
-    NE_RESIZE = SDL_SYSTEM_CURSOR_NE_RESIZE,
-    E_RESIZE = SDL_SYSTEM_CURSOR_E_RESIZE,
-    SE_RESIZE = SDL_SYSTEM_CURSOR_SE_RESIZE,
-    S_RESIZE = SDL_SYSTEM_CURSOR_S_RESIZE,
-    SW_RESIZE = SDL_SYSTEM_CURSOR_SW_RESIZE,
-    W_RESIZE = SDL_SYSTEM_CURSOR_W_RESIZE,
-    COUNT = NUM_CURSORS
+    Default = SDL_SYSTEM_CURSOR_DEFAULT,
+    Text = SDL_SYSTEM_CURSOR_TEXT,
+    Wait = SDL_SYSTEM_CURSOR_WAIT,
+    Crosshair = SDL_SYSTEM_CURSOR_CROSSHAIR,
+    Progress = SDL_SYSTEM_CURSOR_PROGRESS,
+    NwseResize = SDL_SYSTEM_CURSOR_NWSE_RESIZE,
+    NeswResize = SDL_SYSTEM_CURSOR_NESW_RESIZE,
+    EwResize = SDL_SYSTEM_CURSOR_EW_RESIZE,
+    NsResize = SDL_SYSTEM_CURSOR_NS_RESIZE,
+    Move = SDL_SYSTEM_CURSOR_MOVE,
+    NotAllowed = SDL_SYSTEM_CURSOR_NOT_ALLOWED,
+    Pointer = SDL_SYSTEM_CURSOR_POINTER,
+    NwResize = SDL_SYSTEM_CURSOR_NW_RESIZE,
+    NResize = SDL_SYSTEM_CURSOR_N_RESIZE,
+    NeResize = SDL_SYSTEM_CURSOR_NE_RESIZE,
+    EResize = SDL_SYSTEM_CURSOR_E_RESIZE,
+    SEResize = SDL_SYSTEM_CURSOR_SE_RESIZE,
+    SResize = SDL_SYSTEM_CURSOR_S_RESIZE,
+    SWResize = SDL_SYSTEM_CURSOR_SW_RESIZE,
+    WResize = SDL_SYSTEM_CURSOR_W_RESIZE,
+    NumCursors = NUM_CURSORS
   };
 
   namespace {
@@ -310,12 +312,11 @@ namespace asw::input {
     bool anyPressed{false};
     int lastPressed{-1};
 
-    float xChange{0};
-    float yChange{0};
+    float xChange{0.0F};
+    float yChange{0.0F};
 
-    float x{0};
-    float y{0};
-    float z{0};
+    Vec2<float> position{0.0F, 0.0F};
+    float z{0.0F};
 
     std::array<bool, NUM_MOUSE_BUTTONS> pressed{false};
     std::array<bool, NUM_MOUSE_BUTTONS> released{false};
@@ -325,29 +326,29 @@ namespace asw::input {
   /// @brief Global mouse state.
   extern MouseState mouse;
 
-  /// @brief Check if a button is down.
+  /// @brief Check if a mouse button is down.
   ///
   /// @param button The button to check.
   /// @return true - If the button is down.
   /// @return false - If the button is not down.
   ///
-  bool isButtonDown(asw::input::MouseButton button);
+  bool getMouseButton(asw::input::MouseButton button);
 
-  /// @brief Check if a button was pressed since the last update.
+  /// @brief Check if a mouse button was pressed since the last update.
   ///
   /// @param button The button to check.
   /// @return true - If the button was pressed.
   /// @return false - If the button was not pressed.
   ///
-  bool wasButtonPressed(asw::input::MouseButton button);
+  bool getMouseButtonDown(asw::input::MouseButton button);
 
-  /// @brief Check if a button was released since the last update.
+  /// @brief Check if a mouse button was released since the last update.
   ///
   /// @param button The button to check.
   /// @return true - If the button was released.
   /// @return false - If the button was not released.
   ///
-  bool wasButtonReleased(asw::input::MouseButton button);
+  bool getMouseButtonUp(asw::input::MouseButton button);
 
   /// @brief Keyboard state stores the current state of the keyboard. It is
   /// updated by the core.
@@ -371,7 +372,7 @@ namespace asw::input {
   /// @return true - If the key is down.
   /// @return false - If the key is not down.
   ///
-  bool isKeyDown(asw::input::Key key);
+  bool getKey(asw::input::Key key);
 
   /// @brief Check if a key was pressed since the last update.
   ///
@@ -379,7 +380,7 @@ namespace asw::input {
   /// @return true - If the key was pressed.
   /// @return false - If the key was not pressed.
   ///
-  bool wasKeyPressed(asw::input::Key key);
+  bool getKeyDown(asw::input::Key key);
 
   /// @brief Check if a key was released since the last update.
   ///
@@ -387,7 +388,7 @@ namespace asw::input {
   /// @return true - If the key was released.
   /// @return false - If the key was not released.
   ///
-  bool wasKeyReleased(asw::input::Key key);
+  bool getKeyUp(asw::input::Key key);
 
   /// @brief Change cursor
   ///
@@ -411,24 +412,24 @@ namespace asw::input {
     B = SDL_GAMEPAD_BUTTON_EAST,
     X = SDL_GAMEPAD_BUTTON_WEST,
     Y = SDL_GAMEPAD_BUTTON_NORTH,
-    BACK = SDL_GAMEPAD_BUTTON_BACK,
-    GUIDE = SDL_GAMEPAD_BUTTON_GUIDE,
-    START = SDL_GAMEPAD_BUTTON_START,
-    LEFT_STICK = SDL_GAMEPAD_BUTTON_LEFT_STICK,
-    RIGHT_STICK = SDL_GAMEPAD_BUTTON_RIGHT_STICK,
-    LEFT_SHOULDER = SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
-    RIGHT_SHOULDER = SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
-    DPAD_UP = SDL_GAMEPAD_BUTTON_DPAD_UP,
-    DPAD_DOWN = SDL_GAMEPAD_BUTTON_DPAD_DOWN,
-    DPAD_LEFT = SDL_GAMEPAD_BUTTON_DPAD_LEFT,
-    DPAD_RIGHT = SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
-    MISC_1 = SDL_GAMEPAD_BUTTON_MISC1,
-    RIGHT_PADDLE_1 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1,
-    LEFT_PADDLE_2 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE1,
-    RIGHT_PADDLE_3 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2,
-    LEFT_PADDLE_4 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE2,
-    TOUCH_PAD = SDL_GAMEPAD_BUTTON_TOUCHPAD,
-    MAX = NUM_CONTROLLER_BUTTONS
+    Back = SDL_GAMEPAD_BUTTON_BACK,
+    Guide = SDL_GAMEPAD_BUTTON_GUIDE,
+    Start = SDL_GAMEPAD_BUTTON_START,
+    LeftStick = SDL_GAMEPAD_BUTTON_LEFT_STICK,
+    RightStick = SDL_GAMEPAD_BUTTON_RIGHT_STICK,
+    LeftShoulder = SDL_GAMEPAD_BUTTON_LEFT_SHOULDER,
+    RightShoulder = SDL_GAMEPAD_BUTTON_RIGHT_SHOULDER,
+    DPadUp = SDL_GAMEPAD_BUTTON_DPAD_UP,
+    DPadDown = SDL_GAMEPAD_BUTTON_DPAD_DOWN,
+    DPadLeft = SDL_GAMEPAD_BUTTON_DPAD_LEFT,
+    DPadRight = SDL_GAMEPAD_BUTTON_DPAD_RIGHT,
+    Misc1 = SDL_GAMEPAD_BUTTON_MISC1,
+    RightPaddle1 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE1,
+    LeftPaddle1 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE1,
+    RightPaddle2 = SDL_GAMEPAD_BUTTON_RIGHT_PADDLE2,
+    LeftPaddle2 = SDL_GAMEPAD_BUTTON_LEFT_PADDLE2,
+    TouchPad = SDL_GAMEPAD_BUTTON_TOUCHPAD,
+    NumControllerButtons = NUM_CONTROLLER_BUTTONS
   };
 
   /**
@@ -440,13 +441,13 @@ namespace asw::input {
    * @brief Mappings from SDL game controller axes to ASW axes
    */
   enum class ControllerAxis {
-    LEFT_X = SDL_GAMEPAD_AXIS_LEFTX,
-    LEFT_Y = SDL_GAMEPAD_AXIS_LEFTY,
-    RIGHT_X = SDL_GAMEPAD_AXIS_RIGHTX,
-    RIGHT_Y = SDL_GAMEPAD_AXIS_RIGHTY,
-    LEFT_TRIGGER = SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
-    RIGHT_TRIGGER = SDL_GAMEPAD_AXIS_RIGHT_TRIGGER,
-    MAX = NUM_CONTROLLER_AXES
+    LeftX = SDL_GAMEPAD_AXIS_LEFTX,
+    LeftY = SDL_GAMEPAD_AXIS_LEFTY,
+    RightX = SDL_GAMEPAD_AXIS_RIGHTX,
+    RightY = SDL_GAMEPAD_AXIS_RIGHTY,
+    LeftTrigger = SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+    RightTrigger = SDL_GAMEPAD_AXIS_RIGHT_TRIGGER,
+    NumControllerAxes = NUM_CONTROLLER_AXES
   };
 
   /**
@@ -483,7 +484,7 @@ namespace asw::input {
    * @return true - If the button is down.
    * @return false - If the button is not down.
    */
-  bool isControllerButtonDown(int index, asw::input::ControllerButton button);
+  bool getControllerButton(int index, asw::input::ControllerButton button);
 
   /**
    * @brief Check if a controller button was pressed since the last update.
@@ -493,8 +494,7 @@ namespace asw::input {
    * @return true - If the button was pressed.
    * @return false - If the button was not pressed.
    */
-  bool wasControllerButtonPressed(int index,
-                                  asw::input::ControllerButton button);
+  bool getControllerButtonDown(int index, asw::input::ControllerButton button);
 
   /**
    * @brief Check if a controller button was released since the last update.
@@ -504,8 +504,7 @@ namespace asw::input {
    * @return true - If the button was released.
    * @return false - If the button was not released.
    */
-  bool wasControllerButtonReleased(int index,
-                                   asw::input::ControllerButton button);
+  bool getControllerButtonUp(int index, asw::input::ControllerButton button);
 
   /**
    * @brief Get the value of a controller axis.

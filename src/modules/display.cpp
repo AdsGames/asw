@@ -44,7 +44,7 @@ SDL_Point asw::display::getSize() {
 SDL_Point asw::display::getLogicalSize() {
   SDL_Point size;
 
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return size;
   }
 
@@ -56,7 +56,7 @@ SDL_Point asw::display::getLogicalSize() {
 SDL_FPoint asw::display::getScale() {
   SDL_FPoint scale;
 
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return scale;
   }
 
@@ -65,7 +65,7 @@ SDL_FPoint asw::display::getScale() {
 }
 
 void asw::display::setRenderTarget(const asw::Texture& texture) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -73,7 +73,7 @@ void asw::display::setRenderTarget(const asw::Texture& texture) {
 }
 
 void asw::display::resetRenderTarget() {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -81,17 +81,28 @@ void asw::display::resetRenderTarget() {
 }
 
 void asw::display::clear() {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
   SDL_RenderClear(asw::display::renderer);
 }
 
+void asw::display::clear(const asw::Color& color) {
+  SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
+                         color.a);
+  SDL_RenderClear(asw::display::renderer);
+}
+
 void asw::display::present() {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
   SDL_RenderPresent(asw::display::renderer);
+}
+
+void asw::display::setBlendMode(asw::BlendMode mode) {
+  SDL_SetRenderDrawBlendMode(asw::display::renderer,
+                             static_cast<SDL_BlendMode>(mode));
 }
