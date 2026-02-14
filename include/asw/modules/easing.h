@@ -6,8 +6,8 @@
 /// @copyright Copyright (c) 2026
 ///
 
-#ifndef ASW_DRAW_H
-#define ASW_DRAW_H
+#ifndef ASW_EASING_H
+#define ASW_EASING_H
 
 #include <algorithm>
 #include <cmath>
