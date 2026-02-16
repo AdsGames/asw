@@ -26,8 +26,8 @@
 namespace asw::scene {
   using namespace std::chrono_literals;
 
-  /// @brief The time step for the game loop.
-  constexpr auto timestep = 8ms;
+  /// @brief Default time step for the game loop.
+  constexpr auto DEFAULT_TIMESTEP = 8ms;
 
   /// @brief Forward declaration of the SceneManager class.
   template <typename T>
@@ -244,9 +244,9 @@ namespace asw::scene {
         time_start = std::chrono::high_resolution_clock::now();
         lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
-        while (lag >= timestep) {
-          update(timestep / 1ms);
-          lag -= timestep;
+        while (lag >= this->timestep) {
+          update(this->timestep / 1ms);
+          lag -= this->timestep;
         }
 
         // Draw
@@ -283,6 +283,18 @@ namespace asw::scene {
         asw::display::present();
       }
     }
+
+    /// @brief Set the fixed timestep for the game loop.
+    ///
+    /// @param ts Timestep duration (default: 8ms).
+    ///
+    void setTimestep(std::chrono::nanoseconds ts) { timestep = ts; }
+
+    /// @brief Get the current timestep.
+    ///
+    /// @return The current timestep duration.
+    ///
+    std::chrono::nanoseconds getTimestep() const { return timestep; }
 
     /// @brief Get the current FPS. Only applies to the managed loop.
     ///
@@ -322,7 +334,10 @@ namespace asw::scene {
     /// @brief Collection of all scenes registered in the scene engine.
     std::unordered_map<T, std::shared_ptr<Scene<T>>> scenes;
 
-    /// @breif FPS Counter for managed loop;
+    /// @brief Fixed timestep for the game loop.
+    std::chrono::nanoseconds timestep{DEFAULT_TIMESTEP};
+
+    /// @brief FPS Counter for managed loop.
     int fps{0};
 
 #ifdef __EMSCRIPTEN__

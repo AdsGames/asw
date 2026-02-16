@@ -9,7 +9,7 @@
 #include "./asw/modules/util.h"
 
 void asw::draw::clearColor(asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -20,7 +20,7 @@ void asw::draw::clearColor(asw::Color color) {
 
 void asw::draw::sprite(const asw::Texture& tex,
                        const asw::Vec2<float>& position) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -39,7 +39,7 @@ void asw::draw::spriteFlip(const asw::Texture& tex,
                            const asw::Vec2<float>& position,
                            bool flipX,
                            bool flipY) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -67,6 +67,10 @@ void asw::draw::spriteFlip(const asw::Texture& tex,
 
 void asw::draw::stretchSprite(const asw::Texture& tex,
                               const asw::Quad<float>& position) {
+  if (asw::display::renderer == nullptr) {
+    return;
+  }
+
   SDL_FRect dest;
   dest.x = position.position.x;
   dest.y = position.position.y;
@@ -79,7 +83,7 @@ void asw::draw::stretchSprite(const asw::Texture& tex,
 void asw::draw::rotateSprite(const asw::Texture& tex,
                              const asw::Vec2<float>& position,
                              double angle) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -98,7 +102,7 @@ void asw::draw::rotateSprite(const asw::Texture& tex,
 void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
                                   const asw::Quad<float>& source,
                                   const asw::Quad<float>& dest) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -121,7 +125,7 @@ void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
                                         const asw::Quad<float>& source,
                                         const asw::Quad<float>& dest,
                                         double angle) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -145,7 +149,7 @@ void asw::draw::text(const asw::Font& font,
                      const std::string& text,
                      const asw::Vec2<float>& position,
                      asw::Color color) {
-  if (text.empty() || !asw::display::renderer) {
+  if (text.empty() || asw::display::renderer == nullptr) {
     return;
   }
 
@@ -174,7 +178,7 @@ void asw::draw::textCenter(const asw::Font& font,
                            const std::string& text,
                            const asw::Vec2<float>& position,
                            asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -187,7 +191,7 @@ void asw::draw::textRight(const asw::Font& font,
                           const std::string& text,
                           const asw::Vec2<float>& position,
                           asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -196,7 +200,7 @@ void asw::draw::textRight(const asw::Font& font,
 }
 
 void asw::draw::point(const asw::Vec2<float>& position, asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -208,7 +212,7 @@ void asw::draw::point(const asw::Vec2<float>& position, asw::Color color) {
 void asw::draw::line(const asw::Vec2<float>& position1,
                      const asw::Vec2<float>& position2,
                      asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -219,7 +223,7 @@ void asw::draw::line(const asw::Vec2<float>& position1,
 }
 
 void asw::draw::rect(const asw::Quad<float>& position, asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -235,7 +239,7 @@ void asw::draw::rect(const asw::Quad<float>& position, asw::Color color) {
 }
 
 void asw::draw::rectFill(const asw::Quad<float>& position, asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -253,7 +257,7 @@ void asw::draw::rectFill(const asw::Quad<float>& position, asw::Color color) {
 void asw::draw::circle(const asw::Vec2<float>& position,
                        float radius,
                        asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
@@ -269,7 +273,7 @@ void asw::draw::circle(const asw::Vec2<float>& position,
 void asw::draw::circleFill(const asw::Vec2<float>& position,
                            float radius,
                            asw::Color color) {
-  if (!asw::display::renderer) {
+  if (asw::display::renderer == nullptr) {
     return;
   }
 
