@@ -11,6 +11,7 @@
 
 #include <vector>
 
+#include "./color.h"
 #include "./game.h"
 #include "./geometry.h"
 #include "./types.h"

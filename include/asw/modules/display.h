@@ -11,6 +11,7 @@
 
 #include <string>
 
+#include "./color.h"
 #include "./types.h"
 
 namespace asw::display {

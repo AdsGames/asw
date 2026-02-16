@@ -45,9 +45,6 @@ namespace asw {
   /// @brief Alias for a shared pointer to an SDL_Window
   using Window = SDL_Window;
 
-  /// @brief Alias for an SDL_Color
-  using Color = SDL_Color;
-
 }  // namespace asw
 
 #endif  // ASW_TYPES_H
