@@ -5,6 +5,7 @@
 
 #include "./modules/asset_manager.h"
 #include "./modules/assets.h"
+#include "./modules/color.h"
 #include "./modules/core.h"
 #include "./modules/display.h"
 #include "./modules/draw.h"

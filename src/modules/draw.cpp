@@ -153,8 +153,7 @@ void asw::draw::text(const asw::Font& font,
     return;
   }
 
-  const SDL_Color sdlColor =
-      asw::util::makeColor(color.r, color.g, color.b, color.a);
+  const SDL_Color sdlColor = color.toSDLColor();
   SDL_Surface* textSurface =
       TTF_RenderText_Solid(font.get(), text.c_str(), 0, sdlColor);
   SDL_Texture* textTexture =

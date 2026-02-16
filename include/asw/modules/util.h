@@ -23,25 +23,6 @@ namespace asw::util {
   ///
   void abortOnError(const std::string& message);
 
-  /// @brief Make a color from RGB values
-  ///
-  /// @param r Red value (0-255)
-  /// @param g Green value (0-255)
-  /// @param b Blue value (0-255)
-  /// @return The color
-  ///
-  asw::Color makeColor(int r, int g, int b);
-
-  /// @brief Make a color from RGBA values
-  ///
-  /// @param r Red value (0-255)
-  /// @param g Green value (0-255)
-  /// @param b Blue value (0-255)
-  /// @param a Alpha value (0-255)
-  /// @return The color
-  ///
-  asw::Color makeColor(int r, int g, int b, int a);
-
   /// @brief Get texture size
   ///
   /// @param tex Texture to get size of

@@ -12,24 +12,6 @@ void asw::util::abortOnError(const std::string& message) {
   exit(-1);
 }
 
-asw::Color asw::util::makeColor(int r, int g, int b) {
-  asw::Color color;
-  color.r = r;
-  color.g = g;
-  color.b = b;
-  color.a = 255;
-  return color;
-}
-
-asw::Color asw::util::makeColor(int r, int g, int b, int a) {
-  asw::Color color;
-  color.r = r;
-  color.g = g;
-  color.b = b;
-  color.a = a;
-  return color;
-}
-
 asw::Vec2<float> asw::util::getTextureSize(const asw::Texture& tex) {
   asw::Vec2<float> size;
   SDL_GetTextureSize(tex.get(), &size.x, &size.y);

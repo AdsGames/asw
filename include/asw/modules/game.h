@@ -11,6 +11,7 @@
 
 #include <string>
 
+#include "./color.h"
 #include "./draw.h"
 #include "./geometry.h"
 #include "./util.h"
