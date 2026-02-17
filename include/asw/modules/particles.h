@@ -21,11 +21,11 @@ namespace asw {
   /// @brief Configuration for particle emitters.
   ///
   struct ParticleConfig {
-    // Lifetime
+    // Lifetime in seconds
     float lifetimeMin{1.0F};
     float lifetimeMax{2.0F};
 
-    // Speed
+    // Speed in pixels per second
     float speedMin{50.0F};
     float speedMax{100.0F};
 
@@ -41,7 +41,7 @@ namespace asw {
     float sizeStart{4.0F};
     float sizeEnd{1.0F};
 
-    // Physics
+    // Physics in pixels per second squared
     Vec2<float> gravity{0.0F, 0.0F};
 
     // Optional texture (nullptr = use circleFill)
@@ -52,6 +52,10 @@ namespace asw {
   ///
   class ParticleEmitter : public game::GameObject {
    public:
+    /// @brief Create a default ParticleEmitter with no particles.
+    ///
+    ParticleEmitter() = default;
+
     /// @brief Construct a new ParticleEmitter.
     ///
     /// @param config The particle configuration.
@@ -82,7 +86,7 @@ namespace asw {
 
     /// @brief Update particles.
     ///
-    /// @param deltaTime The time since the last update.
+    /// @param deltaTime The time in seconds since the last update.
     ///
     void update(float deltaTime) override;
 
@@ -112,6 +116,8 @@ namespace asw {
     ParticleConfig config;
     std::vector<Particle> particles;
     int aliveCount{0};
+
+    // Emission rate in particles per second
     float emissionRate{0.0F};
     float emissionAccumulator{0.0F};
     bool emitting{false};

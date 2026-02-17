@@ -24,10 +24,14 @@ namespace asw::game {
   ///
   class Physics {
    public:
+    // Velocity in pixels per second
     asw::Vec2<float> velocity;
+    // Acceleration in pixels per second squared
     asw::Vec2<float> acceleration;
-    float angularVelocity{0};
-    float angularAcceleration{0};
+    // Angular velocity in radians per second
+    float angularVelocity{0.0F};
+    // Angular acceleration in radians per second squared
+    float angularAcceleration{0.0F};
   };
 
   /// Objects
@@ -43,7 +47,7 @@ namespace asw::game {
 
     /// @brief Update the object.
     ///
-    /// @param deltaTime The time since the last update.
+    /// @param deltaTime The time in seconds since the last update.
     ///
     virtual void update(float deltaTime) {
       body.velocity += body.acceleration * deltaTime;
@@ -66,9 +70,9 @@ namespace asw::game {
     ///
     asw::Quad<float> transform;
 
-    /// @brief The rotation of the object in degrees.
+    /// @brief The rotation of the object in radians.
     ///
-    float rotation{0};
+    float rotation{0.0F};
 
     /// @brief The layer that the object is on.
     /// @details Objects on higher layers are drawn on top of objects on lower
@@ -114,7 +118,7 @@ namespace asw::game {
 
     /// @brief Update the sprite.
     ///
-    /// @param deltaTime The time since the last update.
+    /// @param deltaTime The time in seconds since the last update.
     ///
     void update(float deltaTime) override { GameObject::update(deltaTime); }
 

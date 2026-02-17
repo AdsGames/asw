@@ -82,7 +82,7 @@ void asw::draw::stretchSprite(const asw::Texture& tex,
 
 void asw::draw::rotateSprite(const asw::Texture& tex,
                              const asw::Vec2<float>& position,
-                             double angle) {
+                             float angle) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -95,8 +95,11 @@ void asw::draw::rotateSprite(const asw::Texture& tex,
   dest.w = size.x;
   dest.h = size.y;
 
+  // Rad to deg
+  const double angleDeg = angle * (180.0 / M_PI);
+
   SDL_RenderTextureRotated(asw::display::renderer, tex.get(), nullptr, &dest,
-                           angle, nullptr, SDL_FLIP_NONE);
+                           angleDeg, nullptr, SDL_FLIP_NONE);
 }
 
 void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
@@ -124,7 +127,7 @@ void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
 void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
                                         const asw::Quad<float>& source,
                                         const asw::Quad<float>& dest,
-                                        double angle) {
+                                        float angle) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -141,8 +144,10 @@ void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
   r_dest.w = dest.size.x;
   r_dest.h = dest.size.y;
 
+  const double angleDeg = angle * (180.0 / M_PI);
+
   SDL_RenderTextureRotated(asw::display::renderer, tex.get(), &r_src, &r_dest,
-                           angle, nullptr, SDL_FLIP_NONE);
+                           angleDeg, nullptr, SDL_FLIP_NONE);
 }
 
 void asw::draw::text(const asw::Font& font,
@@ -262,10 +267,30 @@ void asw::draw::circle(const asw::Vec2<float>& position,
 
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  for (int i = 0; i < 360; i++) {
-    SDL_RenderPoint(asw::display::renderer,
-                    position.x + static_cast<float>(radius * std::cos(i)),
-                    position.y + static_cast<float>(radius * std::sin(i)));
+
+  // Midpoint circle algorithm — no trig, integer arithmetic only
+  int x = static_cast<int>(radius);
+  int y = 0;
+  int err = 1 - x;
+  const float cx = position.x;
+  const float cy = position.y;
+
+  while (x >= y) {
+    SDL_RenderPoint(asw::display::renderer, cx + x, cy + y);
+    SDL_RenderPoint(asw::display::renderer, cx - x, cy + y);
+    SDL_RenderPoint(asw::display::renderer, cx + x, cy - y);
+    SDL_RenderPoint(asw::display::renderer, cx - x, cy - y);
+    SDL_RenderPoint(asw::display::renderer, cx + y, cy + x);
+    SDL_RenderPoint(asw::display::renderer, cx - y, cy + x);
+    SDL_RenderPoint(asw::display::renderer, cx + y, cy - x);
+    SDL_RenderPoint(asw::display::renderer, cx - y, cy - x);
+    y++;
+    if (err < 0) {
+      err += 2 * y + 1;
+    } else {
+      x--;
+      err += 2 * (y - x) + 1;
+    }
   }
 }
 
@@ -278,10 +303,26 @@ void asw::draw::circleFill(const asw::Vec2<float>& position,
 
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  for (int i = 0; i < 360; i++) {
-    SDL_RenderLine(asw::display::renderer, position.x, position.y,
-                   position.x + static_cast<float>(radius * std::cos(i)),
-                   position.y + static_cast<float>(radius * std::sin(i)));
+
+  // Midpoint circle with horizontal scanlines — no gaps, no trig
+  int x = static_cast<int>(radius);
+  int y = 0;
+  int err = 1 - x;
+  const float cx = position.x;
+  const float cy = position.y;
+
+  while (x >= y) {
+    SDL_RenderLine(asw::display::renderer, cx - x, cy + y, cx + x, cy + y);
+    SDL_RenderLine(asw::display::renderer, cx - x, cy - y, cx + x, cy - y);
+    SDL_RenderLine(asw::display::renderer, cx - y, cy + x, cx + y, cy + x);
+    SDL_RenderLine(asw::display::renderer, cx - y, cy - x, cx + y, cy - x);
+    y++;
+    if (err < 0) {
+      err += 2 * y + 1;
+    } else {
+      x--;
+      err += 2 * (y - x) + 1;
+    }
   }
 }
 

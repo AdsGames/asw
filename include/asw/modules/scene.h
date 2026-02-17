@@ -60,7 +60,7 @@ namespace asw::scene {
 
     /// @brief Update the game scene.
     ///
-    /// @param deltaTime The time since the last update.
+    /// @param deltaTime The time in seconds since the last update.
     /// @details This function is called every frame to update the scene.
     ///
     virtual void update(float deltaTime) {
@@ -245,7 +245,7 @@ namespace asw::scene {
         lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
         while (lag >= this->timestep) {
-          update(this->timestep / 1ms);
+          update(std::chrono::duration<float>(this->timestep).count());
           lag -= this->timestep;
         }
 
@@ -354,7 +354,7 @@ namespace asw::scene {
             std::chrono::high_resolution_clock::now() - SceneManager::em_time;
         SceneManager::em_time = std::chrono::high_resolution_clock::now();
 
-        instance->update(delta_time / 1ms);
+        instance->update(std::chrono::duration<float>(delta_time).count());
         instance->draw();
       }
     }

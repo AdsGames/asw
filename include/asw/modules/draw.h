@@ -52,11 +52,11 @@ namespace asw::draw {
   ///
   /// @param tex The texture to draw.
   /// @param position The position to draw the sprite at.
-  /// @param angle The angle to rotate the sprite by in degrees.
+  /// @param angle The angle to rotate the sprite by in radians.
   ///
   void rotateSprite(const asw::Texture& tex,
                     const asw::Vec2<float>& position,
-                    double angle);
+                    float angle);
 
   /// @brief Draw a sprite with the option to stretch a portion of it.
   ///
@@ -76,12 +76,12 @@ namespace asw::draw {
   /// @param source The quad defining the portion of the texture to stretch.
   /// @param dest The quad defining the position and size to stretch the sprite
   /// to.
-  /// @param angle The angle to rotate the sprite by in degrees.
+  /// @param angle The angle to rotate the sprite by in radians.
   ///
   void stretchSpriteRotateBlit(const asw::Texture& tex,
                                const asw::Quad<float>& source,
                                const asw::Quad<float>& dest,
-                               double angle);
+                               float angle);
 
   /// @brief Draw text left aligned.
   ///
