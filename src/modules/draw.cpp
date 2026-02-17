@@ -262,10 +262,30 @@ void asw::draw::circle(const asw::Vec2<float>& position,
 
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  for (int i = 0; i < 360; i++) {
-    SDL_RenderPoint(asw::display::renderer,
-                    position.x + static_cast<float>(radius * std::cos(i)),
-                    position.y + static_cast<float>(radius * std::sin(i)));
+
+  // Midpoint circle algorithm — no trig, integer arithmetic only
+  int x = static_cast<int>(radius);
+  int y = 0;
+  int err = 1 - x;
+  const float cx = position.x;
+  const float cy = position.y;
+
+  while (x >= y) {
+    SDL_RenderPoint(asw::display::renderer, cx + x, cy + y);
+    SDL_RenderPoint(asw::display::renderer, cx - x, cy + y);
+    SDL_RenderPoint(asw::display::renderer, cx + x, cy - y);
+    SDL_RenderPoint(asw::display::renderer, cx - x, cy - y);
+    SDL_RenderPoint(asw::display::renderer, cx + y, cy + x);
+    SDL_RenderPoint(asw::display::renderer, cx - y, cy + x);
+    SDL_RenderPoint(asw::display::renderer, cx + y, cy - x);
+    SDL_RenderPoint(asw::display::renderer, cx - y, cy - x);
+    y++;
+    if (err < 0) {
+      err += 2 * y + 1;
+    } else {
+      x--;
+      err += 2 * (y - x) + 1;
+    }
   }
 }
 
@@ -278,10 +298,26 @@ void asw::draw::circleFill(const asw::Vec2<float>& position,
 
   SDL_SetRenderDrawColor(asw::display::renderer, color.r, color.g, color.b,
                          color.a);
-  for (int i = 0; i < 360; i++) {
-    SDL_RenderLine(asw::display::renderer, position.x, position.y,
-                   position.x + static_cast<float>(radius * std::cos(i)),
-                   position.y + static_cast<float>(radius * std::sin(i)));
+
+  // Midpoint circle with horizontal scanlines — no gaps, no trig
+  int x = static_cast<int>(radius);
+  int y = 0;
+  int err = 1 - x;
+  const float cx = position.x;
+  const float cy = position.y;
+
+  while (x >= y) {
+    SDL_RenderLine(asw::display::renderer, cx - x, cy + y, cx + x, cy + y);
+    SDL_RenderLine(asw::display::renderer, cx - x, cy - y, cx + x, cy - y);
+    SDL_RenderLine(asw::display::renderer, cx - y, cy + x, cx + y, cy + x);
+    SDL_RenderLine(asw::display::renderer, cx - y, cy - x, cx + y, cy - x);
+    y++;
+    if (err < 0) {
+      err += 2 * y + 1;
+    } else {
+      x--;
+      err += 2 * (y - x) + 1;
+    }
   }
 }
 
