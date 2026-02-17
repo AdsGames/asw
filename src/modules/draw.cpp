@@ -82,7 +82,7 @@ void asw::draw::stretchSprite(const asw::Texture& tex,
 
 void asw::draw::rotateSprite(const asw::Texture& tex,
                              const asw::Vec2<float>& position,
-                             double angle) {
+                             float angle) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -95,8 +95,11 @@ void asw::draw::rotateSprite(const asw::Texture& tex,
   dest.w = size.x;
   dest.h = size.y;
 
+  // Rad to deg
+  const double angleDeg = angle * (180.0 / M_PI);
+
   SDL_RenderTextureRotated(asw::display::renderer, tex.get(), nullptr, &dest,
-                           angle, nullptr, SDL_FLIP_NONE);
+                           angleDeg, nullptr, SDL_FLIP_NONE);
 }
 
 void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
@@ -124,7 +127,7 @@ void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
 void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
                                         const asw::Quad<float>& source,
                                         const asw::Quad<float>& dest,
-                                        double angle) {
+                                        float angle) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -141,8 +144,10 @@ void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
   r_dest.w = dest.size.x;
   r_dest.h = dest.size.y;
 
+  const double angleDeg = angle * (180.0 / M_PI);
+
   SDL_RenderTextureRotated(asw::display::renderer, tex.get(), &r_src, &r_dest,
-                           angle, nullptr, SDL_FLIP_NONE);
+                           angleDeg, nullptr, SDL_FLIP_NONE);
 }
 
 void asw::draw::text(const asw::Font& font,
