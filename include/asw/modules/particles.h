@@ -52,6 +52,10 @@ namespace asw {
   ///
   class ParticleEmitter : public game::GameObject {
    public:
+    /// @brief Create a default ParticleEmitter with no particles.
+    ///
+    ParticleEmitter() = default;
+
     /// @brief Construct a new ParticleEmitter.
     ///
     /// @param config The particle configuration.
