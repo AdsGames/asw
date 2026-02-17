@@ -245,7 +245,7 @@ namespace asw::scene {
         lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
         while (lag >= this->timestep) {
-          update(this->timestep / 1s);
+          update(std::chrono::duration<float>(this->timestep).count());
           lag -= this->timestep;
         }
 
@@ -354,7 +354,7 @@ namespace asw::scene {
             std::chrono::high_resolution_clock::now() - SceneManager::em_time;
         SceneManager::em_time = std::chrono::high_resolution_clock::now();
 
-        instance->update(delta_time / 1ms);
+        instance->update(std::chrono::duration<float>(delta_time).count());
         instance->draw();
       }
     }
