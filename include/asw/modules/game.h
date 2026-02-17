@@ -174,6 +174,12 @@ namespace asw::game {
     ///
     void setColor(const asw::Color& color) { this->color = color; }
 
+    /// @brief Set the justification of the text.
+    ///
+    /// @param justify The justification to set.
+    ///
+    void setJustify(asw::TextJustify justify) { this->justify = justify; }
+
     /// @brief Set the size of the text.
     ///
     /// @param size The size of the text.
@@ -181,13 +187,14 @@ namespace asw::game {
     void update(float deltaTime) override { GameObject::update(deltaTime); }
 
     void draw() override {
-      asw::draw::text(font, text, transform.position, color);
+      asw::draw::text(font, text, transform.position, color, justify);
     }
 
    private:
     std::string text;
     asw::Font font;
     asw::Color color;
+    asw::TextJustify justify{asw::TextJustify::LEFT};
   };
 
 };  // namespace asw::game

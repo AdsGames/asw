@@ -83,41 +83,19 @@ namespace asw::draw {
                                const asw::Quad<float>& dest,
                                float angle);
 
-  /// @brief Draw text left aligned.
+  /// @brief Draw text
   ///
   /// @param font The font to use.
   /// @param text The text to draw.
   /// @param position The position to draw the text at.
   /// @param color The color to draw the text.
+  /// @param justify The justification of the text.
   ///
   void text(const asw::Font& font,
             const std::string& text,
             const asw::Vec2<float>& position,
-            asw::Color color);
-
-  /// @brief Draw text center aligned.
-  ///
-  /// @param font The font to use.
-  /// @param text The text to draw.
-  /// @param position The position to draw the text at.
-  /// @param color The color to draw the text.
-  ///
-  void textCenter(const asw::Font& font,
-                  const std::string& text,
-                  const asw::Vec2<float>& position,
-                  asw::Color color);
-
-  /// @brief Draw text right aligned.
-  ///
-  /// @param font The font to use.
-  /// @param text The text to draw.
-  /// @param position The position to draw the text at.
-  /// @param color The color to draw the text.
-  ///
-  void textRight(const asw::Font& font,
-                 const std::string& text,
-                 const asw::Vec2<float>& position,
-                 asw::Color color);
+            asw::Color color,
+            asw::TextJustify justify = asw::TextJustify::LEFT);
 
   /// @brief Draw a point.
   ///

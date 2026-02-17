@@ -153,7 +153,8 @@ void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
 void asw::draw::text(const asw::Font& font,
                      const std::string& text,
                      const asw::Vec2<float>& position,
-                     asw::Color color) {
+                     asw::Color color,
+                     asw::TextJustify justify) {
   if (text.empty() || asw::display::renderer == nullptr) {
     return;
   }
@@ -173,34 +174,16 @@ void asw::draw::text(const asw::Font& font,
   dest.w = float(textSurface->w);
   dest.h = float(textSurface->h);
 
+  // Justification settings
+  if (justify == asw::TextJustify::CENTER) {
+    dest.x -= dest.w / 2.0F;
+  } else if (justify == asw::TextJustify::RIGHT) {
+    dest.x -= dest.w;
+  }
+
   SDL_RenderTexture(asw::display::renderer, textTexture, nullptr, &dest);
   SDL_DestroySurface(textSurface);
   SDL_DestroyTexture(textTexture);
-}
-
-void asw::draw::textCenter(const asw::Font& font,
-                           const std::string& text,
-                           const asw::Vec2<float>& position,
-                           asw::Color color) {
-  if (asw::display::renderer == nullptr) {
-    return;
-  }
-
-  auto size = asw::util::getTextSize(font, text);
-  asw::draw::text(font, text, position - asw::Vec2<float>(size.x / 2, 0),
-                  color);
-}
-
-void asw::draw::textRight(const asw::Font& font,
-                          const std::string& text,
-                          const asw::Vec2<float>& position,
-                          asw::Color color) {
-  if (asw::display::renderer == nullptr) {
-    return;
-  }
-
-  auto size = asw::util::getTextSize(font, text);
-  asw::draw::text(font, text, position - asw::Vec2<float>(size.x, 0), color);
 }
 
 void asw::draw::point(const asw::Vec2<float>& position, asw::Color color) {

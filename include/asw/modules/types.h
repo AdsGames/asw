@@ -27,6 +27,13 @@ namespace asw {
     MULTIPLY = SDL_BLENDMODE_MUL,
   };
 
+  /// @brief Text justification options for text rendering
+  enum class TextJustify {
+    LEFT,
+    CENTER,
+    RIGHT,
+  };
+
   /// @brief Alias for a shared pointer to an SDL_Texture
   using Texture = std::shared_ptr<SDL_Texture>;
 
