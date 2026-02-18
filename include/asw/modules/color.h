@@ -72,6 +72,74 @@ namespace asw {
 
       return {r, g, b, a};
     }
+
+    /// @brief Lighten a color by a given percentage.
+    ///
+    /// @param color The color to lighten.
+    /// @param percentage The percentage to lighten (0.0-1.0).
+    /// @return The lightened color.
+    static Color lighten(const Color& color, float percentage) {
+      return {static_cast<uint8_t>(color.r + (255 - color.r) * percentage),
+              static_cast<uint8_t>(color.g + (255 - color.g) * percentage),
+              static_cast<uint8_t>(color.b + (255 - color.b) * percentage),
+              color.a};
+    }
+
+    /// @brief Darken a color by a given percentage.
+    ///
+    /// @param color The color to darken.
+    /// @param percentage The percentage to darken (0.0-1.0).
+    /// @return The darkened color.
+    static Color darken(const Color& color, float percentage) {
+      return {static_cast<uint8_t>(color.r * (1 - percentage)),
+              static_cast<uint8_t>(color.g * (1 - percentage)),
+              static_cast<uint8_t>(color.b * (1 - percentage)), color.a};
+    }
+
+    /// @brief Blend two colors together using alpha blending.
+    ///
+    /// @param foreground The foreground color (with alpha).
+    /// @param background The background color.
+    /// @return The blended color.
+    static Color blend(const Color& foreground, const Color& background) {
+      float alpha = foreground.a / 255.0F;
+      uint8_t r = static_cast<uint8_t>(foreground.r * alpha +
+                                       background.r * (1 - alpha));
+      uint8_t g = static_cast<uint8_t>(foreground.g * alpha +
+                                       background.g * (1 - alpha));
+      uint8_t b = static_cast<uint8_t>(foreground.b * alpha +
+                                       background.b * (1 - alpha));
+      return {r, g, b, 255};
+    }
+
+    /// @brief Invert a color.
+    ///
+    /// @param color The color to invert.
+    /// @return The inverted color.
+    static Color invert(const Color& color) {
+      return {static_cast<uint8_t>(255 - color.r),
+              static_cast<uint8_t>(255 - color.g),
+              static_cast<uint8_t>(255 - color.b), color.a};
+    }
+
+    /// @brief Convert a color to grayscale.
+    ///
+    /// @param color The color to convert.
+    /// @return The grayscale color.
+    static Color grayscale(const Color& color) {
+      uint8_t gray = static_cast<uint8_t>(0.299F * color.r + 0.587F * color.g +
+                                          0.114F * color.b);
+      return {gray, gray, gray, color.a};
+    }
+
+    /// @brief Adjust the alpha of a color.
+    ///
+    /// @param color The color to adjust.
+    /// @param alpha The new alpha value (0-255).
+    /// @return The color with the adjusted alpha.
+    static Color withAlpha(const Color& color, uint8_t alpha) {
+      return {color.r, color.g, color.b, alpha};
+    }
   };
 
   /// Color constants
