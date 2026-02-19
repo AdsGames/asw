@@ -18,20 +18,20 @@ namespace asw {
 
   /// @brief Mappings from SDL_BLENDMODE to ASW BlendMode
   enum class BlendMode {
-    NONE = SDL_BLENDMODE_NONE,
-    BLEND = SDL_BLENDMODE_BLEND,
-    BLEND_PREMULTIPLIED = SDL_BLENDMODE_BLEND_PREMULTIPLIED,
-    ADD = SDL_BLENDMODE_ADD,
-    ADD_PREMULTIPLIED = SDL_BLENDMODE_ADD_PREMULTIPLIED,
-    MODULATE = SDL_BLENDMODE_MOD,
-    MULTIPLY = SDL_BLENDMODE_MUL,
+    None = SDL_BLENDMODE_NONE,
+    Blend = SDL_BLENDMODE_BLEND,
+    BlendPremultiplied = SDL_BLENDMODE_BLEND_PREMULTIPLIED,
+    Add = SDL_BLENDMODE_ADD,
+    AddPremultiplied = SDL_BLENDMODE_ADD_PREMULTIPLIED,
+    Modulate = SDL_BLENDMODE_MOD,
+    Multiply = SDL_BLENDMODE_MUL,
   };
 
   /// @brief Text justification options for text rendering
   enum class TextJustify {
-    LEFT,
-    CENTER,
-    RIGHT,
+    Left,
+    Center,
+    Right,
   };
 
   /// @brief Alias for a shared pointer to an SDL_Texture

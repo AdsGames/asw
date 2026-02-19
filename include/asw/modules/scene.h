@@ -42,11 +42,10 @@ namespace asw::scene {
   class Scene {
    public:
     /// @brief Constructor for the Scene class.
-    /// @param sceneManager Reference to the SceneManager object.
+    /// @param manager Reference to the SceneManager object.
     /// @details This constructor initializes the scene engine reference.
     ///
-    explicit Scene(SceneManager<T>& sceneManager)
-        : sceneManager(sceneManager) {}
+    explicit Scene(SceneManager<T>& manager) : manager(manager) {}
 
     /// @brief Destructor for the Scene class.
     virtual ~Scene() = default;
@@ -60,10 +59,10 @@ namespace asw::scene {
 
     /// @brief Update the game scene.
     ///
-    /// @param deltaTime The time in seconds since the last update.
+    /// @param dt The time in seconds since the last update.
     /// @details This function is called every frame to update the scene.
     ///
-    virtual void update(float deltaTime) {
+    virtual void update(float dt) {
       // Erase inactive objects
       objects.erase(
           std::remove_if(objects.begin(), objects.end(),
@@ -75,17 +74,17 @@ namespace asw::scene {
       // Update all objects in the scene
       for (auto& obj : objects) {
         if (obj->active && obj->alive) {
-          obj->update(deltaTime);
+          obj->update(dt);
         }
       }
 
       // Create new objects
-      for (auto& obj : objectsToCreate) {
+      for (auto& obj : obj_to_create) {
         objects.push_back(obj);
       }
 
       // Clear the objects to create
-      objectsToCreate.clear();
+      obj_to_create.clear();
     };
 
     /// @brief Draw the game scene.
@@ -97,7 +96,7 @@ namespace asw::scene {
       std::sort(objects.begin(), objects.end(),
                 [](const std::shared_ptr<game::GameObject>& a,
                    const std::shared_ptr<game::GameObject>& b) {
-                  return a->zIndex < b->zIndex;
+                  return a->z_index < b->z_index;
                 });
 
       for (auto& obj : objects) {
@@ -118,7 +117,7 @@ namespace asw::scene {
     ///
     /// @param gameObject The game object to add to the scene.
     ///
-    void registerObject(const std::shared_ptr<game::GameObject> obj) {
+    void register_object(const std::shared_ptr<game::GameObject> obj) {
       objects.push_back(obj);
     }
 
@@ -127,7 +126,7 @@ namespace asw::scene {
     /// @param gameObject The game object to add to the scene.
     ///
     template <typename ObjectType, typename... Args>
-    std::shared_ptr<ObjectType> createObject(Args&&... args) {
+    std::shared_ptr<ObjectType> create_object(Args&&... args) {
       static_assert(std::is_base_of_v<game::GameObject, ObjectType>,
                     "ObjectType must be derived from Scene<T>");
       static_assert(
@@ -135,7 +134,7 @@ namespace asw::scene {
           "ObjectType must be constructible with the given arguments");
 
       auto obj = std::make_shared<ObjectType>(std::forward<Args>(args)...);
-      objectsToCreate.emplace_back(obj);
+      obj_to_create.emplace_back(obj);
       return obj;
     }
 
@@ -143,7 +142,7 @@ namespace asw::scene {
     ///
     /// @return A vector of shared pointers to game objects in the scene.
     ///
-    std::vector<std::shared_ptr<game::GameObject>> getObjects() {
+    std::vector<std::shared_ptr<game::GameObject>> get_objects() {
       return objects;
     }
 
@@ -154,14 +153,14 @@ namespace asw::scene {
     /// type in the scene.
     ///
     template <typename ObjectType>
-    std::vector<std::shared_ptr<ObjectType>> getObjectView() {
+    std::vector<std::shared_ptr<ObjectType>> get_object_view() {
       static_assert(std::is_base_of_v<game::GameObject, ObjectType>,
                     "ObjectType must be derived from Scene<T>");
 
       std::vector<std::shared_ptr<ObjectType>> result;
       for (const auto& obj : objects) {
-        if (auto castedObj = std::dynamic_pointer_cast<ObjectType>(obj)) {
-          result.push_back(castedObj);
+        if (auto casted_obj = std::dynamic_pointer_cast<ObjectType>(obj)) {
+          result.push_back(casted_obj);
         }
       }
       return result;
@@ -169,14 +168,14 @@ namespace asw::scene {
 
    protected:
     /// @brief Reference to the scene manager.
-    SceneManager<T>& sceneManager;
+    SceneManager<T>& manager;
 
    private:
     /// @brief Collection of game objects in the scene.
     std::vector<std::shared_ptr<game::GameObject>> objects;
 
     /// @brief Objects to be created in the next frame.
-    std::vector<std::shared_ptr<game::GameObject>> objectsToCreate;
+    std::vector<std::shared_ptr<game::GameObject>> obj_to_create;
   };
 
   /// @brief SceneManager class for managing game scenes.
@@ -199,27 +198,27 @@ namespace asw::scene {
 
     /// @brief Register a scene to be managed by the scene engine.
     ///
-    /// @param sceneId The unique identifier for the scene.
+    /// @param scene_id The unique identifier for the scene.
     /// @param scene Pointer to the Scene object to be registered.
     ///
     template <typename SceneType, typename... Args>
-    void registerScene(const T sceneId, Args&&... args) {
+    void register_scene(const T scene_id, Args&&... args) {
       static_assert(std::is_base_of_v<Scene<T>, SceneType>,
                     "SceneType must be derived from Scene<T>");
       static_assert(std::is_constructible_v<SceneType, Args...>,
                     "SceneType must be constructible with the given arguments");
 
       auto scene = std::make_shared<SceneType>(std::forward<Args>(args)...);
-      scenes[sceneId] = scene;
+      scenes[scene_id] = scene;
     }
 
     /// @brief Set the next scene
     ///
-    /// @param sceneId The unique identifier for the scene.
+    /// @param scene_id The unique identifier for the scene.
     ///
-    void setNextScene(const T sceneId) {
-      nextScene = sceneId;
-      hasNextScene = true;
+    void set_next_scene(const T scene_id) {
+      next_scene = scene_id;
+      has_next_scene = true;
     }
 
     /// @brief Main loop for the scene engine. If this is not enough, or you
@@ -230,7 +229,7 @@ namespace asw::scene {
     ///
     void start() {
 #ifdef __EMSCRIPTEN__
-      emscripten_set_main_loop(SceneManager::loopEmscripten, 0, 1);
+      emscripten_set_main_loop(SceneManager::loop_emscripten, 0, 1);
 #else
 
       std::chrono::nanoseconds lag(0ns);
@@ -265,21 +264,23 @@ namespace asw::scene {
 
     /// @brief Update the current scene.
     ///
-    void update(const float deltaTime) {
+    /// @param dt The time in seconds since the last update.
+    ///
+    void update(const float dt) {
       asw::core::update();
       changeScene();
 
-      if (activeScene != nullptr) {
-        activeScene->update(deltaTime);
+      if (active_scene != nullptr) {
+        active_scene->update(dt);
       }
     }
 
     /// @brief Draw the current scene.
     ///
     void draw() {
-      if (activeScene != nullptr) {
+      if (active_scene != nullptr) {
         asw::display::clear();
-        activeScene->draw();
+        active_scene->draw();
         asw::display::present();
       }
     }
@@ -288,48 +289,48 @@ namespace asw::scene {
     ///
     /// @param ts Timestep duration (default: 8ms).
     ///
-    void setTimestep(std::chrono::nanoseconds ts) { timestep = ts; }
+    void set_timestep(std::chrono::nanoseconds ts) { timestep = ts; }
 
     /// @brief Get the current timestep.
     ///
     /// @return The current timestep duration.
     ///
-    std::chrono::nanoseconds getTimestep() const { return timestep; }
+    std::chrono::nanoseconds get_timestep() const { return timestep; }
 
     /// @brief Get the current FPS. Only applies to the managed loop.
     ///
     /// @return The current FPS.
     ///
-    int getFPS() const { return fps; }
+    int get_fps() const { return fps; }
 
    private:
     /// @brief Change the current scene to the next scene.
     ///
     void changeScene() {
-      if (!hasNextScene) {
+      if (!has_next_scene) {
         return;
       }
 
-      if (activeScene != nullptr) {
-        activeScene->cleanup();
+      if (active_scene != nullptr) {
+        active_scene->cleanup();
       }
 
-      if (auto it = scenes.find(nextScene); it != scenes.end()) {
-        activeScene = it->second;
-        activeScene->init();
+      if (auto it = scenes.find(next_scene); it != scenes.end()) {
+        active_scene = it->second;
+        active_scene->init();
       }
 
-      hasNextScene = false;
+      has_next_scene = false;
     }
 
     /// @brief The current scene of the scene engine.
-    std::shared_ptr<Scene<T>> activeScene;
+    std::shared_ptr<Scene<T>> active_scene;
 
     /// @brief The next scene of the scene engine.
-    T nextScene;
+    T next_scene;
 
     /// @brief Flag to indicate if there is a next scene to change to.
-    bool hasNextScene{false};
+    bool has_next_scene{false};
 
     /// @brief Collection of all scenes registered in the scene engine.
     std::unordered_map<T, std::shared_ptr<Scene<T>>> scenes;
@@ -348,7 +349,7 @@ namespace asw::scene {
     static std::chrono::high_resolution_clock::time_point em_time;
 
     /// @brief Emscripten loop function.
-    static void loopEmscripten() {
+    static void loop_emscripten() {
       if (instance != nullptr) {
         auto delta_time =
             std::chrono::high_resolution_clock::now() - SceneManager::em_time;

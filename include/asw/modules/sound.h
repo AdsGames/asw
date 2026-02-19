@@ -31,81 +31,81 @@ namespace asw::sound {
   /// @param sample Sample to play
   /// @param volume Playback volume (0.0 - 1.0).
   ///
-  void playMusic(const asw::Music& sample, float volume = 1.0F);
+  void play_music(const asw::Music& sample, float volume = 1.0F);
 
   /// @brief Stop the currently playing music.
   ///
-  void stopMusic();
+  void stop_music();
 
   /// @brief Fade in music over a duration.
   ///
   /// @param music The music to play.
   /// @param volume Playback volume (0.0 - 1.0).
-  /// @param durationMs Fade duration in milliseconds.
+  /// @param duration Fade duration in seconds.
   ///
-  void fadeInMusic(const asw::Music& music, float volume, int durationMs);
+  void fade_in_music(const asw::Music& music, float volume, float duration);
 
   /// @brief Fade out the currently playing music.
   ///
-  /// @param durationMs Fade duration in milliseconds.
+  /// @param duration Fade duration in seconds.
   ///
-  void fadeOutMusic(int durationMs);
+  void fade_out_music(float duration);
 
   /// @brief Pause the currently playing music.
   ///
-  void pauseMusic();
+  void pause_music();
 
   /// @brief Resume paused music.
   ///
-  void resumeMusic();
+  void resume_music();
 
   /// @brief Check if music is currently playing.
   ///
   /// @return True if music is playing.
   ///
-  bool isMusicPlaying();
+  bool is_music_playing();
 
   /// @brief Check if music is paused.
   ///
   /// @return True if music is paused.
   ///
-  bool isMusicPaused();
+  bool is_music_paused();
 
   /// @brief Set the master volume multiplier (affects all audio).
   ///
   /// @param volume Volume multiplier (0.0 - 1.0).
   ///
-  void setMasterVolume(float volume);
+  void set_master_volume(float volume);
 
   /// @brief Set the SFX volume multiplier.
   ///
   /// @param volume Volume multiplier (0.0 - 1.0).
   ///
-  void setSfxVolume(float volume);
+  void set_sfx_volume(float volume);
 
   /// @brief Set the music volume multiplier.
   ///
   /// @param volume Volume multiplier (0.0 - 1.0).
   ///
-  void setMusicVolume(float volume);
+  void set_music_volume(float volume);
 
   /// @brief Get the current master volume multiplier.
   ///
   /// @return The master volume (0.0 - 1.0).
   ///
-  float getMasterVolume();
+  float get_master_volume();
 
   /// @brief Get the current SFX volume multiplier.
   ///
   /// @return The SFX volume (0.0 - 1.0).
   ///
-  float getSfxVolume();
+  float get_sfx_volume();
 
   /// @brief Get the current music volume multiplier.
   ///
   /// @return The music volume (0.0 - 1.0).
   ///
-  float getMusicVolume();
+  float get_music_volume();
 
 }  // namespace asw::sound
 

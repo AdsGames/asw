@@ -4,6 +4,7 @@
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <algorithm>
+#include <format>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
@@ -45,9 +46,10 @@ void asw::core::update() {
 
         const auto scale = std::min(x_scale, y_scale);
 
-        SDL_SetWindowSize(asw::display::window,
-                          static_cast<float>(render_size.x) * scale,
-                          static_cast<float>(render_size.y) * scale);
+        SDL_SetWindowSize(
+            asw::display::window,
+            static_cast<int>(static_cast<float>(render_size.x) * scale),
+            static_cast<int>(static_cast<float>(render_size.y) * scale));
         break;
       }
 
@@ -55,8 +57,8 @@ void asw::core::update() {
         if (!e.key.repeat) {
           keyboard.pressed[e.key.scancode] = true;
           keyboard.down[e.key.scancode] = true;
-          keyboard.anyPressed = true;
-          keyboard.lastPressed = e.key.scancode;
+          keyboard.any_pressed = true;
+          keyboard.last_pressed = e.key.scancode;
         }
         break;
       }
@@ -73,8 +75,8 @@ void asw::core::update() {
         const auto button = static_cast<int>(e.button.button);
         mouse.pressed[button] = true;
         mouse.down[button] = true;
-        mouse.anyPressed = true;
-        mouse.lastPressed = button;
+        mouse.any_pressed = true;
+        mouse.last_pressed = button;
         break;
       }
 
@@ -88,8 +90,8 @@ void asw::core::update() {
       case SDL_EVENT_MOUSE_MOTION: {
         // Ensure scale is applied to mouse coordinates
         SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
-        mouse.xChange = e.motion.xrel;
-        mouse.yChange = e.motion.yrel;
+        mouse.change.x = e.motion.xrel;
+        mouse.change.y = e.motion.yrel;
         mouse.position.x = e.motion.x;
         mouse.position.y = e.motion.y;
         break;
@@ -106,11 +108,11 @@ void asw::core::update() {
         }
 
         auto motion = static_cast<float>(e.gaxis.value) / 32768.0F;
-        auto& current = controller[e.gaxis.which];
 
-        if (motion > current.deadZone) {
+        if (auto& current = controller[e.gaxis.which];
+            motion > current.dead_zone) {
           current.axis[e.gaxis.axis] = motion;
-        } else if (motion < -current.deadZone) {
+        } else if (motion < -current.dead_zone) {
           current.axis[e.gaxis.axis] = motion;
         } else {
           current.axis[e.gaxis.axis] = 0.0F;
@@ -127,8 +129,8 @@ void asw::core::update() {
         auto button = static_cast<int>(e.gbutton.button);
         controller[e.gbutton.which].pressed[button] = true;
         controller[e.gbutton.which].down[button] = true;
-        controller[e.gbutton.which].anyPressed = true;
-        controller[e.gbutton.which].lastPressed = button;
+        controller[e.gbutton.which].any_pressed = true;
+        controller[e.gbutton.which].last_pressed = button;
         break;
       }
 
@@ -147,7 +149,8 @@ void asw::core::update() {
         if (e.gdevice.which >= asw::input::MAX_CONTROLLERS ||
             !SDL_IsGamepad(e.gdevice.which) ||
             SDL_OpenGamepad(e.gdevice.which) == nullptr) {
-          // TODO: Log error
+          asw::log::warn(
+              std::format("Failed to open gamepad: {}", e.gdevice.which));
           break;
         }
 
@@ -161,10 +164,9 @@ void asw::core::update() {
           break;
         }
 
-        auto* controller = SDL_GetGamepadFromID(e.gdevice.which);
-
-        if (controller) {
-          SDL_CloseGamepad(controller);
+        if (auto* existing = SDL_GetGamepadFromID(e.gdevice.which);
+            existing != nullptr) {
+          SDL_CloseGamepad(existing);
         }
 
         break;
@@ -183,11 +185,11 @@ void asw::core::update() {
 
 void asw::core::init(int width, int height, int scale) {
   if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
-    asw::util::abortOnError("SDL_Init");
+    asw::util::abort_on_error("SDL_Init");
   }
 
   if (!TTF_Init()) {
-    asw::util::abortOnError("TTF_Init");
+    asw::util::abort_on_error("TTF_Init");
   }
 
   // Initialize SDL_mixer
@@ -197,14 +199,14 @@ void asw::core::init(int width, int height, int scale) {
   spec.channels = 2;
 
   if (!Mix_OpenAudio(0, &spec)) {
-    asw::util::abortOnError("Mix_OpenAudio");
+    asw::util::abort_on_error("Mix_OpenAudio");
   }
 
   asw::display::window =
       SDL_CreateWindow("", width * scale, height * scale, SDL_WINDOW_RESIZABLE);
 
   if (asw::display::window == nullptr) {
-    asw::util::abortOnError("WINDOW");
+    asw::util::abort_on_error("WINDOW");
   }
 
   // Hints
@@ -221,24 +223,14 @@ void asw::core::print_info() {
   asw::log::info("ASW Info");
   asw::log::info("========");
 
-  const char* renderer_name = "None";
+  const char* renderer_name = "none";
   if (asw::display::renderer != nullptr) {
     renderer_name = SDL_GetRendererName(asw::display::renderer);
   }
 
-  const bool is_software = false;  // info.flags & SDL_SOFTWARE_RENDERER;
-  const bool is_accelerated = !is_software;
-  const bool is_target_texture = true;
-  const bool is_vsync = true;  // info.flags & SDL_RENDERER_PRESENTVSYNC;
+  const std::string sdl_version = std::format(
+      "{}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
 
-  const std::string sdl_version = std::to_string(SDL_MAJOR_VERSION) + "." +
-                                  std::to_string(SDL_MINOR_VERSION) + "." +
-                                  std::to_string(SDL_MICRO_VERSION);
-
-  asw::log::info("SDL Version: " + sdl_version);
-  asw::log::info("Renderer: " + std::string(renderer_name));
-  asw::log::info("Accelerated: " + std::to_string(is_accelerated));
-  asw::log::info("Software: " + std::to_string(is_software));
-  asw::log::info("Target Texture: " + std::to_string(is_target_texture));
-  asw::log::info("Vsync: " + std::to_string(is_vsync));
+  asw::log::info(std::format("SDL Version: {}", sdl_version));
+  asw::log::info(std::format("Renderer: {}", renderer_name));
 }

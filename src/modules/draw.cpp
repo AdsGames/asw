@@ -8,7 +8,7 @@
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
 
-void asw::draw::clearColor(asw::Color color) {
+void asw::draw::clear_color(asw::Color color) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -24,7 +24,7 @@ void asw::draw::sprite(const asw::Texture& tex,
     return;
   }
 
-  auto size = asw::util::getTextureSize(tex);
+  auto size = asw::util::get_texture_size(tex);
 
   SDL_FRect dest;
   dest.x = position.x;
@@ -35,15 +35,15 @@ void asw::draw::sprite(const asw::Texture& tex,
   SDL_RenderTexture(asw::display::renderer, tex.get(), nullptr, &dest);
 }
 
-void asw::draw::spriteFlip(const asw::Texture& tex,
-                           const asw::Vec2<float>& position,
-                           bool flipX,
-                           bool flipY) {
+void asw::draw::sprite_flip(const asw::Texture& tex,
+                            const asw::Vec2<float>& position,
+                            bool flip_x,
+                            bool flip_y) {
   if (asw::display::renderer == nullptr) {
     return;
   }
 
-  auto size = asw::util::getTextureSize(tex);
+  auto size = asw::util::get_texture_size(tex);
 
   SDL_FRect dest;
   dest.x = position.x;
@@ -53,11 +53,11 @@ void asw::draw::spriteFlip(const asw::Texture& tex,
 
   SDL_FlipMode flip = SDL_FLIP_NONE;
 
-  if (flipX) {
+  if (flip_x) {
     flip = static_cast<SDL_FlipMode>(flip | SDL_FLIP_HORIZONTAL);
   }
 
-  if (flipY) {
+  if (flip_y) {
     flip = static_cast<SDL_FlipMode>(flip | SDL_FLIP_VERTICAL);
   }
 
@@ -65,8 +65,8 @@ void asw::draw::spriteFlip(const asw::Texture& tex,
                            nullptr, flip);
 }
 
-void asw::draw::stretchSprite(const asw::Texture& tex,
-                              const asw::Quad<float>& position) {
+void asw::draw::stretch_sprite(const asw::Texture& tex,
+                               const asw::Quad<float>& position) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -80,14 +80,14 @@ void asw::draw::stretchSprite(const asw::Texture& tex,
   SDL_RenderTexture(asw::display::renderer, tex.get(), nullptr, &dest);
 }
 
-void asw::draw::rotateSprite(const asw::Texture& tex,
-                             const asw::Vec2<float>& position,
-                             float angle) {
+void asw::draw::rotate_sprite(const asw::Texture& tex,
+                              const asw::Vec2<float>& position,
+                              float angle) {
   if (asw::display::renderer == nullptr) {
     return;
   }
 
-  auto size = asw::util::getTextureSize(tex);
+  auto size = asw::util::get_texture_size(tex);
 
   SDL_FRect dest;
   dest.x = position.x;
@@ -102,9 +102,9 @@ void asw::draw::rotateSprite(const asw::Texture& tex,
                            angleDeg, nullptr, SDL_FLIP_NONE);
 }
 
-void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
-                                  const asw::Quad<float>& source,
-                                  const asw::Quad<float>& dest) {
+void asw::draw::stretch_sprite_blit(const asw::Texture& tex,
+                                    const asw::Quad<float>& source,
+                                    const asw::Quad<float>& dest) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -124,10 +124,10 @@ void asw::draw::stretchSpriteBlit(const asw::Texture& tex,
   SDL_RenderTexture(asw::display::renderer, tex.get(), &r_src, &r_dest);
 }
 
-void asw::draw::stretchSpriteRotateBlit(const asw::Texture& tex,
-                                        const asw::Quad<float>& source,
-                                        const asw::Quad<float>& dest,
-                                        float angle) {
+void asw::draw::stretch_sprite_rotate_blit(const asw::Texture& tex,
+                                           const asw::Quad<float>& source,
+                                           const asw::Quad<float>& dest,
+                                           float angle) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -159,7 +159,7 @@ void asw::draw::text(const asw::Font& font,
     return;
   }
 
-  const SDL_Color sdlColor = color.toSDLColor();
+  const auto sdlColor = SDL_Color{color.r, color.g, color.b, color.a};
   SDL_Surface* textSurface =
       TTF_RenderText_Solid(font.get(), text.c_str(), 0, sdlColor);
   SDL_Texture* textTexture =
@@ -175,9 +175,9 @@ void asw::draw::text(const asw::Font& font,
   dest.h = float(textSurface->h);
 
   // Justification settings
-  if (justify == asw::TextJustify::CENTER) {
+  if (justify == asw::TextJustify::Center) {
     dest.x -= dest.w / 2.0F;
-  } else if (justify == asw::TextJustify::RIGHT) {
+  } else if (justify == asw::TextJustify::Right) {
     dest.x -= dest.w;
   }
 
@@ -225,7 +225,7 @@ void asw::draw::rect(const asw::Quad<float>& position, asw::Color color) {
   SDL_RenderRect(asw::display::renderer, &rect);
 }
 
-void asw::draw::rectFill(const asw::Quad<float>& position, asw::Color color) {
+void asw::draw::rect_fill(const asw::Quad<float>& position, asw::Color color) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -252,9 +252,9 @@ void asw::draw::circle(const asw::Vec2<float>& position,
                          color.a);
 
   // Midpoint circle algorithm — no trig, integer arithmetic only
-  int x = static_cast<int>(radius);
-  int y = 0;
-  int err = 1 - x;
+  auto x = radius;
+  auto y = 0.0F;
+  auto err = 1.0F - x;
   const float cx = position.x;
   const float cy = position.y;
 
@@ -269,17 +269,17 @@ void asw::draw::circle(const asw::Vec2<float>& position,
     SDL_RenderPoint(asw::display::renderer, cx - y, cy - x);
     y++;
     if (err < 0) {
-      err += 2 * y + 1;
+      err += (2.0F * y) + 1.0F;
     } else {
       x--;
-      err += 2 * (y - x) + 1;
+      err += (2.0F * (y - x)) + 1.0F;
     }
   }
 }
 
-void asw::draw::circleFill(const asw::Vec2<float>& position,
-                           float radius,
-                           asw::Color color) {
+void asw::draw::circle_fill(const asw::Vec2<float>& position,
+                            float radius,
+                            asw::Color color) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -288,9 +288,9 @@ void asw::draw::circleFill(const asw::Vec2<float>& position,
                          color.a);
 
   // Midpoint circle with horizontal scanlines — no gaps, no trig
-  int x = static_cast<int>(radius);
-  int y = 0;
-  int err = 1 - x;
+  float x = radius;
+  float y = 0.0F;
+  float err = 1.0F - x;
   const float cx = position.x;
   const float cy = position.y;
 
@@ -301,18 +301,19 @@ void asw::draw::circleFill(const asw::Vec2<float>& position,
     SDL_RenderLine(asw::display::renderer, cx - y, cy - x, cx + y, cy - x);
     y++;
     if (err < 0) {
-      err += 2 * y + 1;
+      err += (2.0F * y) + 1.0F;
     } else {
       x--;
-      err += 2 * (y - x) + 1;
+      err += (2.0F * (y - x)) + 1.0F;
     }
   }
 }
 
-void asw::draw::setBlendMode(const asw::Texture& texture, asw::BlendMode mode) {
+void asw::draw::set_blend_mode(const asw::Texture& texture,
+                               asw::BlendMode mode) {
   SDL_SetTextureBlendMode(texture.get(), static_cast<SDL_BlendMode>(mode));
 }
 
-void asw::draw::setAlpha(const asw::Texture& texture, float alpha) {
+void asw::draw::set_alpha(const asw::Texture& texture, float alpha) {
   SDL_SetTextureAlphaModFloat(texture.get(), alpha);
 }

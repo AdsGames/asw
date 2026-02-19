@@ -1,5 +1,11 @@
 #include "./asw/modules/input.h"
 
+namespace {
+  /// @brief Active cursor stores the current active cursor. It is updated by
+  /// the core.
+  std::array<SDL_Cursor*, asw::input::NUM_CURSORS> cursors{nullptr};
+}  // namespace
+
 asw::input::KeyState asw::input::keyboard{};
 
 asw::input::MouseState asw::input::mouse{};
@@ -13,8 +19,8 @@ void asw::input::reset() {
   auto& c_state = asw::input::controller;
 
   // Clear key state
-  k_state.anyPressed = false;
-  k_state.lastPressed = -1;
+  k_state.any_pressed = false;
+  k_state.last_pressed = -1;
 
   for (auto& pressed : k_state.pressed) {
     pressed = false;
@@ -25,9 +31,8 @@ void asw::input::reset() {
   }
 
   // Clear mouse state
-  m_state.anyPressed = false;
-  m_state.xChange = 0;
-  m_state.yChange = 0;
+  m_state.any_pressed = false;
+  m_state.change = {0.0F, 0.0F};
   m_state.z = 0;
 
   for (auto& pressed : m_state.pressed) {
@@ -40,8 +45,8 @@ void asw::input::reset() {
 
   // Clear controller state
   for (auto& cont : c_state) {
-    cont.anyPressed = false;
-    cont.lastPressed = -1;
+    cont.any_pressed = false;
+    cont.last_pressed = -1;
 
     for (auto& button : cont.pressed) {
       button = false;
@@ -53,34 +58,34 @@ void asw::input::reset() {
   }
 }
 
-bool asw::input::getMouseButton(asw::input::MouseButton button) {
+bool asw::input::get_mouse_button(asw::input::MouseButton button) {
   return mouse.down[static_cast<int>(button)];
 }
 
-bool asw::input::getMouseButtonDown(asw::input::MouseButton button) {
+bool asw::input::get_mouse_button_down(asw::input::MouseButton button) {
   return mouse.pressed[static_cast<int>(button)];
 }
 
-bool asw::input::getMouseButtonUp(asw::input::MouseButton button) {
+bool asw::input::get_mouse_button_up(asw::input::MouseButton button) {
   return mouse.released[static_cast<int>(button)];
 }
 
-bool asw::input::getKey(asw::input::Key key) {
+bool asw::input::get_key(asw::input::Key key) {
   return keyboard.down[static_cast<int>(key)];
 }
 
-bool asw::input::getKeyDown(asw::input::Key key) {
+bool asw::input::get_key_down(asw::input::Key key) {
   return keyboard.pressed[static_cast<int>(key)];
 }
 
-bool asw::input::getKeyUp(asw::input::Key key) {
+bool asw::input::get_key_up(asw::input::Key key) {
   return keyboard.released[static_cast<int>(key)];
 }
 
-void asw::input::setCursor(asw::input::CursorId cursor) {
+void asw::input::set_cursor(asw::input::CursorId cursor) {
   auto cursor_int = static_cast<unsigned int>(cursor);
 
-  if (cursor_int < 0 || cursor_int >= cursors.size()) {
+  if (cursor_int >= cursors.size()) {
     return;
   }
 
@@ -92,31 +97,32 @@ void asw::input::setCursor(asw::input::CursorId cursor) {
   SDL_SetCursor(cursors[cursor_int]);
 }
 
-bool asw::input::getControllerButton(int index,
-                                     asw::input::ControllerButton button) {
+bool asw::input::get_controller_button(int index,
+                                       asw::input::ControllerButton button) {
   return controller[index].down[static_cast<int>(button)];
 }
 
-bool asw::input::getControllerButtonDown(int index,
-                                         asw::input::ControllerButton button) {
+bool asw::input::get_controller_button_down(
+    int index,
+    asw::input::ControllerButton button) {
   return controller[index].pressed[static_cast<int>(button)];
 }
 
-bool asw::input::getControllerButtonUp(int index,
-                                       asw::input::ControllerButton button) {
+bool asw::input::get_controller_button_up(int index,
+                                          asw::input::ControllerButton button) {
   return controller[index].released[static_cast<int>(button)];
 }
 
-float asw::input::getControllerAxis(int index,
-                                    asw::input::ControllerAxis axis) {
+float asw::input::get_controller_axis(int index,
+                                      asw::input::ControllerAxis axis) {
   return controller[index].axis[static_cast<int>(axis)];
 }
 
-void asw::input::setControllerDeadZone(int index, float deadZone) {
-  controller[index].deadZone = deadZone;
+void asw::input::set_controller_dead_zone(int index, float dead_zone) {
+  controller[index].dead_zone = dead_zone;
 }
 
-int asw::input::getControllerCount() {
+int asw::input::get_controller_count() {
   int* count = nullptr;
   SDL_GetJoysticks(count);
   if (count == nullptr) {
@@ -126,6 +132,6 @@ int asw::input::getControllerCount() {
   return *count;
 }
 
-std::string asw::input::getControllerName(int index) {
+std::string asw::input::get_controller_name(int index) {
   return SDL_GetJoystickNameForID(index);
 }

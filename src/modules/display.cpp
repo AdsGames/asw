@@ -9,11 +9,11 @@
 asw::Renderer* asw::display::renderer = nullptr;
 asw::Window* asw::display::window = nullptr;
 
-void asw::display::setTitle(const std::string& title) {
+void asw::display::set_title(const std::string& title) {
   SDL_SetWindowTitle(asw::display::window, title.c_str());
 }
 
-void asw::display::setIcon(const std::string& path) {
+void asw::display::set_icon(const std::string& path) {
   SDL_Surface* icon = IMG_Load(path.c_str());
 
   if (icon == nullptr) {
@@ -23,25 +23,25 @@ void asw::display::setIcon(const std::string& path) {
   SDL_SetWindowIcon(asw::display::window, icon);
 }
 
-void asw::display::setFullscreen(bool fullscreen) {
+void asw::display::set_fullscreen(bool fullscreen) {
   SDL_SetWindowFullscreen(asw::display::window, fullscreen);
 }
 
-void asw::display::setResolution(int w, int h) {
+void asw::display::set_resolution(int w, int h) {
   SDL_SetWindowSize(asw::display::window, w, h);
 }
 
-void asw::display::setResizable(bool resizable) {
+void asw::display::set_resizable(bool resizable) {
   SDL_SetWindowResizable(asw::display::window, resizable);
 }
 
-SDL_Point asw::display::getSize() {
+SDL_Point asw::display::get_size() {
   SDL_Point size;
   SDL_GetWindowSize(asw::display::window, &size.x, &size.y);
   return size;
 }
 
-SDL_Point asw::display::getLogicalSize() {
+SDL_Point asw::display::get_logical_size() {
   SDL_Point size;
 
   if (asw::display::renderer == nullptr) {
@@ -53,7 +53,7 @@ SDL_Point asw::display::getLogicalSize() {
   return size;
 }
 
-SDL_FPoint asw::display::getScale() {
+SDL_FPoint asw::display::get_scale() {
   SDL_FPoint scale;
 
   if (asw::display::renderer == nullptr) {
@@ -64,7 +64,7 @@ SDL_FPoint asw::display::getScale() {
   return scale;
 }
 
-void asw::display::setRenderTarget(const asw::Texture& texture) {
+void asw::display::set_render_target(const asw::Texture& texture) {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -72,7 +72,7 @@ void asw::display::setRenderTarget(const asw::Texture& texture) {
   SDL_SetRenderTarget(asw::display::renderer, texture.get());
 }
 
-void asw::display::resetRenderTarget() {
+void asw::display::reset_render_target() {
   if (asw::display::renderer == nullptr) {
     return;
   }
@@ -102,7 +102,7 @@ void asw::display::present() {
   SDL_RenderPresent(asw::display::renderer);
 }
 
-void asw::display::setBlendMode(asw::BlendMode mode) {
+void asw::display::set_blend_mode(asw::BlendMode mode) {
   SDL_SetRenderDrawBlendMode(asw::display::renderer,
                              static_cast<SDL_BlendMode>(mode));
 }

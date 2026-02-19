@@ -9,6 +9,7 @@
 #ifndef ASW_LOG_H
 #define ASW_LOG_H
 
+#include <format>
 #include <iostream>
 #include <string>
 
@@ -21,13 +22,13 @@ namespace asw::log {
   ///
   /// @param level The minimum level to log.
   ///
-  void setLevel(Level level);
+  void set_level(Level level);
 
   /// @brief Set the output stream (default: std::cerr).
   ///
   /// @param stream The output stream to write log messages to.
   ///
-  void setOutput(std::ostream& stream);
+  void set_output(std::ostream& stream);
 
   /// @brief Log a debug message.
   ///
@@ -35,11 +36,31 @@ namespace asw::log {
   ///
   void debug(const std::string& message);
 
+  /// @brief Log a formatted debug message.
+  ///
+  /// @param format The format string.
+  /// @param args The arguments to format.
+  ///
+  template <typename... Args>
+  void debug(const std::string& format, Args&&... args) {
+    log_message(Level::DEBUG, std::format(format, std::forward<Args>(args)...));
+  }
+
   /// @brief Log an info message.
   ///
   /// @param message The message to log.
   ///
   void info(const std::string& message);
+
+  /// @brief Log a formatted info message.
+  ///
+  /// @param format The format string.
+  /// @param args The arguments to format.
+  ///
+  template <typename... Args>
+  void info(const std::string& format, Args&&... args) {
+    log_message(Level::INFO, std::format(format, std::forward<Args>(args)...));
+  }
 
   /// @brief Log a warning message.
   ///
@@ -47,11 +68,32 @@ namespace asw::log {
   ///
   void warn(const std::string& message);
 
+  /// @brief Log a formatted warning message.
+  ///
+  ///
+  /// @param format The format string.
+  /// @param args The arguments to format.
+  ///
+  template <typename... Args>
+  void warn(const std::string& format, Args&&... args) {
+    log_message(Level::WARN, std::format(format, std::forward<Args>(args)...));
+  }
+
   /// @brief Log an error message.
   ///
   /// @param message The message to log.
   ///
   void error(const std::string& message);
+
+  /// @brief Log a formatted error message.
+  ///
+  /// @param format The format string.
+  /// @param args The arguments to format.
+  ///
+  template <typename... Args>
+  void error(const std::string& format, Args&&... args) {
+    log_message(Level::ERROR, std::format(format, std::forward<Args>(args)...));
+  }
 
 }  // namespace asw::log
 

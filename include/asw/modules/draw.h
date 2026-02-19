@@ -19,7 +19,7 @@ namespace asw::draw {
   ///
   /// @param color The color to clear the screen to.
   ///
-  void clearColor(asw::Color color);
+  void clear_color(asw::Color color);
 
   /// @brief Draw a sprite.
   ///
@@ -32,13 +32,13 @@ namespace asw::draw {
   ///
   /// @param tex The texture to draw.
   /// @param position The position to draw the sprite at.
-  /// @param flipX Whether or not to flip the sprite on the x axis.
-  /// @param flipY Whether or not to flip the sprite on the y axis.
+  /// @param flip_x Whether or not to flip the sprite on the x axis.
+  /// @param flip_y Whether or not to flip the sprite on the y axis.
   ///
-  void spriteFlip(const asw::Texture& tex,
-                  const asw::Vec2<float>& position,
-                  bool flipX,
-                  bool flipY);
+  void sprite_flip(const asw::Texture& tex,
+                   const asw::Vec2<float>& position,
+                   bool flip_x,
+                   bool flip_y);
 
   /// @brief Draw a sprite with the option to stretch it.
   ///
@@ -46,7 +46,8 @@ namespace asw::draw {
   /// @param position The quad defining the position and size to stretch the
   /// sprite to.
   ///
-  void stretchSprite(const asw::Texture& tex, const asw::Quad<float>& position);
+  void stretch_sprite(const asw::Texture& tex,
+                      const asw::Quad<float>& position);
 
   /// @brief Draw a sprite with the option to rotate it.
   ///
@@ -54,9 +55,9 @@ namespace asw::draw {
   /// @param position The position to draw the sprite at.
   /// @param angle The angle to rotate the sprite by in radians.
   ///
-  void rotateSprite(const asw::Texture& tex,
-                    const asw::Vec2<float>& position,
-                    float angle);
+  void rotate_sprite(const asw::Texture& tex,
+                     const asw::Vec2<float>& position,
+                     float angle);
 
   /// @brief Draw a sprite with the option to stretch a portion of it.
   ///
@@ -65,9 +66,9 @@ namespace asw::draw {
   /// @param dest The quad defining the position and size to stretch the sprite
   /// to.
   ///
-  void stretchSpriteBlit(const asw::Texture& tex,
-                         const asw::Quad<float>& source,
-                         const asw::Quad<float>& dest);
+  void stretch_sprite_blit(const asw::Texture& tex,
+                           const asw::Quad<float>& source,
+                           const asw::Quad<float>& dest);
 
   /// @brief Draw a sprite with the option to stretch and rotate a portion of
   /// it.
@@ -78,10 +79,10 @@ namespace asw::draw {
   /// to.
   /// @param angle The angle to rotate the sprite by in radians.
   ///
-  void stretchSpriteRotateBlit(const asw::Texture& tex,
-                               const asw::Quad<float>& source,
-                               const asw::Quad<float>& dest,
-                               float angle);
+  void stretch_sprite_rotate_blit(const asw::Texture& tex,
+                                  const asw::Quad<float>& source,
+                                  const asw::Quad<float>& dest,
+                                  float angle);
 
   /// @brief Draw text
   ///
@@ -95,7 +96,7 @@ namespace asw::draw {
             const std::string& text,
             const asw::Vec2<float>& position,
             asw::Color color,
-            asw::TextJustify justify = asw::TextJustify::LEFT);
+            asw::TextJustify justify = asw::TextJustify::Left);
 
   /// @brief Draw a point.
   ///
@@ -126,7 +127,7 @@ namespace asw::draw {
   /// @param position The quad defining the position and size of the rectangle.
   /// @param color The color of the rectangle.
   ///
-  void rectFill(const asw::Quad<float>& position, asw::Color color);
+  void rect_fill(const asw::Quad<float>& position, asw::Color color);
 
   /// @brief Draw a circle.
   ///
@@ -142,23 +143,23 @@ namespace asw::draw {
   /// @param radius The radius of the circle.
   /// @param color The color of the circle.
   ///
-  void circleFill(const asw::Vec2<float>& position,
-                  float radius,
-                  asw::Color color);
+  void circle_fill(const asw::Vec2<float>& position,
+                   float radius,
+                   asw::Color color);
 
   /// @brief Set the blend mode of a texture.
   ///
   /// @param texture The texture to set the blend mode of.
   /// @param mode The blend mode to set.
   ///
-  void setBlendMode(const asw::Texture& texture, asw::BlendMode mode);
+  void set_blend_mode(const asw::Texture& texture, asw::BlendMode mode);
 
   /// @brief Set the alpha of a texture.
   ///
   /// @param texture The texture to set the alpha of.
   /// @param alpha The alpha to set.
   ///
-  void setAlpha(const asw::Texture& texture, float alpha);
+  void set_alpha(const asw::Texture& texture, float alpha);
 }  // namespace asw::draw
 
 #endif  // ASW_DRAW_H

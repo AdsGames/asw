@@ -20,13 +20,13 @@ namespace asw {
                                    int maxParticles)
       : config(config), particles(maxParticles) {}
 
-  void ParticleEmitter::setEmissionRate(float rate) {
-    emissionRate = rate;
+  void ParticleEmitter::set_emission_rate(float rate) {
+    emission_rate = rate;
   }
 
   void ParticleEmitter::emit(int count) {
     for (int i = 0; i < count; ++i) {
-      spawnParticle();
+      spawn_particle();
     }
   }
 
@@ -38,94 +38,94 @@ namespace asw {
     emitting = false;
   }
 
-  void ParticleEmitter::update(float deltaTime) {
+  void ParticleEmitter::update(float dt) {
     // Auto-emit
-    if (emitting && emissionRate > 0.0F) {
-      emissionAccumulator += emissionRate * deltaTime;
-      while (emissionAccumulator >= 1.0F) {
-        spawnParticle();
-        emissionAccumulator -= 1.0F;
+    if (emitting && emission_rate > 0.0F) {
+      emission_accumulator += emission_rate * dt;
+      while (emission_accumulator >= 1.0F) {
+        spawn_particle();
+        emission_accumulator -= 1.0F;
       }
     }
 
     // Update alive particles (swap-and-shrink)
-    for (int i = 0; i < aliveCount;) {
+    for (unsigned int i = 0; i < alive_count;) {
       auto& p = particles[i];
-      p.age += deltaTime;
+      p.age += dt;
 
       if (p.age >= p.lifetime) {
-        particles[i] = particles[aliveCount - 1];
-        aliveCount--;
+        particles[i] = particles[alive_count - 1];
+        alive_count--;
         continue;
       }
 
-      p.velocity += config.gravity * deltaTime;
-      p.position += p.velocity * deltaTime;
+      p.velocity += config.gravity * dt;
+      p.position += p.velocity * dt;
       ++i;
     }
   }
 
   void ParticleEmitter::draw() {
-    for (int i = 0; i < aliveCount; ++i) {
+    for (unsigned int i = 0; i < alive_count; ++i) {
       const auto& p = particles[i];
-      float t = p.age / p.lifetime;
+      const float t = p.age / p.lifetime;
 
       // Interpolate visuals
-      float size = util::lerp(config.sizeStart, config.sizeEnd, t);
-      float alpha = util::lerp(config.alphaStart, config.alphaEnd, t);
-
-      auto r = static_cast<Uint8>(
-          util::lerp(static_cast<float>(config.colorStart.r),
-                     static_cast<float>(config.colorEnd.r), t));
-      auto g = static_cast<Uint8>(
-          util::lerp(static_cast<float>(config.colorStart.g),
-                     static_cast<float>(config.colorEnd.g), t));
-      auto b = static_cast<Uint8>(
-          util::lerp(static_cast<float>(config.colorStart.b),
-                     static_cast<float>(config.colorEnd.b), t));
-      auto a = static_cast<Uint8>(
-          util::lerp(static_cast<float>(config.colorStart.a),
-                     static_cast<float>(config.colorEnd.a), t) *
-          alpha);
-
-      const Color color{r, g, b, a};
+      const float size = util::lerp(config.size_start, config.size_end, t);
+      const float alpha = util::lerp(config.alpha_start, config.alpha_end, t);
 
       if (config.texture != nullptr) {
-        const Quad<float> dest(p.position.x - size / 2.0F,
-                               p.position.y - size / 2.0F, size, size);
+        const auto dest = Quad<float>(p.position.x - (size / 2.0F),
+                                      p.position.y - (size / 2.0F), size, size);
 
-        draw::setAlpha(config.texture, alpha);
-        draw::stretchSprite(config.texture, dest);
-        draw::setAlpha(config.texture, 1.0F);
+        draw::set_alpha(config.texture, alpha);
+        draw::stretch_sprite(config.texture, dest);
+        draw::set_alpha(config.texture, 1.0F);
       } else {
-        draw::circleFill(p.position, size / 2.0F, color);
+        auto r = static_cast<Uint8>(
+            util::lerp(static_cast<float>(config.color_start.r),
+                       static_cast<float>(config.color_end.r), t));
+        auto g = static_cast<Uint8>(
+            util::lerp(static_cast<float>(config.color_start.g),
+                       static_cast<float>(config.color_end.g), t));
+        auto b = static_cast<Uint8>(
+            util::lerp(static_cast<float>(config.color_start.b),
+                       static_cast<float>(config.color_end.b), t));
+        auto a = static_cast<Uint8>(
+            util::lerp(static_cast<float>(config.color_start.a),
+                       static_cast<float>(config.color_end.a), t) *
+            alpha);
+
+        const Color color{r, g, b, a};
+
+        draw::circle_fill(p.position, size / 2.0F, color);
       }
     }
   }
 
-  int ParticleEmitter::getAliveCount() const {
-    return aliveCount;
+  unsigned int ParticleEmitter::get_alive_count() const {
+    return alive_count;
   }
 
-  void ParticleEmitter::spawnParticle() {
-    if (aliveCount >= static_cast<int>(particles.size())) {
+  void ParticleEmitter::spawn_particle() {
+    if (alive_count >= particles.size()) {
       return;
     }
 
-    auto& p = particles[aliveCount];
+    auto& p = particles[alive_count];
     p.position = transform.position;
     p.age = 0.0F;
-    p.lifetime = random::between(config.lifetimeMin, config.lifetimeMax);
+    p.lifetime = random::between(config.lifetime_min, config.lifetime_max);
     p.alive = true;
 
-    const float speed = random::between(config.speedMin, config.speedMax);
-    const float angle = random::between(config.angleMin, config.angleMax);
+    const float speed = random::between(config.speed_min, config.speed_max);
+    const float angle = random::between(config.angle_min, config.angle_max);
     p.velocity = Vec2<float>(std::cos(angle) * speed, std::sin(angle) * speed);
 
-    p.size = config.sizeStart;
+    p.size = config.size_start;
     p.rotation = 0.0F;
 
-    aliveCount++;
+    alive_count++;
   }
 
 }  // namespace asw

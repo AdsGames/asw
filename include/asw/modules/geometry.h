@@ -23,7 +23,7 @@ namespace asw {
    public:
     /// @brief Default constructor for the Vec2 class.
     ///
-    Vec2() : x(0), y(0) {}
+    Vec2() = default;
 
     /// @brief Constructor for the Vec2 class.
     ///
@@ -164,18 +164,7 @@ namespace asw {
     /// @param other The vector to compare.
     /// @return bool True if the vectors are equal.
     ///
-    bool operator==(const Vec2& other) const {
-      return x == other.x && y == other.y;
-    }
-
-    /// @brief Inequality operator for the Vec2 class.
-    ///
-    /// @param other The vector to compare.
-    /// @return bool True if the vectors are not equal.
-    ///
-    bool operator!=(const Vec2& other) const {
-      return x != other.x || y != other.y;
-    }
+    bool operator==(const Vec2& other) const = default;
 
     /// @brief The x component of the vector.
     T x{0};
@@ -194,7 +183,7 @@ namespace asw {
    public:
     /// @brief Default constructor for the Vec3 class.
     ///
-    Vec3() : x(0), y(0), z(0) {}
+    Vec3() = default;
 
     /// @brief Constructor for the Vec3 class.
     ///
@@ -209,9 +198,9 @@ namespace asw {
     /// @return The angle of the vector in radians.
     ///
     T angle(const Vec3& other) const {
-      T dotProduct = dot(other);
+      T dot_product = dot(other);
       T magnitudes = magnitude() * other.magnitude();
-      return std::acos(dotProduct / magnitudes);
+      return std::acos(dot_product / magnitudes);
     }
 
     /// @brief Get distance between two vectors.
@@ -338,18 +327,7 @@ namespace asw {
     /// @param other The vector to compare.
     /// @return bool True if the vectors are equal.
     ///
-    bool operator==(const Vec3& other) const {
-      return x == other.x && y == other.y && z == other.z;
-    }
-
-    /// @brief Inequality operator for the Vec3 class.
-    ///
-    /// @param other The vector to compare.
-    /// @return bool True if the vectors are not equal.
-    ///
-    bool operator!=(const Vec3& other) const {
-      return x != other.x || y != other.y || z != other.z;
-    }
+    bool operator==(const Vec3& other) const = default;
 
     /// @brief The x component of the vector.
     T x{0};
@@ -395,20 +373,20 @@ namespace asw {
     /// @param x The x position of the rectangle.
     /// @param y The y position of the rectangle.
     ///
-    void setPosition(T x, T y) { position = Vec2<T>(x, y); }
+    void set_position(T x, T y) { position = Vec2<T>(x, y); }
 
     /// @brief Set the size of the rectangle.
     ///
     /// @param width The width of the rectangle.
     /// @param height The height of the rectangle.
     ///
-    void setSize(T width, T height) { size = Vec2<T>(width, height); }
+    void set_size(T width, T height) { size = Vec2<T>(width, height); }
 
     /// @brief Get center of the rectangle.
     ///
     /// @return Vec2 The center of the rectangle.
     ///
-    Vec2<T> getCenter() const {
+    Vec2<T> get_center() const {
       return Vec2<T>(position.x + (size.x / 2.0F),
                      position.y + (size.y / 2.0F));
     }
@@ -449,22 +427,22 @@ namespace asw {
     }
 
     // Collision
-    bool collidesBottom(const Quad& other) const {
+    bool collides_bottom(const Quad& other) const {
       return position.y < other.position.y + other.size.y &&
              position.y + size.y > other.position.y + other.size.y;
     }
 
-    bool collidesTop(const Quad& other) const {
+    bool collides_top(const Quad& other) const {
       return position.y + size.y > other.position.y &&
              position.y < other.position.y;
     }
 
-    bool collidesLeft(const Quad& other) const {
+    bool collides_left(const Quad& other) const {
       return position.x + size.x > other.position.x &&
              position.x < other.position.x;
     }
 
-    bool collidesRight(const Quad& other) const {
+    bool collides_right(const Quad& other) const {
       return position.x < other.position.x + other.size.x &&
              position.x + size.x > other.position.x + other.size.x;
     }

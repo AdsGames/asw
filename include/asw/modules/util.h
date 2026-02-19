@@ -21,14 +21,14 @@ namespace asw::util {
   ///
   /// @param message Message to display
   ///
-  void abortOnError(const std::string& message);
+  void abort_on_error(const std::string& message);
 
   /// @brief Get texture size
   ///
   /// @param tex Texture to get size of
   /// @return Size as Vec2
   ///
-  asw::Vec2<float> getTextureSize(const asw::Texture& tex);
+  asw::Vec2<float> get_texture_size(const asw::Texture& tex);
 
   /// @brief Get text size
   ///
@@ -36,7 +36,7 @@ namespace asw::util {
   /// @param text Text to get size of
   /// @return Size as Vec2
   ///
-  asw::Vec2<int> getTextSize(const asw::Font& font, const std::string& text);
+  asw::Vec2<int> get_text_size(const asw::Font& font, const std::string& text);
 
   /// @brief Lerp between two values
   ///

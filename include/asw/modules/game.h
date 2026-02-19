@@ -29,9 +29,9 @@ namespace asw::game {
     // Acceleration in pixels per second squared
     asw::Vec2<float> acceleration;
     // Angular velocity in radians per second
-    float angularVelocity{0.0F};
+    float angular_velocity{0.0F};
     // Angular acceleration in radians per second squared
-    float angularAcceleration{0.0F};
+    float angular_acceleration{0.0F};
   };
 
   /// Objects
@@ -47,13 +47,13 @@ namespace asw::game {
 
     /// @brief Update the object.
     ///
-    /// @param deltaTime The time in seconds since the last update.
+    /// @param dt The time in seconds since the last update.
     ///
-    virtual void update(float deltaTime) {
-      body.velocity += body.acceleration * deltaTime;
-      transform.position += body.velocity * deltaTime;
-      body.angularVelocity += body.angularAcceleration * deltaTime;
-      rotation += body.angularVelocity * deltaTime;
+    virtual void update(float dt) {
+      body.velocity += body.acceleration * dt;
+      transform.position += body.velocity * dt;
+      body.angular_velocity += body.angular_acceleration * dt;
+      rotation += body.angular_velocity * dt;
     };
 
     /// @brief Draw the object to the screen.
@@ -64,7 +64,7 @@ namespace asw::game {
     ///
     /// @return The position of the object.
     ///
-    const asw::Quad<float>& getTransform() const { return transform; }
+    const asw::Quad<float>& get_transform() const { return transform; }
 
     /// @brief The transform of the object.
     ///
@@ -78,7 +78,7 @@ namespace asw::game {
     /// @details Objects on higher layers are drawn on top of objects on lower
     /// layers.
     ///
-    int zIndex{0};
+    int z_index{0};
 
     /// @brief Whether or not the object is active.
     /// @details If an object is not active, it will not be updated or drawn.
@@ -105,22 +105,22 @@ namespace asw::game {
     /// @brief Set the texture of the sprite.
     ///
     /// @param texture The texture to set.
-    /// @param autoSize Whether or not to automatically set the size of the
+    /// @param auto_size Whether or not to automatically set the size of the
     /// sprite based on the texture dimensions.
     ///
-    void setTexture(const asw::Texture& texture, bool autoSize = true) {
+    void set_texture(const asw::Texture& texture, bool auto_size = true) {
       this->texture = texture;
 
-      if (autoSize) {
-        transform.size = asw::util::getTextureSize(texture);
+      if (auto_size) {
+        transform.size = asw::util::get_texture_size(texture);
       }
     }
 
     /// @brief Update the sprite.
     ///
-    /// @param deltaTime The time in seconds since the last update.
+    /// @param dt The time in seconds since the last update.
     ///
-    void update(float deltaTime) override { GameObject::update(deltaTime); }
+    void update(float dt) override { GameObject::update(dt); }
 
     /// @brief Draw the sprite to the screen.
     /// @details If a rotation is set, the sprite will be rotated around its
@@ -132,17 +132,17 @@ namespace asw::game {
       }
 
       if (alpha < 1.0F) {
-        asw::draw::setAlpha(texture, alpha);
+        asw::draw::set_alpha(texture, alpha);
       }
 
       if (rotation) {
-        asw::draw::rotateSprite(texture, transform.position, rotation);
+        asw::draw::rotate_sprite(texture, transform.position, rotation);
       } else {
-        asw::draw::stretchSprite(texture, transform);
+        asw::draw::stretch_sprite(texture, transform);
       }
 
       if (alpha < 1.0F) {
-        asw::draw::setAlpha(texture, 1.0F);
+        asw::draw::set_alpha(texture, 1.0F);
       }
     }
 
@@ -160,32 +160,34 @@ namespace asw::game {
     ///
     /// @param font The font to set.
     ///
-    void setFont(const asw::Font& font) { this->font = font; }
+    void set_font(const asw::Font& font) { this->font = font; }
 
     /// @brief Set the text of the text object.
     ///
     /// @param text The text to set.
     ///
-    void setText(const std::string& text) { this->text = text; }
+    void set_text(const std::string& text) { this->text = text; }
 
     /// @brief Set the color of the text.
     ///
     /// @param color The color to set.
     ///
-    void setColor(const asw::Color& color) { this->color = color; }
+    void set_color(const asw::Color& color) { this->color = color; }
 
     /// @brief Set the justification of the text.
     ///
     /// @param justify The justification to set.
     ///
-    void setJustify(asw::TextJustify justify) { this->justify = justify; }
+    void set_justify(asw::TextJustify justify) { this->justify = justify; }
 
     /// @brief Set the size of the text.
     ///
     /// @param size The size of the text.
     ///
-    void update(float deltaTime) override { GameObject::update(deltaTime); }
+    void update(float dt) override { GameObject::update(dt); }
 
+    /// @brief Draw the text to the screen.
+    ///
     void draw() override {
       asw::draw::text(font, text, transform.position, color, justify);
     }
@@ -194,7 +196,7 @@ namespace asw::game {
     std::string text;
     asw::Font font;
     asw::Color color;
-    asw::TextJustify justify{asw::TextJustify::LEFT};
+    asw::TextJustify justify{asw::TextJustify::Left};
   };
 
 };  // namespace asw::game

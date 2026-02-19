@@ -300,21 +300,13 @@ namespace asw::input {
     NumCursors = NUM_CURSORS
   };
 
-  namespace {
-    /// @brief Active cursor stores the current active cursor. It is updated by
-    /// the core.
-    std::array<SDL_Cursor*, NUM_CURSORS> cursors{nullptr};
-  }  // namespace
-
   /// @brief Mouse state stores the current state of the mouse. It is updated by
   /// the core.
   using MouseState = struct MouseState {
-    bool anyPressed{false};
-    int lastPressed{-1};
+    bool any_pressed{false};
+    int last_pressed{-1};
 
-    float xChange{0.0F};
-    float yChange{0.0F};
-
+    Vec2<float> change{0.0F, 0.0F};
     Vec2<float> position{0.0F, 0.0F};
     float z{0.0F};
 
@@ -332,7 +324,7 @@ namespace asw::input {
   /// @return true - If the button is down.
   /// @return false - If the button is not down.
   ///
-  bool getMouseButton(asw::input::MouseButton button);
+  bool get_mouse_button(asw::input::MouseButton button);
 
   /// @brief Check if a mouse button was pressed since the last update.
   ///
@@ -340,7 +332,7 @@ namespace asw::input {
   /// @return true - If the button was pressed.
   /// @return false - If the button was not pressed.
   ///
-  bool getMouseButtonDown(asw::input::MouseButton button);
+  bool get_mouse_button_down(asw::input::MouseButton button);
 
   /// @brief Check if a mouse button was released since the last update.
   ///
@@ -348,7 +340,7 @@ namespace asw::input {
   /// @return true - If the button was released.
   /// @return false - If the button was not released.
   ///
-  bool getMouseButtonUp(asw::input::MouseButton button);
+  bool get_mouse_button_up(asw::input::MouseButton button);
 
   /// @brief Keyboard state stores the current state of the keyboard. It is
   /// updated by the core.
@@ -358,8 +350,8 @@ namespace asw::input {
     std::array<bool, NUM_KEYS> released{false};
     std::array<bool, NUM_KEYS> down{false};
 
-    bool anyPressed{false};
-    int lastPressed{-1};
+    bool any_pressed{false};
+    int last_pressed{-1};
   };
 
   /// @brief Global keyboard state.
@@ -372,7 +364,7 @@ namespace asw::input {
   /// @return true - If the key is down.
   /// @return false - If the key is not down.
   ///
-  bool getKey(asw::input::Key key);
+  bool get_key(asw::input::Key key);
 
   /// @brief Check if a key was pressed since the last update.
   ///
@@ -380,7 +372,7 @@ namespace asw::input {
   /// @return true - If the key was pressed.
   /// @return false - If the key was not pressed.
   ///
-  bool getKeyDown(asw::input::Key key);
+  bool get_key_down(asw::input::Key key);
 
   /// @brief Check if a key was released since the last update.
   ///
@@ -388,7 +380,7 @@ namespace asw::input {
   /// @return true - If the key was released.
   /// @return false - If the key was not released.
   ///
-  bool getKeyUp(asw::input::Key key);
+  bool get_key_up(asw::input::Key key);
 
   /// @brief Change cursor
   ///
@@ -397,7 +389,7 @@ namespace asw::input {
   /// @return true - If the cursor was changed.
   /// @return false - If the cursor was not changed.
   ///
-  void setCursor(asw::input::CursorId cursor);
+  void set_cursor(asw::input::CursorId cursor);
 
   /**
    * @brief Number of buttons on a game controller
@@ -459,9 +451,9 @@ namespace asw::input {
     std::array<bool, NUM_CONTROLLER_BUTTONS> released{false};
     std::array<bool, NUM_CONTROLLER_BUTTONS> down{false};
 
-    bool anyPressed{false};
-    int lastPressed{-1};
-    float deadZone{0.25F};
+    bool any_pressed{false};
+    int last_pressed{-1};
+    float dead_zone{0.25F};
 
     std::array<float, NUM_CONTROLLER_AXES> axis{0};
   };
@@ -484,7 +476,7 @@ namespace asw::input {
    * @return true - If the button is down.
    * @return false - If the button is not down.
    */
-  bool getControllerButton(int index, asw::input::ControllerButton button);
+  bool get_controller_button(int index, asw::input::ControllerButton button);
 
   /**
    * @brief Check if a controller button was pressed since the last update.
@@ -494,7 +486,8 @@ namespace asw::input {
    * @return true - If the button was pressed.
    * @return false - If the button was not pressed.
    */
-  bool getControllerButtonDown(int index, asw::input::ControllerButton button);
+  bool get_controller_button_down(int index,
+                                  asw::input::ControllerButton button);
 
   /**
    * @brief Check if a controller button was released since the last update.
@@ -504,7 +497,7 @@ namespace asw::input {
    * @return true - If the button was released.
    * @return false - If the button was not released.
    */
-  bool getControllerButtonUp(int index, asw::input::ControllerButton button);
+  bool get_controller_button_up(int index, asw::input::ControllerButton button);
 
   /**
    * @brief Get the value of a controller axis.
@@ -513,22 +506,22 @@ namespace asw::input {
    * @param axis The axis to check.
    * @return float - The value of the axis between -1.0f and 1.0f.
    */
-  float getControllerAxis(int index, asw::input::ControllerAxis axis);
+  float get_controller_axis(int index, asw::input::ControllerAxis axis);
 
   /**
    * @breif Set the joystick deadzone for a controller.
    */
-  void setControllerDeadZone(int index, float deadZone);
+  void set_controller_dead_zone(int index, float dead_zone);
 
   /**
    * @breif Get the number of controllers connected.
    */
-  int getControllerCount();
+  int get_controller_count();
 
   /**
    * @breif Get the name of a controller.
    */
-  std::string getControllerName(int index);
+  std::string get_controller_name(int index);
 
   /**
    * @brief Reset all input states. Called by the core.

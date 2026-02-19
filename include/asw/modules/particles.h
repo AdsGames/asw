@@ -22,24 +22,24 @@ namespace asw {
   ///
   struct ParticleConfig {
     // Lifetime in seconds
-    float lifetimeMin{1.0F};
-    float lifetimeMax{2.0F};
+    float lifetime_min{1.0F};
+    float lifetime_max{2.0F};
 
     // Speed in pixels per second
-    float speedMin{50.0F};
-    float speedMax{100.0F};
+    float speed_min{50.0F};
+    float speed_max{100.0F};
 
     // Direction (radians)
-    float angleMin{0.0F};
-    float angleMax{6.2832F};  // Full circle
+    float angle_min{0.0F};
+    float angle_max{6.2832F};  // Full circle
 
     // Visual
-    Color colorStart{255, 255, 255, 255};
-    Color colorEnd{255, 255, 255, 0};
-    float alphaStart{1.0F};
-    float alphaEnd{0.0F};
-    float sizeStart{4.0F};
-    float sizeEnd{1.0F};
+    Color color_start{255, 255, 255, 255};
+    Color color_end{255, 255, 255, 0};
+    float alpha_start{1.0F};
+    float alpha_end{0.0F};
+    float size_start{4.0F};
+    float size_end{1.0F};
 
     // Physics in pixels per second squared
     Vec2<float> gravity{0.0F, 0.0F};
@@ -68,7 +68,7 @@ namespace asw {
     ///
     /// @param rate Particles per second.
     ///
-    void setEmissionRate(float rate);
+    void set_emission_rate(float rate);
 
     /// @brief Emit a burst of particles at current position.
     ///
@@ -86,9 +86,9 @@ namespace asw {
 
     /// @brief Update particles.
     ///
-    /// @param deltaTime The time in seconds since the last update.
+    /// @param dt The time in seconds since the last update.
     ///
-    void update(float deltaTime) override;
+    void update(float dt) override;
 
     /// @brief Draw alive particles.
     ///
@@ -98,7 +98,7 @@ namespace asw {
     ///
     /// @return The alive particle count.
     ///
-    int getAliveCount() const;
+    unsigned int get_alive_count() const;
 
    private:
     struct Particle {
@@ -111,15 +111,15 @@ namespace asw {
       bool alive{false};
     };
 
-    void spawnParticle();
+    void spawn_particle();
 
     ParticleConfig config;
     std::vector<Particle> particles;
-    int aliveCount{0};
+    unsigned int alive_count{0};
 
     // Emission rate in particles per second
-    float emissionRate{0.0F};
-    float emissionAccumulator{0.0F};
+    float emission_rate{0.0F};
+    float emission_accumulator{0.0F};
     bool emitting{false};
   };
 
