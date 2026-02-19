@@ -5,7 +5,6 @@
 
 #include "./asw/modules/log.h"
 
-[[noreturn]]
 void asw::util::abort_on_error(const std::string& message) {
   asw::log::error(message);
   SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Error", message.c_str(),

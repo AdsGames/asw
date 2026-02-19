@@ -21,6 +21,7 @@ namespace asw::util {
   ///
   /// @param message Message to display
   ///
+  [[noreturn]]
   void abort_on_error(const std::string& message);
 
   /// @brief Get texture size
