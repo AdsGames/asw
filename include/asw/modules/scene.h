@@ -238,9 +238,9 @@ namespace asw::scene {
         time_start = std::chrono::high_resolution_clock::now();
         lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
-        while (lag >= this->timestep) {
-          update(std::chrono::duration<float>(this->timestep).count());
-          lag -= this->timestep;
+        while (lag >= this->timestep_) {
+          update(std::chrono::duration<float>(this->timestep_).count());
+          lag -= this->timestep_;
         }
 
         // Draw
