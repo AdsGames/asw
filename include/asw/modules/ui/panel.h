@@ -15,16 +15,19 @@
 
 namespace asw::ui {
 
-  /// @brief A container widget with a background color or image.
-  ///
-  class Panel : public Widget {
-   public:
+/// @brief A container widget with a background color or image.
+///
+class Panel : public Widget {
+public:
     /// @brief Default constructor.
     ///
-    Panel() { focusable = false; }
+    Panel()
+    {
+        focusable = false;
+    }
 
     /// @brief The background color.
-    asw::Color bg{0, 0, 0, 0};
+    asw::Color bg { 0, 0, 0, 0 };
 
     /// @brief The background image texture.
     asw::Texture bg_image;
@@ -34,8 +37,8 @@ namespace asw::ui {
     /// @param ctx The UI context.
     ///
     void draw(Context& ctx) override;
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_MODULES_UI_PANEL_H
+#endif // ASW_MODULES_UI_PANEL_H

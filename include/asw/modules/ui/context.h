@@ -16,10 +16,10 @@
 
 namespace asw::ui {
 
-  /// @brief Manages focus navigation for UI widgets.
-  ///
-  class FocusManager {
-   public:
+/// @brief Manages focus navigation for UI widgets.
+///
+class FocusManager {
+public:
     /// @brief Rebuild the focusable widget list from the widget tree.
     ///
     /// @param root The root widget to traverse.
@@ -30,7 +30,10 @@ namespace asw::ui {
     ///
     /// @return Pointer to the focused widget, or nullptr.
     ///
-    Widget* focused() const { return focused_; }
+    Widget* focused() const
+    {
+        return focused_;
+    }
 
     /// @brief Set focus to a specific widget.
     ///
@@ -59,17 +62,17 @@ namespace asw::ui {
     ///
     void focus_dir(Context& ctx, int dx, int dy);
 
-   private:
+private:
     void dfs(Widget& w);
 
     std::vector<Widget*> focusables_;
     Widget* focused_ = nullptr;
-  };
+};
 
-  /// @brief Shared state for the UI system.
-  ///
-  class Context {
-   public:
+/// @brief Shared state for the UI system.
+///
+class Context {
+public:
     /// @brief Default constructor.
     ///
     Context() = default;
@@ -91,8 +94,8 @@ namespace asw::ui {
 
     /// @brief Whether the focus list needs to be rebuilt.
     bool need_focus_rebuild = true;
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_UI_CONTEXT_H
+#endif // ASW_UI_CONTEXT_H

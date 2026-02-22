@@ -17,19 +17,20 @@
 
 namespace asw::ui {
 
-  class Context;
+class Context;
 
-  /// @brief Unique identifier type for widgets.
-  ///
-  using WidgetId = uint32_t;
+/// @brief Unique identifier type for widgets.
+///
+using WidgetId = uint32_t;
 
-  /// @brief Base class for all UI widgets.
-  ///
-  class Widget {
-   public:
+/// @brief Base class for all UI widgets.
+///
+class Widget {
+public:
     /// @brief Default constructor for Widget.
     ///
-    Widget() : id_(generate_id()) {};
+    Widget()
+        : id_(generate_id()) { };
 
     /// @brief Default virtual destructor.
     ///
@@ -50,7 +51,10 @@ namespace asw::ui {
     ///
     /// @return The widget's unique identifier.
     ///
-    WidgetId id() const { return id_; }
+    WidgetId id() const
+    {
+        return id_;
+    }
 
     /// @brief Whether the widget is visible.
     bool visible = true;
@@ -101,28 +105,30 @@ namespace asw::ui {
     /// @param args Constructor arguments forwarded to T.
     /// @return A reference to the newly added child widget.
     ///
-    template <class T, class... Args>
-    T& add_child(Args&&... args) {
-      static_assert(std::is_base_of_v<Widget, T>,
-                    "add_child<T>: T must derive from Widget");
-      auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
-      ptr->parent = this;
-      auto& ref = *ptr;
-      children.emplace_back(std::move(ptr));
-      return ref;
+    template <class T, class... Args> T& add_child(Args&&... args)
+    {
+        static_assert(std::is_base_of_v<Widget, T>, "add_child<T>: T must derive from Widget");
+        auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
+        ptr->parent = this;
+        auto& ref = *ptr;
+        children.emplace_back(std::move(ptr));
+        return ref;
     }
 
     /// @brief The transform (position and size) of the widget.
     asw::Quad<float> transform;
 
-   private:
-    static inline int id_counter_{1};
+private:
+    static inline int id_counter_ { 1 };
 
-    static int generate_id() { return id_counter_++; }
+    static int generate_id()
+    {
+        return id_counter_++;
+    }
 
     WidgetId id_;
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_MODULES_UI_WIDGET_H
+#endif // ASW_MODULES_UI_WIDGET_H

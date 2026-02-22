@@ -2,10 +2,11 @@
 
 #include "./asw/modules/draw.h"
 
-void asw::ui::Label::draw(Context& ctx) {
-  if (!text.empty() && font != nullptr) {
-    asw::draw::text(font, text, transform.position, color, justify);
-  }
+void asw::ui::Label::draw(Context& ctx)
+{
+    if (!text.empty() && font != nullptr) {
+        asw::draw::text(font, text, transform.position, color, justify);
+    }
 
-  Widget::draw(ctx);
+    Widget::draw(ctx);
 }

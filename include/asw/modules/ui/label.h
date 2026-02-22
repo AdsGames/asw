@@ -17,13 +17,16 @@
 
 namespace asw::ui {
 
-  /// @brief A text display widget.
-  ///
-  class Label : public Widget {
-   public:
+/// @brief A text display widget.
+///
+class Label : public Widget {
+public:
     /// @brief Default constructor.
     ///
-    Label() { focusable = false; }
+    Label()
+    {
+        focusable = false;
+    }
 
     /// @brief Draw the label.
     ///
@@ -42,8 +45,8 @@ namespace asw::ui {
 
     /// @brief The text color.
     asw::Color color;
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_MODULES_UI_LABEL_H
+#endif // ASW_MODULES_UI_LABEL_H

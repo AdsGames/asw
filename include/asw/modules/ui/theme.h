@@ -13,37 +13,40 @@
 
 namespace asw::ui {
 
-  /// @brief Theme configuration for UI elements.
-  ///
-  struct Theme {
+/// @brief Theme configuration for UI elements.
+///
+struct Theme {
     /// @brief Default text color.
-    asw::Color text{255, 255, 255, 255};
+    asw::Color text { 255, 255, 255, 255 };
 
     /// @brief Dimmed text color.
-    asw::Color text_dim{200, 200, 200, 255};
+    asw::Color text_dim { 200, 200, 200, 255 };
 
     /// @brief Panel background color.
-    asw::Color panel_bg{30, 30, 30, 255};
+    asw::Color panel_bg { 30, 30, 30, 255 };
 
     /// @brief Button background color.
-    asw::Color btn_bg{55, 55, 55, 255};
+    asw::Color btn_bg { 55, 55, 55, 255 };
 
     /// @brief Button hover color.
-    asw::Color btn_hover{75, 75, 75, 255};
+    asw::Color btn_hover { 75, 75, 75, 255 };
 
     /// @brief Button pressed color.
-    asw::Color btn_pressed{95, 95, 95, 255};
+    asw::Color btn_pressed { 95, 95, 95, 255 };
 
     /// @brief Button focus ring color.
-    asw::Color btn_focus_ring{255, 200, 80, 255};
+    asw::Color btn_focus_ring { 255, 200, 80, 255 };
+
+    /// @brief Input box background color.
+    asw::Color input_bg { 20, 20, 20, 255 };
 
     /// @brief Default padding.
     float padding = 10.0f;
 
     /// @brief Default gap between elements.
     float gap = 8.0f;
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_MODULES_UI_THEME_H
+#endif // ASW_MODULES_UI_THEME_H

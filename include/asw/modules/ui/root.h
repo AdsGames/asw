@@ -14,10 +14,10 @@
 
 namespace asw::ui {
 
-  /// @brief Root container that manages the UI tree, input, and rendering.
-  ///
-  class Root {
-   public:
+/// @brief Root container that manages the UI tree, input, and rendering.
+///
+class Root {
+public:
     /// @brief Default constructor.
     ///
     Root();
@@ -68,8 +68,8 @@ namespace asw::ui {
     /// @brief Draw the UI tree.
     ///
     void draw();
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_UI_ROOT_H
+#endif // ASW_UI_ROOT_H

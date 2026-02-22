@@ -12,6 +12,7 @@
 #include "button.h"
 #include "context.h"
 #include "event.h"
+#include "input_box.h"
 #include "label.h"
 #include "panel.h"
 #include "root.h"
@@ -19,4 +20,4 @@
 #include "vbox.h"
 #include "widget.h"
 
-#endif  // ASW_MODULES_UI_UI_H
+#endif // ASW_MODULES_UI_UI_H

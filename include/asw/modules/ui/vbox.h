@@ -14,10 +14,10 @@
 
 namespace asw::ui {
 
-  /// @brief A vertical box layout container.
-  ///
-  class VBox : public Widget {
-   public:
+/// @brief A vertical box layout container.
+///
+class VBox : public Widget {
+public:
     /// @brief Gap between child elements.
     float gap = 8.0F;
 
@@ -29,8 +29,8 @@ namespace asw::ui {
     /// @param ctx The UI context.
     ///
     void layout(Context& ctx) override;
-  };
+};
 
-}  // namespace asw::ui
+} // namespace asw::ui
 
-#endif  // ASW_MODULES_UI_VBOX_H
+#endif // ASW_MODULES_UI_VBOX_H

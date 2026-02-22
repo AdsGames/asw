@@ -6,13 +6,19 @@
 #include <string>
 
 namespace asw {
-  /// @brief RGBA color struct with 8-bit channels.
-  ///
-  struct Color {
+/// @brief RGBA color struct with 8-bit channels.
+///
+struct Color {
     uint8_t r, g, b, a;
 
     /// @brief Construct a default Color (black, fully opaque).
-    Color() : r(0), g(0), b(0), a(255) {}
+    Color()
+        : r(0)
+        , g(0)
+        , b(0)
+        , a(255)
+    {
+    }
 
     /// @brief Construct a Color from RGBA values.
     ///
@@ -22,7 +28,12 @@ namespace asw {
     /// @param a Alpha channel (0-255, default 255).
     ///
     Color(uint8_t r, uint8_t g, uint8_t b, uint8_t a = 255)
-        : r(r), g(g), b(b), a(a) {}
+        : r(r)
+        , g(g)
+        , b(b)
+        , a(a)
+    {
+    }
 
     /// @brief From float RGBA values (0.0-1.0) to Color.
     ///
@@ -32,9 +43,10 @@ namespace asw {
     /// @param a Alpha channel (0.0-1.0, default 1.0).
     /// @return The equivalent Color.
     ///
-    static Color from_float(float r, float g, float b, float a = 1.0F) {
-      return {static_cast<uint8_t>(r * 255), static_cast<uint8_t>(g * 255),
-              static_cast<uint8_t>(b * 255), static_cast<uint8_t>(a * 255)};
+    static Color from_float(float r, float g, float b, float a = 1.0F)
+    {
+        return { static_cast<uint8_t>(r * 255), static_cast<uint8_t>(g * 255),
+            static_cast<uint8_t>(b * 255), static_cast<uint8_t>(a * 255) };
     }
 
     /// @brief From a hex string (e.g. "#RRGGBBAA") to a Color.
@@ -42,69 +54,74 @@ namespace asw {
     /// @param hex The hex string to convert.
     /// @return The equivalent Color.
     ///
-    static Color from_hex(const std::string& hex) {
-      if (hex.empty() || hex[0] != '#' ||
-          (hex.length() != 7 && hex.length() != 9)) {
-        return Color();  // Invalid format, return default color
-      }
+    static Color from_hex(const std::string& hex)
+    {
+        if (hex.empty() || hex[0] != '#' || (hex.length() != 7 && hex.length() != 9)) {
+            return Color(); // Invalid format, return default color
+        }
 
-      uint8_t r = std::stoi(hex.substr(1, 2), nullptr, 16);
-      uint8_t g = std::stoi(hex.substr(3, 2), nullptr, 16);
-      uint8_t b = std::stoi(hex.substr(5, 2), nullptr, 16);
-      uint8_t a = 255;  // Default alpha
+        uint8_t r = std::stoi(hex.substr(1, 2), nullptr, 16);
+        uint8_t g = std::stoi(hex.substr(3, 2), nullptr, 16);
+        uint8_t b = std::stoi(hex.substr(5, 2), nullptr, 16);
+        uint8_t a = 255; // Default alpha
 
-      if (hex.length() == 9) {
-        a = std::stoi(hex.substr(7, 2), nullptr, 16);
-      }
+        if (hex.length() == 9) {
+            a = std::stoi(hex.substr(7, 2), nullptr, 16);
+        }
 
-      return {r, g, b, a};
+        return { r, g, b, a };
     }
 
     /// @brief Lighten a color by a given percentage.
     ///
     /// @param percentage The percentage to lighten (0.0-1.0).
     /// @return The lightened color.
-    Color lighten(float percentage) const {
-      return {static_cast<uint8_t>(r + (255 - r) * percentage),
-              static_cast<uint8_t>(g + (255 - g) * percentage),
-              static_cast<uint8_t>(b + (255 - b) * percentage), a};
+    Color lighten(float percentage) const
+    {
+        return { static_cast<uint8_t>(r + (255 - r) * percentage),
+            static_cast<uint8_t>(g + (255 - g) * percentage),
+            static_cast<uint8_t>(b + (255 - b) * percentage), a };
     }
 
     /// @brief Darken a color by a given percentage.
     ///
     /// @param percentage The percentage to darken (0.0-1.0).
     /// @return The darkened color.
-    Color darken(float percentage) const {
-      return {static_cast<uint8_t>(r * (1 - percentage)),
-              static_cast<uint8_t>(g * (1 - percentage)),
-              static_cast<uint8_t>(b * (1 - percentage)), a};
+    Color darken(float percentage) const
+    {
+        return { static_cast<uint8_t>(r * (1 - percentage)),
+            static_cast<uint8_t>(g * (1 - percentage)), static_cast<uint8_t>(b * (1 - percentage)),
+            a };
     }
 
     /// @brief Blend two colors together using alpha blending.
     ///
     /// @param color The color to blend with.
     /// @return The blended color.
-    Color blend(const Color& color) const {
-      float alpha = a / 255.0F;
-      return {static_cast<uint8_t>(r * alpha + color.r * (1 - alpha)),
-              static_cast<uint8_t>(g * alpha + color.g * (1 - alpha)),
-              static_cast<uint8_t>(b * alpha + color.b * (1 - alpha)), 255};
+    Color blend(const Color& color) const
+    {
+        float alpha = a / 255.0F;
+        return { static_cast<uint8_t>(r * alpha + color.r * (1 - alpha)),
+            static_cast<uint8_t>(g * alpha + color.g * (1 - alpha)),
+            static_cast<uint8_t>(b * alpha + color.b * (1 - alpha)), 255 };
     }
 
     /// @brief Invert a color.
     ///
     /// @return The inverted color.
-    Color invert() const {
-      return {static_cast<uint8_t>(255 - r), static_cast<uint8_t>(255 - g),
-              static_cast<uint8_t>(255 - b), a};
+    Color invert() const
+    {
+        return { static_cast<uint8_t>(255 - r), static_cast<uint8_t>(255 - g),
+            static_cast<uint8_t>(255 - b), a };
     }
 
     /// @brief Convert a color to grayscale.
     ///
     /// @param color The color to convert.
-    Color grayscale() const {
-      uint8_t gray = static_cast<uint8_t>(0.299F * r + 0.587F * g + 0.114F * b);
-      return {gray, gray, gray, a};
+    Color grayscale() const
+    {
+        uint8_t gray = static_cast<uint8_t>(0.299F * r + 0.587F * g + 0.114F * b);
+        return { gray, gray, gray, a };
     }
 
     /// @brief Adjust the alpha of a color.
@@ -112,11 +129,14 @@ namespace asw {
     /// @param color The color to adjust.
     /// @param alpha The new alpha value (0-255).
     /// @return The color with the adjusted alpha.
-    Color with_alpha(uint8_t alpha) const { return {r, g, b, alpha}; }
-  };
+    Color with_alpha(uint8_t alpha) const
+    {
+        return { r, g, b, alpha };
+    }
+};
 
-  /// Color constants
-  namespace color {
+/// Color constants
+namespace color {
     // Basic color names
     inline const Color black = Color::from_hex("#000000");
     inline const Color silver = Color::from_hex("#c0c0c0");
@@ -271,8 +291,8 @@ namespace asw {
 
     // Special
     inline const Color transparent = Color::from_hex("#00000000");
-  }  // namespace color
+} // namespace color
 
-}  // namespace asw
+} // namespace asw
 
-#endif  // ASW_COLOR_H
+#endif // ASW_COLOR_H
