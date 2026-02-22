@@ -9,9 +9,11 @@
 #ifndef ASW_SCENE_H
 #define ASW_SCENE_H
 
+#include <algorithm>
 #include <chrono>
 #include <iostream>
 #include <memory>
+#include <ranges>
 #include <unordered_map>
 #include <vector>
 
@@ -24,7 +26,6 @@
 #endif
 
 namespace asw::scene {
-  using namespace std::chrono_literals;
 
   /// @brief Default time step for the game loop.
   constexpr auto DEFAULT_TIMESTEP = 8ms;
@@ -55,7 +56,9 @@ namespace asw::scene {
     /// @details This function is called when the scene is registered and
     /// initialized.
     ///
-    virtual void init() {};
+    virtual void init() {
+      // Default implementation does nothing
+    };
 
     /// @brief Update the game scene.
     ///
@@ -64,27 +67,22 @@ namespace asw::scene {
     ///
     virtual void update(float dt) {
       // Erase inactive objects
-      objects.erase(
-          std::remove_if(objects.begin(), objects.end(),
-                         [](const std::shared_ptr<game::GameObject>& obj) {
-                           return !obj->alive;
-                         }),
-          objects.end());
+      std::erase_if(objects_, [](const auto& obj) { return !obj->alive; });
 
       // Update all objects in the scene
-      for (auto& obj : objects) {
+      for (auto const& obj : objects_) {
         if (obj->active && obj->alive) {
           obj->update(dt);
         }
       }
 
       // Create new objects
-      for (auto& obj : obj_to_create) {
-        objects.push_back(obj);
+      for (auto const& obj : obj_to_create_) {
+        objects_.push_back(obj);
       }
 
       // Clear the objects to create
-      obj_to_create.clear();
+      obj_to_create_.clear();
     };
 
     /// @brief Draw the game scene.
@@ -93,13 +91,9 @@ namespace asw::scene {
     ///
     virtual void draw() {
       // Sort objects by z-index
-      std::sort(objects.begin(), objects.end(),
-                [](const std::shared_ptr<game::GameObject>& a,
-                   const std::shared_ptr<game::GameObject>& b) {
-                  return a->z_index < b->z_index;
-                });
+      std::ranges::sort(objects_, std::less{}, &game::GameObject::z_index);
 
-      for (auto& obj : objects) {
+      for (auto const& obj : objects_) {
         if (obj->active) {
           obj->draw();
         }
@@ -111,14 +105,14 @@ namespace asw::scene {
     /// @details This function is called every frame to handle input for the
     /// scene.
     ///
-    virtual void cleanup() { objects.clear(); };
+    virtual void cleanup() { objects_.clear(); };
 
     /// @brief Add a game object to the scene.
     ///
     /// @param gameObject The game object to add to the scene.
     ///
-    void register_object(const std::shared_ptr<game::GameObject> obj) {
-      objects.push_back(obj);
+    void register_object(const std::shared_ptr<game::GameObject>& obj) {
+      objects_.push_back(obj);
     }
 
     /// @brief Create a new game object in the scene.
@@ -134,7 +128,7 @@ namespace asw::scene {
           "ObjectType must be constructible with the given arguments");
 
       auto obj = std::make_shared<ObjectType>(std::forward<Args>(args)...);
-      obj_to_create.emplace_back(obj);
+      obj_to_create_.emplace_back(obj);
       return obj;
     }
 
@@ -142,8 +136,8 @@ namespace asw::scene {
     ///
     /// @return A vector of shared pointers to game objects in the scene.
     ///
-    std::vector<std::shared_ptr<game::GameObject>> get_objects() {
-      return objects;
+    const std::vector<std::shared_ptr<game::GameObject>>& get_objects() const {
+      return objects_;
     }
 
     /// @brief Get game objects of a specific type in the scene.
@@ -158,7 +152,7 @@ namespace asw::scene {
                     "ObjectType must be derived from Scene<T>");
 
       std::vector<std::shared_ptr<ObjectType>> result;
-      for (const auto& obj : objects) {
+      for (const auto& obj : objects_) {
         if (auto casted_obj = std::dynamic_pointer_cast<ObjectType>(obj)) {
           result.push_back(casted_obj);
         }
@@ -172,10 +166,10 @@ namespace asw::scene {
 
    private:
     /// @brief Collection of game objects in the scene.
-    std::vector<std::shared_ptr<game::GameObject>> objects;
+    std::vector<std::shared_ptr<game::GameObject>> objects_;
 
     /// @brief Objects to be created in the next frame.
-    std::vector<std::shared_ptr<game::GameObject>> obj_to_create;
+    std::vector<std::shared_ptr<game::GameObject>> obj_to_create_;
   };
 
   /// @brief SceneManager class for managing game scenes.
@@ -232,6 +226,7 @@ namespace asw::scene {
       emscripten_set_main_loop(SceneManager::loop_emscripten, 0, 1);
 #else
 
+      using namespace std::chrono_literals;
       std::chrono::nanoseconds lag(0ns);
       auto time_start = std::chrono::high_resolution_clock::now();
       auto last_second = std::chrono::high_resolution_clock::now();
@@ -268,19 +263,19 @@ namespace asw::scene {
     ///
     void update(const float dt) {
       asw::core::update();
-      changeScene();
+      change_scene();
 
-      if (active_scene != nullptr) {
-        active_scene->update(dt);
+      if (active_scene_ != nullptr) {
+        active_scene_->update(dt);
       }
     }
 
     /// @brief Draw the current scene.
     ///
     void draw() {
-      if (active_scene != nullptr) {
+      if (active_scene_ != nullptr) {
         asw::display::clear();
-        active_scene->draw();
+        active_scene_->draw();
         asw::display::present();
       }
     }
@@ -289,57 +284,57 @@ namespace asw::scene {
     ///
     /// @param ts Timestep duration (default: 8ms).
     ///
-    void set_timestep(std::chrono::nanoseconds ts) { timestep = ts; }
+    void set_timestep(std::chrono::nanoseconds ts) { timestep_ = ts; }
 
     /// @brief Get the current timestep.
     ///
     /// @return The current timestep duration.
     ///
-    std::chrono::nanoseconds get_timestep() const { return timestep; }
+    std::chrono::nanoseconds get_timestep() const { return timestep_; }
 
     /// @brief Get the current FPS. Only applies to the managed loop.
     ///
     /// @return The current FPS.
     ///
-    int get_fps() const { return fps; }
+    int get_fps() const { return fps_; }
 
    private:
     /// @brief Change the current scene to the next scene.
     ///
-    void changeScene() {
-      if (!has_next_scene) {
+    void change_scene() {
+      if (!has_next_scene_) {
         return;
       }
 
-      if (active_scene != nullptr) {
-        active_scene->cleanup();
+      if (active_scene_ != nullptr) {
+        active_scene_->cleanup();
       }
 
-      if (auto it = scenes.find(next_scene); it != scenes.end()) {
-        active_scene = it->second;
-        active_scene->init();
+      if (auto it = scenes_.find(next_scene_); it != scenes_.end()) {
+        active_scene_ = it->second;
+        active_scene_->init();
       }
 
-      has_next_scene = false;
+      has_next_scene_ = false;
     }
 
     /// @brief The current scene of the scene engine.
-    std::shared_ptr<Scene<T>> active_scene;
+    std::shared_ptr<Scene<T>> active_scene_{nullptr};
 
     /// @brief The next scene of the scene engine.
-    T next_scene;
+    T next_scene_;
 
     /// @brief Flag to indicate if there is a next scene to change to.
-    bool has_next_scene{false};
+    bool has_next_scene_{false};
 
     /// @brief Collection of all scenes registered in the scene engine.
-    std::unordered_map<T, std::shared_ptr<Scene<T>>> scenes;
+    std::unordered_map<T, std::shared_ptr<Scene<T>>> scenes_;
 
     /// @brief Fixed timestep for the game loop.
-    std::chrono::nanoseconds timestep{DEFAULT_TIMESTEP};
+    std::chrono::nanoseconds timestep_{DEFAULT_TIMESTEP};
 
     /// @brief FPS Counter for managed loop.
-    int fps{0};
+    int fps_{0};
 
 #ifdef __EMSCRIPTEN__
     /// @brief Pointer to the current instance of the scene manager.

@@ -74,7 +74,7 @@ namespace asw {
     ///
     /// @param percentage The percentage to darken (0.0-1.0).
     /// @return The darkened color.
-    Color darken(float percentage) {
+    Color darken(float percentage) const {
       return {static_cast<uint8_t>(r * (1 - percentage)),
               static_cast<uint8_t>(g * (1 - percentage)),
               static_cast<uint8_t>(b * (1 - percentage)), a};
@@ -84,7 +84,7 @@ namespace asw {
     ///
     /// @param color The color to blend with.
     /// @return The blended color.
-    Color blend(const Color& color) {
+    Color blend(const Color& color) const {
       float alpha = a / 255.0F;
       return {static_cast<uint8_t>(r * alpha + color.r * (1 - alpha)),
               static_cast<uint8_t>(g * alpha + color.g * (1 - alpha)),

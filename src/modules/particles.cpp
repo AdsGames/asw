@@ -17,15 +17,15 @@
 namespace asw {
 
   ParticleEmitter::ParticleEmitter(const ParticleConfig& config,
-                                   int maxParticles)
+                                   uint32_t maxParticles)
       : config(config), particles(maxParticles) {}
 
   void ParticleEmitter::set_emission_rate(float rate) {
     emission_rate = rate;
   }
 
-  void ParticleEmitter::emit(int count) {
-    for (int i = 0; i < count; ++i) {
+  void ParticleEmitter::emit(uint32_t count) {
+    for (uint32_t i = 0; i < count; ++i) {
       spawn_particle();
     }
   }
@@ -49,7 +49,7 @@ namespace asw {
     }
 
     // Update alive particles (swap-and-shrink)
-    for (unsigned int i = 0; i < alive_count;) {
+    for (uint32_t i = 0; i < alive_count;) {
       auto& p = particles[i];
       p.age += dt;
 
@@ -66,7 +66,7 @@ namespace asw {
   }
 
   void ParticleEmitter::draw() {
-    for (unsigned int i = 0; i < alive_count; ++i) {
+    for (uint32_t i = 0; i < alive_count; ++i) {
       const auto& p = particles[i];
       const float t = p.age / p.lifetime;
 
@@ -82,16 +82,16 @@ namespace asw {
         draw::stretch_sprite(config.texture, dest);
         draw::set_alpha(config.texture, 1.0F);
       } else {
-        auto r = static_cast<Uint8>(
+        auto r = static_cast<uint8_t>(
             util::lerp(static_cast<float>(config.color_start.r),
                        static_cast<float>(config.color_end.r), t));
-        auto g = static_cast<Uint8>(
+        auto g = static_cast<uint8_t>(
             util::lerp(static_cast<float>(config.color_start.g),
                        static_cast<float>(config.color_end.g), t));
-        auto b = static_cast<Uint8>(
+        auto b = static_cast<uint8_t>(
             util::lerp(static_cast<float>(config.color_start.b),
                        static_cast<float>(config.color_end.b), t));
-        auto a = static_cast<Uint8>(
+        auto a = static_cast<uint8_t>(
             util::lerp(static_cast<float>(config.color_start.a),
                        static_cast<float>(config.color_end.a), t) *
             alpha);
@@ -103,7 +103,7 @@ namespace asw {
     }
   }
 
-  unsigned int ParticleEmitter::get_alive_count() const {
+  uint32_t ParticleEmitter::get_alive_count() const {
     return alive_count;
   }
 

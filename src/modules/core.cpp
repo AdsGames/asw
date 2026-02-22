@@ -88,6 +88,10 @@ void asw::core::update() {
       }
 
       case SDL_EVENT_MOUSE_MOTION: {
+        if (asw::display::renderer == nullptr) {
+          break;
+        }
+
         // Ensure scale is applied to mouse coordinates
         SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
         mouse.change.x = e.motion.xrel;
@@ -147,8 +151,7 @@ void asw::core::update() {
 
       case SDL_EVENT_GAMEPAD_ADDED: {
         if (e.gdevice.which >= asw::input::MAX_CONTROLLERS ||
-            !SDL_IsGamepad(e.gdevice.which) ||
-            SDL_OpenGamepad(e.gdevice.which) == nullptr) {
+            !SDL_IsGamepad(e.gdevice.which)) {
           asw::log::warn(
               std::format("Failed to open gamepad: {}", e.gdevice.which));
           break;

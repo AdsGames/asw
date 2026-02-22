@@ -58,7 +58,9 @@ namespace asw::game {
 
     /// @brief Draw the object to the screen.
     ///
-    virtual void draw() {};
+    virtual void draw() {
+      // Do nothing by default
+    };
 
     /// @brief Get transform
     ///
@@ -109,47 +111,41 @@ namespace asw::game {
     /// sprite based on the texture dimensions.
     ///
     void set_texture(const asw::Texture& texture, bool auto_size = true) {
-      this->texture = texture;
+      this->texture_ = texture;
 
       if (auto_size) {
-        transform.size = asw::util::get_texture_size(texture);
+        transform.size = asw::util::get_texture_size(texture_);
       }
     }
-
-    /// @brief Update the sprite.
-    ///
-    /// @param dt The time in seconds since the last update.
-    ///
-    void update(float dt) override { GameObject::update(dt); }
 
     /// @brief Draw the sprite to the screen.
     /// @details If a rotation is set, the sprite will be rotated around its
     /// center.
     ///
     void draw() override {
-      if (texture == nullptr) {
+      if (texture_ == nullptr) {
         return;
       }
 
       if (alpha < 1.0F) {
-        asw::draw::set_alpha(texture, alpha);
+        asw::draw::set_alpha(texture_, alpha);
       }
 
-      if (rotation) {
-        asw::draw::rotate_sprite(texture, transform.position, rotation);
+      if (rotation != 0.0F) {
+        asw::draw::rotate_sprite(texture_, transform.position, rotation);
       } else {
-        asw::draw::stretch_sprite(texture, transform);
+        asw::draw::stretch_sprite(texture_, transform);
       }
 
       if (alpha < 1.0F) {
-        asw::draw::set_alpha(texture, 1.0F);
+        asw::draw::set_alpha(texture_, 1.0F);
       }
     }
 
    private:
     /// @brief The texture of the sprite.
     ///
-    asw::Texture texture;
+    asw::Texture texture_;
   };
 
   /// @brief Text Object
@@ -160,43 +156,37 @@ namespace asw::game {
     ///
     /// @param font The font to set.
     ///
-    void set_font(const asw::Font& font) { this->font = font; }
+    void set_font(const asw::Font& font) { this->font_ = font; }
 
     /// @brief Set the text of the text object.
     ///
     /// @param text The text to set.
     ///
-    void set_text(const std::string& text) { this->text = text; }
+    void set_text(const std::string_view& text) { this->text_ = text; }
 
     /// @brief Set the color of the text.
     ///
     /// @param color The color to set.
     ///
-    void set_color(const asw::Color& color) { this->color = color; }
+    void set_color(const asw::Color& color) { this->color_ = color; }
 
     /// @brief Set the justification of the text.
     ///
     /// @param justify The justification to set.
     ///
-    void set_justify(asw::TextJustify justify) { this->justify = justify; }
-
-    /// @brief Set the size of the text.
-    ///
-    /// @param size The size of the text.
-    ///
-    void update(float dt) override { GameObject::update(dt); }
+    void set_justify(asw::TextJustify justify) { this->justify_ = justify; }
 
     /// @brief Draw the text to the screen.
     ///
     void draw() override {
-      asw::draw::text(font, text, transform.position, color, justify);
+      asw::draw::text(font_, text_, transform.position, color_, justify_);
     }
 
    private:
-    std::string text;
-    asw::Font font;
-    asw::Color color;
-    asw::TextJustify justify{asw::TextJustify::Left};
+    std::string text_;
+    asw::Font font_;
+    asw::Color color_;
+    asw::TextJustify justify_{asw::TextJustify::Left};
   };
 
 };  // namespace asw::game

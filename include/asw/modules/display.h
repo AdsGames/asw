@@ -12,6 +12,7 @@
 #include <string>
 
 #include "./color.h"
+#include "./geometry.h"
 #include "./types.h"
 
 namespace asw::display {
@@ -58,21 +59,21 @@ namespace asw::display {
   ///
   /// @return The size of the window.
   ///
-  SDL_Point get_size();
+  asw::Vec2<int> get_size();
 
   /// @brief Get the logical size of the window. This may differ from the
   /// actual size if scaling is enabled.
   ///
   /// @return The logical size of the window.
   ///
-  SDL_Point get_logical_size();
+  asw::Vec2<int> get_logical_size();
 
   /// @brief Get the scale of the window. This is equivalent to the logical
   /// size divided by the actual size.
   ///
   /// @return The scale of the window.
   ///
-  SDL_FPoint get_scale();
+  asw::Vec2<float> get_scale();
 
   /// @brief Set the render target to the window.
   ///

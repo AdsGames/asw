@@ -77,12 +77,12 @@ namespace asw::input {
     Backspace = SDL_SCANCODE_BACKSPACE,
     Tab = SDL_SCANCODE_TAB,
     Space = SDL_SCANCODE_SPACE,
-    Minux = SDL_SCANCODE_MINUS,
+    Minus = SDL_SCANCODE_MINUS,
     Equals = SDL_SCANCODE_EQUALS,
     LeftBracket = SDL_SCANCODE_LEFTBRACKET,
     RightBracket = SDL_SCANCODE_RIGHTBRACKET,
     Backslash = SDL_SCANCODE_BACKSLASH,
-    Nonoshash = SDL_SCANCODE_NONUSHASH,
+    NonUsHash = SDL_SCANCODE_NONUSHASH,
     Semicolon = SDL_SCANCODE_SEMICOLON,
     Apostrophe = SDL_SCANCODE_APOSTROPHE,
     Grave = SDL_SCANCODE_GRAVE,
@@ -425,7 +425,7 @@ namespace asw::input {
   };
 
   /**
-   * @breif Number of axes on a game controller
+   * @brief Number of axes on a game controller
    */
   constexpr int NUM_CONTROLLER_AXES = SDL_GAMEPAD_AXIS_COUNT;
 
@@ -476,7 +476,8 @@ namespace asw::input {
    * @return true - If the button is down.
    * @return false - If the button is not down.
    */
-  bool get_controller_button(int index, asw::input::ControllerButton button);
+  bool get_controller_button(uint32_t index,
+                             asw::input::ControllerButton button);
 
   /**
    * @brief Check if a controller button was pressed since the last update.
@@ -486,7 +487,7 @@ namespace asw::input {
    * @return true - If the button was pressed.
    * @return false - If the button was not pressed.
    */
-  bool get_controller_button_down(int index,
+  bool get_controller_button_down(uint32_t index,
                                   asw::input::ControllerButton button);
 
   /**
@@ -497,7 +498,8 @@ namespace asw::input {
    * @return true - If the button was released.
    * @return false - If the button was not released.
    */
-  bool get_controller_button_up(int index, asw::input::ControllerButton button);
+  bool get_controller_button_up(uint32_t index,
+                                asw::input::ControllerButton button);
 
   /**
    * @brief Get the value of a controller axis.
@@ -506,22 +508,22 @@ namespace asw::input {
    * @param axis The axis to check.
    * @return float - The value of the axis between -1.0f and 1.0f.
    */
-  float get_controller_axis(int index, asw::input::ControllerAxis axis);
+  float get_controller_axis(uint32_t index, asw::input::ControllerAxis axis);
 
   /**
-   * @breif Set the joystick deadzone for a controller.
+   * @brief Set the joystick deadzone for a controller.
    */
-  void set_controller_dead_zone(int index, float dead_zone);
+  void set_controller_dead_zone(uint32_t index, float dead_zone);
 
   /**
-   * @breif Get the number of controllers connected.
+   * @brief Get the number of controllers connected.
    */
   int get_controller_count();
 
   /**
-   * @breif Get the name of a controller.
+   * @brief Get the name of a controller.
    */
-  std::string get_controller_name(int index);
+  std::string get_controller_name(uint32_t index);
 
   /**
    * @brief Reset all input states. Called by the core.

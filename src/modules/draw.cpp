@@ -4,6 +4,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <cmath>
+#include <numbers>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
@@ -96,7 +97,7 @@ void asw::draw::rotate_sprite(const asw::Texture& tex,
   dest.h = size.y;
 
   // Rad to deg
-  const double angleDeg = angle * (180.0 / M_PI);
+  const double angleDeg = angle * (180.0 / std::numbers::pi);
 
   SDL_RenderTextureRotated(asw::display::renderer, tex.get(), nullptr, &dest,
                            angleDeg, nullptr, SDL_FLIP_NONE);
@@ -144,7 +145,7 @@ void asw::draw::stretch_sprite_rotate_blit(const asw::Texture& tex,
   r_dest.w = dest.size.x;
   r_dest.h = dest.size.y;
 
-  const double angleDeg = angle * (180.0 / M_PI);
+  const double angleDeg = angle * (180.0 / std::numbers::pi);
 
   SDL_RenderTextureRotated(asw::display::renderer, tex.get(), &r_src, &r_dest,
                            angleDeg, nullptr, SDL_FLIP_NONE);

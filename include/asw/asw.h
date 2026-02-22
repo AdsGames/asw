@@ -18,6 +18,7 @@
 #include "./modules/scene.h"
 #include "./modules/sound.h"
 #include "./modules/types.h"
+#include "./modules/ui/ui.h"
 #include "./modules/util.h"
 
 #endif  // ASW_H

@@ -23,5 +23,7 @@ asw::Vec2<int> asw::util::get_text_size(const asw::Font& font,
   TTF_Text* ttf_text = TTF_CreateText(nullptr, font.get(), text.c_str(), 0);
   asw::Vec2<int> size;
   TTF_GetTextSize(ttf_text, &size.x, &size.y);
+  TTF_DestroyText(ttf_text);
+
   return size;
 }

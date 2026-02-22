@@ -56,7 +56,7 @@ namespace asw {
     /// @return The distance between the vectors.
     ///
     T distance(const Vec2& other) const {
-      return std::hypotf(x - other.x, y - other.y);
+      return std::hypot(x - other.x, y - other.y);
     }
 
     /// @brief Calculate the dot product of two vectors.

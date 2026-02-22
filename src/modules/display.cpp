@@ -35,14 +35,14 @@ void asw::display::set_resizable(bool resizable) {
   SDL_SetWindowResizable(asw::display::window, resizable);
 }
 
-SDL_Point asw::display::get_size() {
-  SDL_Point size;
+asw::Vec2<int> asw::display::get_size() {
+  asw::Vec2<int> size;
   SDL_GetWindowSize(asw::display::window, &size.x, &size.y);
   return size;
 }
 
-SDL_Point asw::display::get_logical_size() {
-  SDL_Point size;
+asw::Vec2<int> asw::display::get_logical_size() {
+  asw::Vec2<int> size;
 
   if (asw::display::renderer == nullptr) {
     return size;
@@ -53,8 +53,8 @@ SDL_Point asw::display::get_logical_size() {
   return size;
 }
 
-SDL_FPoint asw::display::get_scale() {
-  SDL_FPoint scale;
+asw::Vec2<float> asw::display::get_scale() {
+  asw::Vec2<float> scale;
 
   if (asw::display::renderer == nullptr) {
     return scale;

@@ -62,7 +62,7 @@ namespace asw {
     /// @param maxParticles Maximum number of particles in the pool.
     ///
     explicit ParticleEmitter(const ParticleConfig& config,
-                             int maxParticles = 256);
+                             uint32_t maxParticles = 256);
 
     /// @brief Set emission rate (particles per second), 0 to disable auto-emit.
     ///
@@ -74,7 +74,7 @@ namespace asw {
     ///
     /// @param count Number of particles to emit.
     ///
-    void emit(int count);
+    void emit(uint32_t count);
 
     /// @brief Start continuous emission.
     ///
@@ -98,7 +98,7 @@ namespace asw {
     ///
     /// @return The alive particle count.
     ///
-    unsigned int get_alive_count() const;
+    uint32_t get_alive_count() const;
 
    private:
     struct Particle {
@@ -115,7 +115,7 @@ namespace asw {
 
     ParticleConfig config;
     std::vector<Particle> particles;
-    unsigned int alive_count{0};
+    uint32_t alive_count{0};
 
     // Emission rate in particles per second
     float emission_rate{0.0F};

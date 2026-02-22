@@ -5,17 +5,17 @@
 #include <SDL3_mixer/SDL_mixer.h>
 
 namespace {
-  float masterVolume = 1.0F;
-  float sfxVolume = 1.0F;
-  float musicVolume = 1.0F;
+  float master_volume = 1.0F;
+  float sfx_volume = 1.0F;
+  float music_volume = 1.0F;
 
   int compute_sfx_volume(float requestedVolume) {
-    auto volume = requestedVolume * 255.0F * sfxVolume * masterVolume;
+    auto volume = requestedVolume * 255.0F * sfx_volume * master_volume;
     return static_cast<int>(volume);
   }
 
   int compute_music_volume(float requestedVolume) {
-    auto volume = requestedVolume * 255.0F * musicVolume * masterVolume;
+    auto volume = requestedVolume * 255.0F * music_volume * master_volume;
     return static_cast<int>(volume);
   }
 }  // namespace
@@ -72,25 +72,25 @@ bool asw::sound::is_music_paused() {
 }
 
 void asw::sound::set_master_volume(float volume) {
-  masterVolume = std::clamp(volume, 0.0F, 1.0F);
+  master_volume = std::clamp(volume, 0.0F, 1.0F);
 }
 
 void asw::sound::set_sfx_volume(float volume) {
-  sfxVolume = std::clamp(volume, 0.0F, 1.0F);
+  sfx_volume = std::clamp(volume, 0.0F, 1.0F);
 }
 
 void asw::sound::set_music_volume(float volume) {
-  musicVolume = std::clamp(volume, 0.0F, 1.0F);
+  music_volume = std::clamp(volume, 0.0F, 1.0F);
 }
 
 float asw::sound::get_master_volume() {
-  return masterVolume;
+  return master_volume;
 }
 
 float asw::sound::get_sfx_volume() {
-  return sfxVolume;
+  return sfx_volume;
 }
 
 float asw::sound::get_music_volume() {
-  return musicVolume;
+  return music_volume;
 }

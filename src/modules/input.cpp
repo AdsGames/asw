@@ -83,7 +83,7 @@ bool asw::input::get_key_up(asw::input::Key key) {
 }
 
 void asw::input::set_cursor(asw::input::CursorId cursor) {
-  auto cursor_int = static_cast<unsigned int>(cursor);
+  auto cursor_int = static_cast<uint32_t>(cursor);
 
   if (cursor_int >= cursors.size()) {
     return;
@@ -97,41 +97,61 @@ void asw::input::set_cursor(asw::input::CursorId cursor) {
   SDL_SetCursor(cursors[cursor_int]);
 }
 
-bool asw::input::get_controller_button(int index,
+bool asw::input::get_controller_button(uint32_t index,
                                        asw::input::ControllerButton button) {
+  if (index >= controller.size()) {
+    return false;
+  }
+
   return controller[index].down[static_cast<int>(button)];
 }
 
 bool asw::input::get_controller_button_down(
-    int index,
+    uint32_t index,
     asw::input::ControllerButton button) {
+  if (index >= controller.size()) {
+    return false;
+  }
+
   return controller[index].pressed[static_cast<int>(button)];
 }
 
-bool asw::input::get_controller_button_up(int index,
+bool asw::input::get_controller_button_up(uint32_t index,
                                           asw::input::ControllerButton button) {
+  if (index >= controller.size()) {
+    return false;
+  }
+
   return controller[index].released[static_cast<int>(button)];
 }
 
-float asw::input::get_controller_axis(int index,
+float asw::input::get_controller_axis(uint32_t index,
                                       asw::input::ControllerAxis axis) {
+  if (index >= controller.size()) {
+    return 0.0F;
+  }
+
   return controller[index].axis[static_cast<int>(axis)];
 }
 
-void asw::input::set_controller_dead_zone(int index, float dead_zone) {
+void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone) {
+  if (index >= controller.size()) {
+    return;
+  }
+
   controller[index].dead_zone = dead_zone;
 }
 
 int asw::input::get_controller_count() {
-  int* count = nullptr;
-  SDL_GetJoysticks(count);
-  if (count == nullptr) {
-    return 0;
-  }
-
-  return *count;
+  int count = 0;
+  SDL_GetJoysticks(&count);
+  return count;
 }
 
-std::string asw::input::get_controller_name(int index) {
-  return SDL_GetJoystickNameForID(index);
+std::string asw::input::get_controller_name(uint32_t index) {
+  if (index >= controller.size()) {
+    return "";
+  }
+
+  return SDL_GetGamepadNameForID(index);
 }

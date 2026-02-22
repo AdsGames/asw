@@ -37,15 +37,15 @@ float asw::easing::ease_in_out_cubic(float t) {
 
 // Sine
 float asw::easing::ease_in_sine(float t) {
-  return 1.0F - std::cosf(t * std::numbers::pi_v<float> * 0.5F);
+  return 1.0F - std::cos(t * std::numbers::pi_v<float> * 0.5F);
 }
 
 float asw::easing::ease_out_sine(float t) {
-  return std::sinf(t * std::numbers::pi_v<float> * 0.5F);
+  return std::sin(t * std::numbers::pi_v<float> * 0.5F);
 }
 
 float asw::easing::ease_in_out_sine(float t) {
-  return 0.5F * (1.0F - std::cosf(std::numbers::pi_v<float> * t));
+  return 0.5F * (1.0F - std::cos(std::numbers::pi_v<float> * t));
 }
 
 // Exponential
