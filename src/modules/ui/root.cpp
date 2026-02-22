@@ -116,6 +116,7 @@ void asw::ui::Root::update()
         // Also dispatch the regular move event
         const UIEvent e { .type = UIEvent::Type::PointerMove, .pointer_pos = mouse.position };
         dispatch_pointer(e);
+        ctx.theme.show_focus = false;
     }
 
     // --- Button events ---
@@ -127,6 +128,7 @@ void asw::ui::Root::update()
             .pointer_pos = mouse.position,
             .mouse_button = MouseButton::Left };
         dispatch_pointer(e);
+        ctx.theme.show_focus = false;
     }
 
     // Button Up
@@ -136,6 +138,7 @@ void asw::ui::Root::update()
             .pointer_pos = mouse.position,
             .mouse_button = MouseButton::Left };
         dispatch_pointer(e);
+        ctx.theme.show_focus = false;
     }
 
     // --- Text Input ---
@@ -154,6 +157,8 @@ void asw::ui::Root::update()
         } else {
             ctx.focus.focus_next(ctx);
         }
+
+        ctx.theme.show_focus = true;
     }
 
     // Arrow keys: dispatch KeyDown to focused widget first, fall back to focus navigation
@@ -161,24 +166,28 @@ void asw::ui::Root::update()
         const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Up, .shift = shift };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, 0, -1);
+            ctx.theme.show_focus = true;
         }
     }
     if (get_key_down(Key::Down)) {
         const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Down, .shift = shift };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, 0, +1);
+            ctx.theme.show_focus = true;
         }
     }
     if (get_key_down(Key::Left)) {
         const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Left, .shift = shift };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, -1, 0);
+            ctx.theme.show_focus = true;
         }
     }
     if (get_key_down(Key::Right)) {
         const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Right, .shift = shift };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, +1, 0);
+            ctx.theme.show_focus = true;
         }
     }
 

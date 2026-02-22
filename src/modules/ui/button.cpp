@@ -77,7 +77,7 @@ void asw::ui::Button::draw(Context& ctx)
 
     asw::draw::rect_fill(transform, bg);
 
-    if (text != "" && font != nullptr) {
+    if (!text.empty() && font != nullptr) {
         const auto text_size = asw::util::get_text_size(font, text);
         const auto text_pos
             = transform.get_center() - asw::Vec2<float>(text_size.x / 2.0f, text_size.y / 2.0f);
@@ -85,7 +85,7 @@ void asw::ui::Button::draw(Context& ctx)
         asw::draw::text(font, text, text_pos, ctx.theme.text, asw::TextJustify::Left);
     }
 
-    if (focused_) {
+    if (focused_ && ctx.theme.show_focus) {
         // Focus ring
         auto ring = asw::Quad<float>(transform);
         ring.position.x -= 2;

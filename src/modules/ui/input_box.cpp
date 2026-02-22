@@ -171,7 +171,7 @@ void asw::ui::InputBox::draw(Context& ctx)
     SDL_SetRenderClipRect(asw::display::renderer, nullptr);
 
     // Focus ring
-    if (focused_) {
+    if (focused_ && ctx.theme.show_focus) {
         auto ring = asw::Quad<float>(transform);
         ring.position.x -= 2;
         ring.position.y -= 2;

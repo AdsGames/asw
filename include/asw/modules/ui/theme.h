@@ -45,6 +45,10 @@ struct Theme {
 
     /// @brief Default gap between elements.
     float gap = 8.0f;
+
+    /// @brief Show focus rings around focused widgets. Enabled by default when using keyboard
+    /// navigation.
+    bool show_focus = false;
 };
 
 } // namespace asw::ui
