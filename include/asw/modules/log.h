@@ -48,7 +48,7 @@ void debug(const std::string& message);
 /// @param format The format string.
 /// @param args The arguments to format.
 ///
-template <typename... Args> void debug(const std::string& format, Args&&... args)
+template <typename... Args> void debug(std::format_string<Args...> format, Args&&... args)
 {
     log_message(Level::DEBUG, std::format(format, std::forward<Args>(args)...));
 }
@@ -64,7 +64,7 @@ void info(const std::string& message);
 /// @param format The format string.
 /// @param args The arguments to format.
 ///
-template <typename... Args> void info(const std::string& format, Args&&... args)
+template <typename... Args> void info(std::format_string<Args...> format, Args&&... args)
 {
     log_message(Level::INFO, std::format(format, std::forward<Args>(args)...));
 }
@@ -81,7 +81,7 @@ void warn(const std::string& message);
 /// @param format The format string.
 /// @param args The arguments to format.
 ///
-template <typename... Args> void warn(const std::string& format, Args&&... args)
+template <typename... Args> void warn(std::format_string<Args...> format, Args&&... args)
 {
     log_message(Level::WARN, std::format(format, std::forward<Args>(args)...));
 }
@@ -97,7 +97,7 @@ void error(const std::string& message);
 /// @param format The format string.
 /// @param args The arguments to format.
 ///
-template <typename... Args> void error(const std::string& format, Args&&... args)
+template <typename... Args> void error(std::format_string<Args...> format, Args&&... args)
 {
     log_message(Level::ERROR, std::format(format, std::forward<Args>(args)...));
 }
