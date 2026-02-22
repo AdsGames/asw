@@ -9,13 +9,13 @@ namespace {
   float sfx_volume = 1.0F;
   float music_volume = 1.0F;
 
-  int compute_sfx_volume(float requestedVolume) {
-    auto volume = requestedVolume * 255.0F * sfx_volume * master_volume;
+  int compute_sfx_volume(float vol) {
+    auto volume = vol * 255.0F * sfx_volume * master_volume;
     return static_cast<int>(volume);
   }
 
-  int compute_music_volume(float requestedVolume) {
-    auto volume = requestedVolume * 255.0F * music_volume * master_volume;
+  int compute_music_volume(float vol) {
+    auto volume = vol * 255.0F * music_volume * master_volume;
     return static_cast<int>(volume);
   }
 }  // namespace

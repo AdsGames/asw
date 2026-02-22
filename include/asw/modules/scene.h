@@ -28,7 +28,7 @@
 namespace asw::scene {
 
   /// @brief Default time step for the game loop.
-  constexpr auto DEFAULT_TIMESTEP = 8ms;
+  constexpr auto DEFAULT_TIMESTEP = std::chrono::milliseconds(8);
 
   /// @brief Forward declaration of the SceneManager class.
   template <typename T>
@@ -185,8 +185,8 @@ namespace asw::scene {
     ///
     SceneManager() {
 #ifdef __EMSCRIPTEN__
-      instance = this;
-      em_time = std::chrono::high_resolution_clock::now();
+      instance_ = this;
+      em_time_ = std::chrono::high_resolution_clock::now();
 #endif
     }
 
@@ -203,7 +203,7 @@ namespace asw::scene {
                     "SceneType must be constructible with the given arguments");
 
       auto scene = std::make_shared<SceneType>(std::forward<Args>(args)...);
-      scenes[scene_id] = scene;
+      scenes_[scene_id] = scene;
     }
 
     /// @brief Set the next scene
@@ -211,8 +211,8 @@ namespace asw::scene {
     /// @param scene_id The unique identifier for the scene.
     ///
     void set_next_scene(const T scene_id) {
-      next_scene = scene_id;
-      has_next_scene = true;
+      next_scene_ = scene_id;
+      has_next_scene_ = true;
     }
 
     /// @brief Main loop for the scene engine. If this is not enough, or you
@@ -249,7 +249,7 @@ namespace asw::scene {
         frames++;
 
         if (std::chrono::high_resolution_clock::now() - last_second >= 1s) {
-          fps = frames;
+          fps_ = frames;
           frames = 0;
           last_second = last_second + 1s;
         }
@@ -338,20 +338,20 @@ namespace asw::scene {
 
 #ifdef __EMSCRIPTEN__
     /// @brief Pointer to the current instance of the scene manager.
-    static SceneManager<T>* instance;
+    static SceneManager<T>* instance_;
 
     /// @brief The time of the last frame.
-    static std::chrono::high_resolution_clock::time_point em_time;
+    static std::chrono::high_resolution_clock::time_point em_time_;
 
     /// @brief Emscripten loop function.
     static void loop_emscripten() {
-      if (instance != nullptr) {
+      if (instance_ != nullptr) {
         auto delta_time =
-            std::chrono::high_resolution_clock::now() - SceneManager::em_time;
-        SceneManager::em_time = std::chrono::high_resolution_clock::now();
+            std::chrono::high_resolution_clock::now() - SceneManager::em_time_;
+        SceneManager::em_time_ = std::chrono::high_resolution_clock::now();
 
-        instance->update(std::chrono::duration<float>(delta_time).count());
-        instance->draw();
+        instance_->update(std::chrono::duration<float>(delta_time).count());
+        instance_->draw();
       }
     }
 #endif
@@ -359,11 +359,11 @@ namespace asw::scene {
 
 #ifdef __EMSCRIPTEN__
   template <typename T>
-  SceneManager<T>* SceneManager<T>::instance = nullptr;
+  SceneManager<T>* SceneManager<T>::instance_ = nullptr;
 
   // Start time
   template <typename T>
-  auto SceneManager<T>::em_time = std::chrono::high_resolution_clock::now();
+  auto SceneManager<T>::em_time_ = std::chrono::high_resolution_clock::now();
 
 #endif
 
