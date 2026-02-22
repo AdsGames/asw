@@ -17,41 +17,41 @@
 
 namespace asw::util {
 
-  /// @brief Abort program and display error message
-  ///
-  /// @param message Message to display
-  ///
-  void abortOnError(const std::string& message);
+/// @brief Abort program and display error message
+///
+/// @param message Message to display
+///
+[[noreturn]]
+void abort_on_error(const std::string& message);
 
-  /// @brief Get texture size
-  ///
-  /// @param tex Texture to get size of
-  /// @return Size as Vec2
-  ///
-  asw::Vec2<float> getTextureSize(const asw::Texture& tex);
+/// @brief Get texture size
+///
+/// @param tex Texture to get size of
+/// @return Size as Vec2
+///
+asw::Vec2<float> get_texture_size(const asw::Texture& tex);
 
-  /// @brief Get text size
-  ///
-  /// @param font Font to use
-  /// @param text Text to get size of
-  /// @return Size as Vec2
-  ///
-  asw::Vec2<int> getTextSize(const asw::Font& font, const std::string& text);
+/// @brief Get text size
+///
+/// @param font Font to use
+/// @param text Text to get size of
+/// @return Size as Vec2
+///
+asw::Vec2<int> get_text_size(const asw::Font& font, const std::string& text);
 
-  /// @brief Lerp between two values
-  ///
-  /// @param a Start value
-  /// @param b End value
-  /// @param t Interpolation value (0-1)
-  /// @return Interpolated value
-  ///
-  template <typename T>
-  T lerp(const T& a, const T& b, float t) {
+/// @brief Lerp between two values
+///
+/// @param a Start value
+/// @param b End value
+/// @param t Interpolation value (0-1)
+/// @return Interpolated value
+///
+template <typename T> T lerp(const T& a, const T& b, float t)
+{
     t = std::clamp(t, 0.0F, 1.0F);
-
     return a + (b - a) * t;
-  }
+}
 
-}  // namespace asw::util
+} // namespace asw::util
 
-#endif  // ASW_UTIL_H
+#endif // ASW_UTIL_H

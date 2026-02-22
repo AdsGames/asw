@@ -101,5 +101,9 @@
     "future": "cpp",
     "stdfloat": "cpp"
   },
-  "sonarlint.pathToCompileCommands": "${workspaceFolder}/compile_commands.json"
+  "sonarlint.pathToCompileCommands": "${workspaceFolder}/build/debug/compile_commands.json",
+  "sonarlint.connectedMode.project": {
+    "connectionId": "adsgames",
+    "projectKey": "AdsGames_asw"
+  }
 }

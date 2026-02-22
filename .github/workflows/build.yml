@@ -36,7 +36,7 @@ jobs:
           embuilder build harfbuzz
 
       - name: Run CMake
-        run: emcmake cmake -G "Unix Makefiles" .
+        run: emcmake cmake --preset release
 
       - name: Make
-        run: emmake make -j4
+        run: cmake --build --preset release

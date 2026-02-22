@@ -3,7 +3,6 @@
 
 #define SDL_MAIN_HANDLED
 
-#include "./modules/asset_manager.h"
 #include "./modules/assets.h"
 #include "./modules/color.h"
 #include "./modules/core.h"
@@ -19,6 +18,7 @@
 #include "./modules/scene.h"
 #include "./modules/sound.h"
 #include "./modules/types.h"
+#include "./modules/ui/ui.h"
 #include "./modules/util.h"
 
-#endif  // ASW_H
+#endif // ASW_H

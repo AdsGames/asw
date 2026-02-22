@@ -26,6 +26,6 @@ FetchContent_MakeAvailable(asw)
 ### Building
 
 ```sh
-cmake -B build .
-cmake --build build
+cmake --preset debug
+cmake --build --preset debug
 ```
