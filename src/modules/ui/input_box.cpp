@@ -143,7 +143,7 @@ void asw::ui::InputBox::draw(Context& ctx)
 
     if (!display_text.empty() && font != nullptr) {
         const auto text_size = asw::util::get_text_size(font, display_text);
-        const float text_y = transform.position.y + (transform.size.y - text_size.y) / 2.0f;
+        const float text_y = transform.position.y + ((transform.size.y - text_size.y) / 2.0F);
         const asw::Vec2 text_pos { transform.position.x + text_padding, text_y };
 
         asw::draw::text(font, display_text, text_pos, display_color);
@@ -160,8 +160,8 @@ void asw::ui::InputBox::draw(Context& ctx)
         }
 
         const auto text_height = asw::util::get_text_size(font, "|");
-        const float cursor_y
-            = transform.position.y + (transform.size.y - static_cast<float>(text_height.y)) / 2.0F;
+        const float cursor_y = transform.position.y
+            + ((transform.size.y - static_cast<float>(text_height.y)) / 2.0F);
 
         asw::draw::line({ cursor_x, cursor_y },
             { cursor_x, cursor_y + static_cast<float>(text_height.y) }, ctx.theme.text);

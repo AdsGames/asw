@@ -22,7 +22,7 @@ void asw::ui::Root::rebuild_focus_if_needed()
     if (!ctx.need_focus_rebuild) {
         return;
     }
-    ctx.focus.rebuild(root);
+    ctx.focus.rebuild(ctx, root);
     ctx.hover = nullptr;
     ctx.pointer_capture = nullptr;
     ctx.need_focus_rebuild = false;
@@ -97,12 +97,9 @@ void asw::ui::Root::update()
     // --- Mouse ---
 
     // Hover and Unhover events
-    if (mouse.change.x != 0.0f || mouse.change.y != 0.0f) {
-        // Determine what widget the pointer is now over
-        Widget* new_hover = hit_test(root, mouse.position);
-
+    if (mouse.change.x != 0.0F || mouse.change.y != 0.0F) {
         // Send leave/enter when the hovered widget changes
-        if (new_hover != ctx.hover) {
+        if (Widget* new_hover = hit_test(root, mouse.position); new_hover != ctx.hover) {
             if (ctx.hover != nullptr) {
                 const UIEvent leave { .type = UIEvent::Type::PointerLeave,
                     .pointer_pos = mouse.position };

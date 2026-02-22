@@ -22,9 +22,10 @@ class FocusManager {
 public:
     /// @brief Rebuild the focusable widget list from the widget tree.
     ///
+    /// @param ctx The UI context.
     /// @param root The root widget to traverse.
     ///
-    void rebuild(Widget& root);
+    void rebuild(Context& ctx, Widget& root);
 
     /// @brief Get the currently focused widget.
     ///

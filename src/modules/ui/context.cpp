@@ -3,7 +3,7 @@
 #include <cmath>
 #include <ranges>
 
-void asw::ui::FocusManager::rebuild(Widget& root)
+void asw::ui::FocusManager::rebuild(Context& ctx, Widget& root)
 {
     focusables_.clear();
     dfs(root);
@@ -11,11 +11,11 @@ void asw::ui::FocusManager::rebuild(Widget& root)
     if (focused_ != nullptr) {
         auto it = std::ranges::find(focusables_, focused_);
         if (it == focusables_.end()) {
-            focused_ = nullptr;
+            set_focus(ctx, nullptr);
         }
     }
     if (focused_ == nullptr && !focusables_.empty()) {
-        focused_ = focusables_.front();
+        set_focus(ctx, focusables_.front());
     }
 }
 
