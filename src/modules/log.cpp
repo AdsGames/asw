@@ -32,8 +32,9 @@ std::string get_timestamp()
     auto now = std::chrono::system_clock::now();
     return std::format("{:%H:%M:%S}", now);
 }
+} // namespace
 
-void log_message(asw::log::Level level, const std::string& message)
+void asw::log::log_message(asw::log::Level level, const std::string& message)
 {
     if (level < current_level) {
         return;
@@ -62,7 +63,6 @@ void log_message(asw::log::Level level, const std::string& message)
             << "[" << get_timestamp() << "] " << message << "\n";
 #endif
 }
-} // namespace
 
 void asw::log::set_level(Level level)
 {
