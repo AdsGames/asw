@@ -120,7 +120,7 @@ struct Color {
     /// @param color The color to convert.
     Color grayscale() const
     {
-        uint8_t gray = static_cast<uint8_t>(0.299F * r + 0.587F * g + 0.114F * b);
+        auto gray = static_cast<uint8_t>(0.299F * r + 0.587F * g + 0.114F * b);
         return { gray, gray, gray, a };
     }
 
