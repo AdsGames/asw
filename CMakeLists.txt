@@ -28,6 +28,21 @@ set(SDL_STATIC ON)
 
 # Fetch deps
 include(cmake/get_cpm.cmake)
+CPMAddPackage(
+  NAME freetype
+  GITHUB_REPOSITORY freetype/freetype
+  GIT_TAG VER-2-13-2
+  OPTIONS
+    "FT_DISABLE_ZLIB TRUE"
+    "FT_DISABLE_BZIP2 TRUE"
+    "FT_DISABLE_PNG TRUE"
+    "FT_DISABLE_BROTLI TRUE"
+)
+
+if(TARGET freetype AND NOT TARGET Freetype::Freetype)
+  add_library(Freetype::Freetype ALIAS freetype)
+endif()
+
 CPMAddPackage("gh:libsdl-org/SDL#release-3.2.8")
 CPMAddPackage("gh:libsdl-org/SDL_image#release-3.2.4")
 CPMAddPackage("gh:libsdl-org/SDL_ttf#release-3.2.0")
