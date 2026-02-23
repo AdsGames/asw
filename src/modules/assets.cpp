@@ -34,7 +34,7 @@ std::string get_asset_path(const std::string& filename)
     if (!base_path) {
         return filename;
     }
-    return std::format("{}/{}", base_path, filename);
+    return std::format("{}{}", base_path, filename);
 }
 }
 
