@@ -39,20 +39,17 @@ struct UIEvent {
     /// @brief The key associated with the event.
     asw::input::Key key {};
 
-    /// @brief Whether the shift key is held.
-    bool shift = false;
-
     /// @brief The pointer identifier.
-    int pointer_id = 0;
+    int pointer_id { 0 };
 
     /// @brief The pointer position.
-    asw::Vec2<float> pointer_pos;
+    asw::Vec2<float> pointer_pos { 0, 0 };
 
     /// @brief The mouse button associated with the event.
     asw::input::MouseButton mouse_button {};
 
     /// @brief The text associated with a TextInput event.
-    std::string text;
+    std::string text {};
 };
 
 } // namespace asw::ui
