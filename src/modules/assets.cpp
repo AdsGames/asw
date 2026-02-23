@@ -4,6 +4,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <format>
 #include <string>
 #include <unordered_map>
 
@@ -18,14 +19,34 @@ std::unordered_map<std::string, asw::Sample> samples;
 std::unordered_map<std::string, asw::Music> music;
 } // namespace
 
+// --- Paths ---
+namespace {
+
+/// @brief Get the full path to an asset given its filename. This assumes that all assets are
+/// located in an "assets" directory relative to the base path of the application. This will abort
+/// if the base path cannot be determined.
+/// @param filename
+/// @return The full path to the asset.
+std::string get_asset_path(const std::string& filename)
+{
+    // base_path is usually ".../YourGame.app/Contents/Resources/"
+    const char* base_path = SDL_GetBasePath();
+    if (!base_path) {
+        return filename;
+    }
+    return std::format("{}/{}", base_path, filename);
+}
+}
+
 // --- Texture ---
 
 asw::Texture asw::assets::load_texture(const std::string& filename)
 {
-    SDL_Texture* temp = IMG_LoadTexture(asw::display::renderer, filename.c_str());
+    std::string full_path = get_asset_path(filename);
+    SDL_Texture* temp = IMG_LoadTexture(asw::display::renderer, full_path.c_str());
 
     if (temp == nullptr) {
-        asw::util::abort_on_error("Failed to load texture: " + filename);
+        asw::util::abort_on_error("Failed to load texture: " + full_path);
     }
 
     SDL_SetTextureScaleMode(temp, SDL_SCALEMODE_NEAREST);
@@ -75,10 +96,11 @@ asw::Texture asw::assets::create_texture(int w, int h)
 
 asw::Font asw::assets::load_font(const std::string& filename, float size)
 {
-    TTF_Font* temp = TTF_OpenFont(filename.c_str(), size);
+    std::string full_path = get_asset_path(filename);
+    TTF_Font* temp = TTF_OpenFont(full_path.c_str(), size);
 
     if (temp == nullptr) {
-        asw::util::abort_on_error("Failed to load font: " + filename);
+        asw::util::abort_on_error("Failed to load font: " + full_path);
     }
 
     return { temp, TTF_CloseFont };
@@ -113,10 +135,11 @@ void asw::assets::unload_font(const std::string& key)
 
 asw::Sample asw::assets::load_sample(const std::string& filename)
 {
-    Mix_Chunk* temp = Mix_LoadWAV(filename.c_str());
+    std::string full_path = get_asset_path(filename);
+    Mix_Chunk* temp = Mix_LoadWAV(full_path.c_str());
 
     if (temp == nullptr) {
-        asw::util::abort_on_error("Failed to load sample: " + filename);
+        asw::util::abort_on_error("Failed to load sample: " + full_path);
     }
 
     return { temp, Mix_FreeChunk };
@@ -151,10 +174,11 @@ void asw::assets::unload_sample(const std::string& key)
 
 asw::Music asw::assets::load_music(const std::string& filename)
 {
-    Mix_Music* temp = Mix_LoadMUS(filename.c_str());
+    std::string full_path = get_asset_path(filename);
+    Mix_Music* temp = Mix_LoadMUS(full_path.c_str());
 
     if (temp == nullptr) {
-        asw::util::abort_on_error("Failed to load music: " + filename);
+        asw::util::abort_on_error("Failed to load music: " + full_path);
     }
 
     return { temp, Mix_FreeMusic };
