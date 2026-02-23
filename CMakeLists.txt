@@ -27,6 +27,12 @@ set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 set(SDLTTF_VENDORED ON)
 
+# Find deps
+find_package(BZip2 REQUIRED)
+find_package(Brotli REQUIRED)
+find_package(PNG REQUIRED)
+find_package(ZLIB REQUIRED)
+
 # Fetch deps
 include(cmake/get_cpm.cmake)
 CPMAddPackage("gh:libsdl-org/SDL#release-3.2.8")
@@ -57,14 +63,13 @@ target_link_libraries(
   SDL3_image::SDL3_image-static
   SDL3_mixer::SDL3_mixer-static
   SDL3_ttf::SDL3_ttf-static
-)
 
-if(DEFINED EMSCRIPTEN) 
-  target_link_libraries(
-    ${PROJECT_NAME}
-    z # Zlib for SDL3_ttf
-  )
-endif()
+  # TTF Deps
+  bz2
+  brotlidec
+  png
+  z
+)
 
 # Install
 include(CMakePackageConfigHelpers)
