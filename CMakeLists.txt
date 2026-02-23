@@ -25,7 +25,6 @@ target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall -Wextra -pedantic)
 set(BUILD_SHARED_LIBS OFF)
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
-set(SDLTTF_VENDORED ON)
 
 # Fetch deps
 include(cmake/get_cpm.cmake)
@@ -57,11 +56,6 @@ target_link_libraries(
   SDL3_image::SDL3_image-static
   SDL3_mixer::SDL3_mixer-static
   SDL3_ttf::SDL3_ttf-static
-
-  # TTF Deps
-  bz2
-  brotlidec
-  png
   z
 )
 
