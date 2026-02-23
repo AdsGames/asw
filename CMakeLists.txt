@@ -25,6 +25,7 @@ target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall -Wextra -pedantic)
 set(BUILD_SHARED_LIBS OFF)
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
+set(SDLTTF_VENDORED ON)
 
 # Fetch deps
 include(cmake/get_cpm.cmake)

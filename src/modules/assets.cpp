@@ -4,7 +4,6 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <format>
 #include <string>
 #include <unordered_map>
 
@@ -31,10 +30,10 @@ std::string get_asset_path(const std::string& filename)
 {
     // base_path is usually ".../YourGame.app/Contents/Resources/"
     const char* base_path = SDL_GetBasePath();
-    if (!base_path) {
+    if (base_path == nullptr) {
         return filename;
     }
-    return std::format("{}{}", base_path, filename);
+    return std::string(base_path) + filename;
 }
 }
 
