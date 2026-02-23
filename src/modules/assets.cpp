@@ -19,29 +19,23 @@ std::unordered_map<std::string, asw::Music> music;
 } // namespace
 
 // --- Paths ---
-namespace {
 
-/// @brief Get the full path to an asset given its filename. This assumes that all assets are
-/// located in an "assets" directory relative to the base path of the application. This will abort
-/// if the base path cannot be determined.
-/// @param filename
-/// @return The full path to the asset.
-std::string get_asset_path(const std::string& filename)
+std::string asw::assets::get_path(const std::string& filename)
 {
-    // base_path is usually ".../YourGame.app/Contents/Resources/"
+    // base_path is usually ".../YourGame.app/Contents/Resources/" on mac
+    // simply the directory of the executable on other platforms
     const char* base_path = SDL_GetBasePath();
     if (base_path == nullptr) {
         return filename;
     }
     return std::string(base_path) + filename;
 }
-}
 
 // --- Texture ---
 
 asw::Texture asw::assets::load_texture(const std::string& filename)
 {
-    std::string full_path = get_asset_path(filename);
+    const auto full_path = get_path(filename);
     SDL_Texture* temp = IMG_LoadTexture(asw::display::renderer, full_path.c_str());
 
     if (temp == nullptr) {
@@ -95,7 +89,7 @@ asw::Texture asw::assets::create_texture(int w, int h)
 
 asw::Font asw::assets::load_font(const std::string& filename, float size)
 {
-    std::string full_path = get_asset_path(filename);
+    const auto full_path = get_path(filename);
     TTF_Font* temp = TTF_OpenFont(full_path.c_str(), size);
 
     if (temp == nullptr) {
@@ -134,7 +128,7 @@ void asw::assets::unload_font(const std::string& key)
 
 asw::Sample asw::assets::load_sample(const std::string& filename)
 {
-    std::string full_path = get_asset_path(filename);
+    const auto full_path = get_path(filename);
     Mix_Chunk* temp = Mix_LoadWAV(full_path.c_str());
 
     if (temp == nullptr) {
@@ -173,7 +167,7 @@ void asw::assets::unload_sample(const std::string& key)
 
 asw::Music asw::assets::load_music(const std::string& filename)
 {
-    std::string full_path = get_asset_path(filename);
+    const auto full_path = get_path(filename);
     Mix_Music* temp = Mix_LoadMUS(full_path.c_str());
 
     if (temp == nullptr) {
