@@ -87,12 +87,11 @@ void asw::core::update()
         }
 
         case SDL_EVENT_MOUSE_MOTION: {
-            if (asw::display::renderer == nullptr) {
-                break;
+            // Ensure scale is applied to mouse coordinates
+            if (asw::display::renderer != nullptr) {
+                SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
             }
 
-            // Ensure scale is applied to mouse coordinates
-            SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
             mouse.change.x = e.motion.xrel;
             mouse.change.y = e.motion.yrel;
             mouse.position.x = e.motion.x;
