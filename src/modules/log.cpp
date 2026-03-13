@@ -93,7 +93,7 @@ AnsiCode level_to_ansi(asw::log::Level level)
     case DEBUG:
         return AnsiCode::TextBrightCyan;
     case INFO:
-        return AnsiCode::TextBrightGreen;
+        return AnsiCode::TextBrightWhite;
     case WARN:
         return AnsiCode::TextBrightYellow;
     case ERROR:
