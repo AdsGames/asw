@@ -50,7 +50,7 @@ void debug(const std::string& message);
 ///
 template <typename... Args> void debug(std::format_string<Args...> format, Args&&... args)
 {
-    log_message(Level::DEBUG, std::format(format, std::forward<Args>(args)...));
+    debug(std::format(format, std::forward<Args>(args)...));
 }
 
 /// @brief Log an info message.
@@ -66,7 +66,7 @@ void info(const std::string& message);
 ///
 template <typename... Args> void info(std::format_string<Args...> format, Args&&... args)
 {
-    log_message(Level::INFO, std::format(format, std::forward<Args>(args)...));
+    info(std::format(format, std::forward<Args>(args)...));
 }
 
 /// @brief Log a warning message.
@@ -83,7 +83,7 @@ void warn(const std::string& message);
 ///
 template <typename... Args> void warn(std::format_string<Args...> format, Args&&... args)
 {
-    log_message(Level::WARN, std::format(format, std::forward<Args>(args)...));
+    warn(std::format(format, std::forward<Args>(args)...));
 }
 
 /// @brief Log an error message.
@@ -99,16 +99,27 @@ void error(const std::string& message);
 ///
 template <typename... Args> void error(std::format_string<Args...> format, Args&&... args)
 {
-    log_message(Level::ERROR, std::format(format, std::forward<Args>(args)...));
+    error(std::format(format, std::forward<Args>(args)...));
 }
 
+/// @brief Log a progress message with a percentage.
+///
+/// @param progress The progress value (0.0-1.0).
+/// @param format The format string for the message.
+/// @param args The arguments to format.
+///
+void progress(float progress, std::string message);
+
+/// @brief Log a progress message with a percentage.
+///
+/// @param progress The progress value (0.0-1.0).
+/// @param format The format string for the message.
+/// @param args The arguments to format.
+///
 template <typename... Args>
-void progress(float progress, std::format_string<Args...> format, Args&&... args)
+void progress(float prog, std::format_string<Args...> format, Args&&... args)
 {
-    const std::string message = std::format(format, std::forward<Args>(args)...);
-    const std::string progress_message
-        = std::format(" [{:>3}%] {}", static_cast<int>(progress * 100), message);
-    log_message(Level::INFO, progress_message);
+    progress(prog, std::format(format, std::forward<Args>(args)...));
 }
 
 } // namespace asw::log

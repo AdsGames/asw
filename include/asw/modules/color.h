@@ -9,7 +9,10 @@ namespace asw {
 /// @brief RGBA color struct with 8-bit channels.
 ///
 struct Color {
-    uint8_t r, g, b, a;
+    uint8_t r;
+    uint8_t g;
+    uint8_t b;
+    uint8_t a;
 
     /// @brief Construct a default Color (black, fully opaque).
     Color()
