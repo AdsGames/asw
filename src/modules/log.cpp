@@ -142,3 +142,30 @@ void asw::log::set_output(std::ostream& stream)
 {
     output = &stream;
 }
+
+void asw::log::debug(const std::string& message)
+{
+    log_message(Level::DEBUG, message);
+}
+
+void asw::log::info(const std::string& message)
+{
+    log_message(Level::INFO, message);
+}
+
+void asw::log::warn(const std::string& message)
+{
+    log_message(Level::WARN, message);
+}
+
+void asw::log::error(const std::string& message)
+{
+    log_message(Level::ERROR, message);
+}
+
+void asw::log::progress(float progress, std::string message)
+{
+    const std::string progress_message
+        = std::format(" [{:>3}%] {}", static_cast<int>(progress * 100), message);
+    log_message(Level::INFO, progress_message);
+}
