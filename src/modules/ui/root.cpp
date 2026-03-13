@@ -163,28 +163,28 @@ void asw::ui::Root::update()
 
     // Arrow keys: dispatch KeyDown to focused widget first, fall back to focus navigation
     if (get_key_down(Key::Up)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Up, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Up };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, 0, -1);
             ctx.theme.show_focus = true;
         }
     }
     if (get_key_down(Key::Down)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Down, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Down };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, 0, +1);
             ctx.theme.show_focus = true;
         }
     }
     if (get_key_down(Key::Left)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Left, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Left };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, -1, 0);
             ctx.theme.show_focus = true;
         }
     }
     if (get_key_down(Key::Right)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Right, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Right };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, +1, 0);
             ctx.theme.show_focus = true;
@@ -193,19 +193,19 @@ void asw::ui::Root::update()
 
     // Editing keys dispatched to focused widget
     if (get_key_down(Key::Backspace)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Backspace, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Backspace };
         dispatch_to_focused(e);
     }
     if (get_key_down(Key::Delete)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Delete, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Delete };
         dispatch_to_focused(e);
     }
     if (get_key_down(Key::Home)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Home, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Home };
         dispatch_to_focused(e);
     }
     if (get_key_down(Key::End)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::End, .shift = shift };
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::End };
         dispatch_to_focused(e);
     }
 

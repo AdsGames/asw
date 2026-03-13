@@ -32,13 +32,15 @@
       "name": "debug",
       "description": "Build a debug build",
       "displayName": "debug",
-      "configurePreset": "debug"
+      "configurePreset": "debug",
+      "jobs": 0
     },
     {
       "name": "release",
       "description": "Build a release build",
       "displayName": "release",
-      "configurePreset": "release"
+      "configurePreset": "release",
+      "jobs": 0
     }
   ]
 }

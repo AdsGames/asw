@@ -1,5 +1,6 @@
 #include "./asw/modules/easing.h"
 
+#include <cmath>
 #include <numbers>
 
 // Linear
