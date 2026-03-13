@@ -27,6 +27,71 @@ const char* level_to_string(asw::log::Level level)
     return "?????";
 }
 
+/// @brief ANSI escape codes for terminal formatting
+enum class AnsiCode : int {
+    Reset = 0,
+    BoldOn = 1,
+    FaintOff = 2,
+    ItalicOn = 3,
+    UnderlineOn = 4,
+    SlowBlinkOn = 5,
+    RapidBlinkOn = 6,
+    ReverseVideoOn = 7,
+    ConcealOn = 8,
+    CrossedOutOn = 9,
+    BoldOff = 22,
+    ItalicOff = 23,
+    UnderlineOff = 24,
+    BlinkOff = 25,
+    ReverseVideoOff = 27,
+    ConcealOff = 28,
+    CrossedOutOff = 29,
+
+    // Text color
+    TextBlack = 30,
+    TextRed = 31,
+    TextGreen = 32,
+    TextYellow = 33,
+    TextBlue = 34,
+    TextMagenta = 35,
+    TextCyan = 36,
+    TextWhite = 37,
+    TextDefault = 39,
+
+    // Background color
+    BgBlack = 40,
+    BgRed = 41,
+    BgGreen = 42,
+    BgYellow = 43,
+    BgBlue = 44,
+    BgMagenta = 45,
+    BgCyan = 46,
+    BgWhite = 47,
+    BgDefault = 49
+};
+
+inline std::string ansi_to_string(AnsiCode code)
+{
+    return "\033[" + std::to_string(static_cast<int>(code)) + "m";
+}
+
+AnsiCode level_to_ansi(asw::log::Level level)
+{
+    using enum asw::log::Level;
+
+    switch (level) {
+    case DEBUG:
+        return AnsiCode::TextCyan;
+    case INFO:
+        return AnsiCode::TextGreen;
+    case WARN:
+        return AnsiCode::TextYellow;
+    case ERROR:
+        return AnsiCode::TextRed;
+    }
+    return AnsiCode::Reset;
+}
+
 std::string get_timestamp()
 {
     auto now = std::chrono::system_clock::now();
@@ -59,8 +124,12 @@ void asw::log::log_message(asw::log::Level level, const std::string& message)
     emscripten_log(
         emLevel, "[%s] [%s] %s", level_to_string(level), get_timestamp().c_str(), message.c_str());
 #else
-    *output << "[" << level_to_string(level) << "] "
-            << "[" << get_timestamp() << "] " << message << "\n";
+    *output << ansi_to_string(level_to_ansi(level));
+    *output << "[" << level_to_string(level) << "] ";
+    *output << "[" << get_timestamp() << "] ";
+    *output << message;
+    *output << "\n";
+    *output << ansi_to_string(AnsiCode::Reset);
 #endif
 }
 
@@ -72,24 +141,4 @@ void asw::log::set_level(Level level)
 void asw::log::set_output(std::ostream& stream)
 {
     output = &stream;
-}
-
-void asw::log::debug(const std::string& message)
-{
-    log_message(Level::DEBUG, message);
-}
-
-void asw::log::info(const std::string& message)
-{
-    log_message(Level::INFO, message);
-}
-
-void asw::log::warn(const std::string& message)
-{
-    log_message(Level::WARN, message);
-}
-
-void asw::log::error(const std::string& message)
-{
-    log_message(Level::ERROR, message);
 }

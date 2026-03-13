@@ -102,6 +102,15 @@ template <typename... Args> void error(std::format_string<Args...> format, Args&
     log_message(Level::ERROR, std::format(format, std::forward<Args>(args)...));
 }
 
+template <typename... Args>
+void progress(float progress, std::format_string<Args...> format, Args&&... args)
+{
+    const std::string message = std::format(format, std::forward<Args>(args)...);
+    const std::string progress_message
+        = std::format(" [{:>3}%] {}", static_cast<int>(progress * 100), message);
+    log_message(Level::INFO, progress_message);
+}
+
 } // namespace asw::log
 
 #endif // ASW_LOG_H
