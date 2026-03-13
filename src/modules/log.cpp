@@ -31,7 +31,7 @@ const char* level_to_string(asw::log::Level level)
 enum class AnsiCode : int {
     Reset = 0,
     BoldOn = 1,
-    FaintOff = 2,
+    Faint = 2,
     ItalicOn = 3,
     UnderlineOn = 4,
     SlowBlinkOn = 5,
@@ -47,7 +47,7 @@ enum class AnsiCode : int {
     ConcealOff = 28,
     CrossedOutOff = 29,
 
-    // Text color
+    // Standard text colors
     TextBlack = 30,
     TextRed = 31,
     TextGreen = 32,
@@ -67,7 +67,17 @@ enum class AnsiCode : int {
     BgMagenta = 45,
     BgCyan = 46,
     BgWhite = 47,
-    BgDefault = 49
+    BgDefault = 49,
+
+    // Bright (high-intensity) text colors
+    TextBrightBlack = 90,
+    TextBrightRed = 91,
+    TextBrightGreen = 92,
+    TextBrightYellow = 93,
+    TextBrightBlue = 94,
+    TextBrightMagenta = 95,
+    TextBrightCyan = 96,
+    TextBrightWhite = 97,
 };
 
 inline std::string ansi_to_string(AnsiCode code)
@@ -81,13 +91,13 @@ AnsiCode level_to_ansi(asw::log::Level level)
 
     switch (level) {
     case DEBUG:
-        return AnsiCode::TextCyan;
+        return AnsiCode::TextBrightCyan;
     case INFO:
-        return AnsiCode::TextGreen;
+        return AnsiCode::TextBrightGreen;
     case WARN:
-        return AnsiCode::TextYellow;
+        return AnsiCode::TextBrightYellow;
     case ERROR:
-        return AnsiCode::TextRed;
+        return AnsiCode::TextBrightRed;
     }
     return AnsiCode::Reset;
 }
@@ -124,12 +134,19 @@ void asw::log::log_message(asw::log::Level level, const std::string& message)
     emscripten_log(
         emLevel, "[%s] [%s] %s", level_to_string(level), get_timestamp().c_str(), message.c_str());
 #else
-    *output << ansi_to_string(level_to_ansi(level));
-    *output << "[" << level_to_string(level) << "] ";
-    *output << "[" << get_timestamp() << "] ";
-    *output << message;
-    *output << "\n";
-    *output << ansi_to_string(AnsiCode::Reset);
+    const std::string reset = ansi_to_string(AnsiCode::Reset);
+    const std::string color = ansi_to_string(level_to_ansi(level));
+    const std::string bold = ansi_to_string(AnsiCode::BoldOn);
+    const std::string faint = ansi_to_string(AnsiCode::Faint);
+
+    // Dim timestamp
+    *output << faint << "[" << get_timestamp() << "]" << reset << " ";
+
+    // Bold + bright colored level badge
+    *output << bold << color << "[" << level_to_string(level) << "]" << reset << " ";
+
+    // Level-colored message
+    *output << color << message << reset << "\n";
 #endif
 }
 
@@ -165,7 +182,17 @@ void asw::log::error(const std::string& message)
 
 void asw::log::progress(float progress, std::string message)
 {
+    constexpr int bar_width = 20;
+    const int filled = static_cast<int>(progress * static_cast<float>(bar_width));
+
+    // Build Unicode block bar: █ filled, ░ empty
+    std::string bar;
+    bar.reserve(bar_width * 3);
+    for (int i = 0; i < bar_width; ++i) {
+        bar += (i < filled) ? "█" : "░";
+    }
+
     const std::string progress_message
-        = std::format(" [{:>3}%] {}", static_cast<int>(progress * 100), message);
+        = std::format("[{}] {:>3}% {}", bar, static_cast<int>(progress * 100.0f), message);
     log_message(Level::INFO, progress_message);
 }
