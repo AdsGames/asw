@@ -35,8 +35,8 @@ jobs:
         run: |
           embuilder build harfbuzz
 
-      - name: Run CMake
-        run: emcmake cmake --preset release
+      - name: Run CMake (Release & Examples)
+        run: emcmake cmake --preset release -DASW_BUILD_EXAMPLES=ON
 
       - name: Make
         run: cmake --build --preset release
