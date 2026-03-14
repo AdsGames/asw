@@ -46,24 +46,20 @@ bool binding_is_down(const asw::input::ActionBinding& binding, float& out_streng
                 return false;
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerButtonBinding>) {
-                if (b.controller_index < asw::input::controller.size()
-                    && asw::input::controller[b.controller_index]
-                        .down[static_cast<int>(b.button)]) {
+                if (asw::input::get_controller_button_down(b.controller_index, b.button)) {
                     out_strength = std::max(out_strength, 1.0F);
                     return true;
                 }
                 return false;
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerAxisBinding>) {
-                if (b.controller_index < asw::input::controller.size()) {
-                    const float val
-                        = asw::input::controller[b.controller_index].axis[static_cast<int>(b.axis)];
-                    const float effective = b.positive_direction ? val : -val;
-                    if (effective >= b.threshold) {
-                        out_strength = std::max(out_strength, effective);
-                        return true;
-                    }
+                const float val = asw::input::get_controller_axis(b.controller_index, b.axis);
+                const float effective = b.positive_direction ? val : -val;
+                if (effective >= b.threshold) {
+                    out_strength = std::max(out_strength, effective);
+                    return true;
                 }
+
                 return false;
             }
 
@@ -87,9 +83,7 @@ bool binding_is_pressed(const asw::input::ActionBinding& binding)
                 return asw::input::mouse.pressed[static_cast<int>(b.button)];
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerButtonBinding>) {
-                return b.controller_index < asw::input::controller.size()
-                    && asw::input::controller[b.controller_index]
-                           .pressed[static_cast<int>(b.button)];
+                return asw::input::get_controller_button_down(b.controller_index, b.button);
 
             } else {
                 // ControllerAxisBinding: transition handled by prev_down in update_actions.
@@ -113,9 +107,7 @@ bool binding_is_released(const asw::input::ActionBinding& binding)
                 return asw::input::mouse.released[static_cast<int>(b.button)];
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerButtonBinding>) {
-                return b.controller_index < asw::input::controller.size()
-                    && asw::input::controller[b.controller_index]
-                           .released[static_cast<int>(b.button)];
+                return asw::input::get_controller_button_up(b.controller_index, b.button);
 
             } else {
                 // ControllerAxisBinding: transition handled by prev_down in update_actions.

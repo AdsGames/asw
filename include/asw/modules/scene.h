@@ -243,7 +243,7 @@ public:
         auto last_second = std::chrono::high_resolution_clock::now();
         int frames = 0;
 
-        while (!asw::core::exit) {
+        while (!asw::core::is_exiting()) {
             auto delta_time = std::chrono::high_resolution_clock::now() - time_start;
             time_start = std::chrono::high_resolution_clock::now();
             lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
@@ -273,6 +273,10 @@ public:
     ///
     void update(const float dt)
     {
+        if (asw::core::is_exiting()) {
+            return;
+        }
+
         asw::core::update();
         change_scene();
 
@@ -285,6 +289,10 @@ public:
     ///
     void draw()
     {
+        if (asw::core::is_exiting()) {
+            return;
+        }
+
         if (active_scene_ != nullptr) {
             asw::display::clear();
             active_scene_->draw();

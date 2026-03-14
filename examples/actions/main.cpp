@@ -25,6 +25,7 @@ int main()
 {
     asw::core::init(800, 600);
     asw::display::set_title("ASW Example - Action Bindings");
+    asw::core::print_info();
 
     // --- Register actions ---
     asw::input::bind_action("move_left", asw::input::KeyBinding { asw::input::Key::A });
@@ -61,11 +62,12 @@ int main()
 
     int fire_frames = 0;
 
-    while (!asw::core::exit) {
+    while (!asw::core::is_exiting()) {
         asw::core::update();
 
         if (asw::input::is_action_pressed("quit")) {
-            asw::core::exit = true;
+            asw::core::exit();
+            break;
         }
 
         // Move using analogue strength so a controller stick gives smooth speed

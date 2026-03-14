@@ -49,15 +49,28 @@ int main()
 {
     asw::core::init(800, 600);
     asw::display::set_title("ASW Example - Controller");
+    asw::core::print_info();
 
     // Use a comfortable dead zone
     asw::input::set_controller_dead_zone(0, 0.15F);
 
-    while (!asw::core::exit) {
+    // Get controller name
+    const auto count = asw::input::get_controller_count();
+    asw::log::info("Controller count: {}", count);
+
+    const auto name = asw::input::get_controller_name(0);
+    if (!name.empty()) {
+        asw::log::info("Controller 0 connected: {}", name);
+    } else {
+        asw::log::info("No controllers detected");
+    }
+
+    while (!asw::core::is_exiting()) {
         asw::core::update();
 
         if (asw::input::get_key_down(asw::input::Key::Escape)) {
-            asw::core::exit = true;
+            asw::core::exit();
+            break;
         }
 
         // Log button events for controller 0
@@ -95,6 +108,10 @@ int main()
                 = asw::input::get_controller_axis(0, asw::input::ControllerAxis::LeftTrigger);
             const float rt
                 = asw::input::get_controller_axis(0, asw::input::ControllerAxis::RightTrigger);
+
+            asw::log::info("Left stick: ({:.2f}, {:.2f}), Right stick: ({:.2f}, {:.2f}), Triggers: "
+                           "L {:.2f}, R {:.2f}",
+                lx, ly, rx, ry, lt, rt);
 
             // Sticks
             draw_stick({ 200.0F, 350.0F }, 80.0F, lx, ly);

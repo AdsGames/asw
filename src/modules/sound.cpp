@@ -1,85 +1,156 @@
 #include "./asw/modules/sound.h"
 
-#include <algorithm>
-
 #include <SDL3_mixer/SDL_mixer.h>
+#include <algorithm>
+#include <array>
+#include <cmath>
+
+#include "./asw/modules/log.h"
 
 namespace {
 float master_volume = 1.0F;
 float sfx_volume = 1.0F;
 float music_volume = 1.0F;
 
-int compute_sfx_volume(float vol)
+std::array<MIX_Track*, 16> tracks;
+MIX_Track* music_track = nullptr;
+
+float compute_sfx_volume(float vol)
 {
-    auto volume = vol * 255.0F * sfx_volume * master_volume;
-    return static_cast<int>(volume);
+    auto volume = vol * sfx_volume;
+    return std::clamp(volume, 0.0F, 1.0F);
 }
 
-int compute_music_volume(float vol)
+float compute_music_volume(float vol)
 {
-    auto volume = vol * 255.0F * music_volume * master_volume;
-    return static_cast<int>(volume);
+    auto volume = vol * music_volume;
+    return std::clamp(volume, 0.0F, 1.0F);
 }
+
+int find_free_track()
+{
+    for (size_t i = 0; i < tracks.size(); ++i) {
+        if (!MIX_TrackPlaying(tracks[i])) {
+            return static_cast<int>(i);
+        }
+    }
+    return -1;
+}
+
 } // namespace
+
+MIX_Mixer* asw::sound::mixer = nullptr;
+
+bool asw::sound::_init()
+{
+    if (!MIX_Init()) {
+        asw::log::error("Failed to initialize SDL_mixer: {}", SDL_GetError());
+        return false;
+    }
+
+    if (mixer != nullptr) {
+        asw::log::warn("Mixer already initialized");
+        return true;
+    }
+
+    // Initialize SDL_mixer
+    SDL_AudioSpec spec;
+    spec.format = SDL_AUDIO_S16LE;
+    spec.freq = 44100;
+    spec.channels = 2;
+
+    mixer = MIX_CreateMixerDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &spec);
+    if (mixer == nullptr) {
+        asw::log::error("Failed to create mixer: {}", SDL_GetError());
+        return false;
+    }
+
+    for (auto& track : tracks) {
+        track = MIX_CreateTrack(mixer);
+        if (track == nullptr) {
+            asw::log::error("Failed to create track: {}", SDL_GetError());
+            return false;
+        }
+    }
+
+    music_track = MIX_CreateTrack(mixer);
+    if (music_track == nullptr) {
+        asw::log::error("Failed to create music track: {}", SDL_GetError());
+        return false;
+    }
+
+    return true;
+}
 
 void asw::sound::play(const asw::Sample& sample, float volume, float pan, bool loop)
 {
-    const int channel = Mix_PlayChannel(-1, sample.get(), loop ? -1 : 0);
+    const int channel = find_free_track();
     if (channel >= 0) {
-        Mix_Volume(channel, compute_sfx_volume(volume));
+        // Find first free track and play sample on it
+        auto& track = tracks[channel];
+        MIX_SetTrackAudio(track, sample.get());
+        MIX_SetTrackGain(track, compute_sfx_volume(volume));
 
-        auto panning = (std::clamp(pan, -1.0F, 1.0F) + 1.0F) * 127.5F;
-        auto int_pan = static_cast<unsigned char>(panning);
+        // Stereo gains for panning using equal power panning
+        const float left = std::sqrtf((1.0F - pan) * 0.5F);
+        const float right = std::sqrtf((1.0F + pan) * 0.5F);
 
-        Mix_SetPanning(channel, 255 - int_pan, int_pan);
+        MIX_StereoGains gains;
+        gains.left = left;
+        gains.right = right;
+        MIX_SetTrackStereo(track, &gains);
+
+        // Play the track, looping if requested
+        const SDL_PropertiesID options = SDL_CreateProperties();
+        SDL_SetNumberProperty(options, MIX_PROP_PLAY_LOOPS_NUMBER, loop ? -1 : 0);
+        MIX_PlayTrack(track, options);
     }
 }
 
-void asw::sound::play_music(const asw::Music& sample, float volume)
+void asw::sound::play_music(const asw::Music& sample, float volume, float fade_in_s)
 {
-    Mix_VolumeMusic(compute_music_volume(volume));
-    Mix_PlayMusic(sample.get(), -1);
+    MIX_SetTrackGain(music_track, compute_music_volume(volume));
+    MIX_SetTrackAudio(music_track, sample.get());
+
+    const SDL_PropertiesID options = SDL_CreateProperties();
+    SDL_SetNumberProperty(options, MIX_PROP_PLAY_LOOPS_NUMBER, -1);
+    SDL_SetNumberProperty(
+        options, MIX_PROP_PLAY_FADE_IN_MILLISECONDS_NUMBER, static_cast<int>(fade_in_s * 1000.0F));
+    MIX_PlayTrack(music_track, options);
 }
 
-void asw::sound::stop_music()
-{
-    Mix_HaltMusic();
-}
+void asw::sound::stop_music(float fade_out_s)
 
-void asw::sound::fade_in_music(const asw::Music& music, float volume, float duration)
 {
-    Mix_FadeInMusic(music.get(), -1, static_cast<int>(duration * 1000.0F));
-    Mix_VolumeMusic(compute_music_volume(volume));
-}
-
-void asw::sound::fade_out_music(float duration)
-{
-    Mix_FadeOutMusic(static_cast<int>(duration * 1000.0F));
+    const auto fade_out_frames
+        = MIX_TrackMSToFrames(music_track, static_cast<Sint64>(fade_out_s * 1000.0F));
+    MIX_StopTrack(music_track, fade_out_frames);
 }
 
 void asw::sound::pause_music()
 {
-    Mix_PauseMusic();
+    MIX_PauseTrack(music_track);
 }
 
 void asw::sound::resume_music()
 {
-    Mix_ResumeMusic();
+    MIX_ResumeTrack(music_track);
 }
 
 bool asw::sound::is_music_playing()
 {
-    return Mix_PlayingMusic();
+    return MIX_TrackPlaying(music_track);
 }
 
 bool asw::sound::is_music_paused()
 {
-    return Mix_PausedMusic();
+    return MIX_TrackPaused(music_track);
 }
 
 void asw::sound::set_master_volume(float volume)
 {
     master_volume = std::clamp(volume, 0.0F, 1.0F);
+    MIX_SetMixerGain(mixer, master_volume);
 }
 
 void asw::sound::set_sfx_volume(float volume)

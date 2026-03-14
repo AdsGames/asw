@@ -17,12 +17,13 @@ int main()
 {
     asw::core::init(800, 600);
     asw::display::set_title("ASW Example - Keyboard");
+    asw::core::print_info();
 
     asw::Vec2<float> pos { 375.0F, 275.0F };
     constexpr float speed = 3.0F;
     constexpr float box_size = 50.0F;
 
-    while (!asw::core::exit) {
+    while (!asw::core::is_exiting()) {
         asw::core::update();
 
         // --- Movement (held) ---
@@ -42,14 +43,18 @@ int main()
 
         // Clamp to window
         const auto win = asw::display::get_logical_size();
-        if (pos.x < 0)
+        if (pos.x < 0) {
             pos.x = 0;
-        if (pos.y < 0)
+        }
+        if (pos.y < 0) {
             pos.y = 0;
-        if (pos.x + box_size > static_cast<float>(win.x))
+        }
+        if (pos.x + box_size > static_cast<float>(win.x)) {
             pos.x = static_cast<float>(win.x) - box_size;
-        if (pos.y + box_size > static_cast<float>(win.y))
+        }
+        if (pos.y + box_size > static_cast<float>(win.y)) {
             pos.y = static_cast<float>(win.y) - box_size;
+        }
 
         // --- Key-press events (single frame) ---
         if (asw::input::get_key_down(asw::input::Key::Space)) {
@@ -59,7 +64,8 @@ int main()
             asw::log::info("Space released");
         }
         if (asw::input::get_key_down(asw::input::Key::Escape)) {
-            asw::core::exit = true;
+            asw::core::exit();
+            break;
         }
 
         // --- Text input ---

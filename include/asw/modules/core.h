@@ -11,9 +11,6 @@
 
 namespace asw::core {
 
-/// @brief When set to true, exits the main loop.
-extern bool exit;
-
 /// @brief Updates core module functionality.
 ///
 void update();
@@ -29,6 +26,15 @@ void init(int width, int height, int scale = 1);
 /// @brief Prints information about the core module.
 ///
 void print_info();
+
+/// @brief Exit the application.
+/// Calls SDL_Quit() and performs any necessary cleanup.
+///
+void exit();
+
+/// @brief Return exiting status.
+///
+bool is_exiting();
 
 } // namespace asw::core
 

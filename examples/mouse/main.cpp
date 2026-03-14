@@ -21,11 +21,12 @@ int main()
 {
     asw::core::init(800, 600);
     asw::display::set_title("ASW Example - Mouse");
+    asw::core::print_info();
 
     asw::Color circle_color = asw::color::white;
     float radius = 30.0F;
 
-    while (!asw::core::exit) {
+    while (!asw::core::is_exiting()) {
         asw::core::update();
 
         // --- Button events ---
@@ -60,7 +61,8 @@ int main()
         }
 
         if (asw::input::get_key_down(asw::input::Key::Escape)) {
-            asw::core::exit = true;
+            asw::core::exit();
+            break;
         }
 
         // --- Draw ---

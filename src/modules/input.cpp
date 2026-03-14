@@ -1,18 +1,26 @@
 #include "./asw/modules/input.h"
 
+#include <unordered_map>
+#include <vector>
+
 #include "./asw/modules/action.h"
+#include "./asw/modules/log.h"
 
 namespace {
 /// @brief Active cursor stores the current active cursor. It is updated by
 /// the core.
 std::array<SDL_Cursor*, asw::input::NUM_CURSORS> cursors { nullptr };
+
+/// @brief Global controller state.
+std::vector<asw::input::ControllerState> controller {};
+
+/// @brief Map of SDL_JoystickID to controller index in the controller vector.
+std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map {};
 } // namespace
 
 asw::input::KeyState asw::input::keyboard {};
 
 asw::input::MouseState asw::input::mouse {};
-
-std::array<asw::input::ControllerState, asw::input::MAX_CONTROLLERS> asw::input::controller {};
 
 std::string asw::input::text_input;
 
@@ -23,7 +31,6 @@ void asw::input::reset()
 
     auto& k_state = asw::input::keyboard;
     auto& m_state = asw::input::mouse;
-    auto& c_state = asw::input::controller;
 
     // Clear key state
     k_state.any_pressed = false;
@@ -54,7 +61,7 @@ void asw::input::reset()
     asw::input::text_input.clear();
 
     // Clear controller state
-    for (auto& cont : c_state) {
+    for (auto& cont : controller) {
         cont.any_pressed = false;
         cont.last_pressed = -1;
 
@@ -67,6 +74,9 @@ void asw::input::reset()
         }
     }
 }
+
+// ---- MOUSE ----
+//
 
 bool asw::input::get_mouse_button(asw::input::MouseButton button)
 {
@@ -83,6 +93,24 @@ bool asw::input::get_mouse_button_up(asw::input::MouseButton button)
     return mouse.released[static_cast<int>(button)];
 }
 
+void asw::input::set_cursor(asw::input::CursorId cursor)
+{
+    auto cursor_int = static_cast<uint32_t>(cursor);
+
+    if (cursor_int >= cursors.size()) {
+        return;
+    }
+
+    if (cursors[cursor_int] == nullptr) {
+        cursors[cursor_int] = SDL_CreateSystemCursor(static_cast<SDL_SystemCursor>(cursor_int));
+    }
+
+    SDL_SetCursor(cursors[cursor_int]);
+}
+
+// ---- KEYBOARD ----
+//
+
 bool asw::input::get_key(asw::input::Key key)
 {
     return keyboard.down[static_cast<int>(key)];
@@ -98,19 +126,95 @@ bool asw::input::get_key_up(asw::input::Key key)
     return keyboard.released[static_cast<int>(key)];
 }
 
-void asw::input::set_cursor(asw::input::CursorId cursor)
-{
-    auto cursor_int = static_cast<uint32_t>(cursor);
+// ---- CONTROLLER ----
+//
 
-    if (cursor_int >= cursors.size()) {
+void asw::input::_controller_added(SDL_JoystickID id)
+{
+    if (!SDL_IsGamepad(id)) {
+        asw::log::warn("Failed to open gamepad: {}", id);
         return;
     }
 
-    if (cursors[cursor_int] == nullptr) {
-        cursors[cursor_int] = SDL_CreateSystemCursor(static_cast<SDL_SystemCursor>(cursor_int));
+    auto* opened = SDL_OpenGamepad(id);
+    if (opened == nullptr) {
+        asw::log::warn("Failed to open gamepad: {}", id);
     }
 
-    SDL_SetCursor(cursors[cursor_int]);
+    // Add controller
+    auto& new_controller = controller.emplace_back();
+    new_controller.gamepad = opened;
+    new_controller.name = SDL_GetGamepadName(opened);
+    controller_id_map[id] = controller.size() - 1;
+
+    asw::log::info("Gamepad added: {} (ID: {})", new_controller.name, id);
+}
+
+void asw::input::_controller_removed(SDL_JoystickID id)
+{
+    const auto it = controller_id_map.find(id);
+    if (it == controller_id_map.end()) {
+        return;
+    }
+
+    // Erase from vector and map
+    const auto index = it->second;
+    controller_id_map.erase(it);
+    controller.erase(controller.begin() + index);
+
+    // Close gamepad if it exists
+    if (auto* existing = SDL_GetGamepadFromID(id); existing != nullptr) {
+        SDL_CloseGamepad(existing);
+    }
+}
+
+void asw::input::_controller_axis_motion(SDL_JoystickID id, uint32_t axis, float value)
+{
+    const auto it = controller_id_map.find(id);
+    if (it == controller_id_map.end()) {
+        return;
+    }
+
+    const auto index = it->second;
+    if (index >= controller.size() || axis >= asw::input::NUM_CONTROLLER_AXES) {
+        return;
+    }
+
+    controller[index].axis[axis] = value / 32768.0F; // Normalize to [-1, 1]
+}
+
+void asw::input::_controller_button_down(SDL_JoystickID id, uint32_t button)
+{
+    const auto it = controller_id_map.find(id);
+    if (it == controller_id_map.end()) {
+        return;
+    }
+
+    const auto index = it->second;
+    if (index >= controller.size()) {
+        return;
+    }
+
+    controller[index].pressed[button] = true;
+    controller[index].down[button] = true;
+    controller[index].any_pressed = true;
+    controller[index].last_pressed = button;
+}
+
+void asw::input::_controller_button_up(SDL_JoystickID id, uint32_t button)
+{
+    const auto it = controller_id_map.find(id);
+    if (it == controller_id_map.end()) {
+        return;
+    }
+
+    const auto index = it->second;
+    if (index >= controller.size()) {
+        return;
+    }
+
+    controller[index].released[button] = true;
+    controller[index].down[button] = false;
 }
 
 bool asw::input::get_controller_button(uint32_t index, asw::input::ControllerButton button)
@@ -160,9 +264,7 @@ void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone)
 
 int asw::input::get_controller_count()
 {
-    int count = 0;
-    SDL_GetJoysticks(&count);
-    return count;
+    return controller.size();
 }
 
 std::string asw::input::get_controller_name(uint32_t index)
@@ -171,5 +273,5 @@ std::string asw::input::get_controller_name(uint32_t index)
         return "";
     }
 
-    return SDL_GetGamepadNameForID(index);
+    return controller.at(index).name;
 }
