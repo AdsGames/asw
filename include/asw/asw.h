@@ -3,6 +3,7 @@
 
 #define SDL_MAIN_HANDLED
 
+#include "./modules/action.h"
 #include "./modules/assets.h"
 #include "./modules/color.h"
 #include "./modules/core.h"

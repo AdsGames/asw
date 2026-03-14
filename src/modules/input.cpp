@@ -1,5 +1,7 @@
 #include "./asw/modules/input.h"
 
+#include "./asw/modules/action.h"
+
 namespace {
 /// @brief Active cursor stores the current active cursor. It is updated by
 /// the core.
@@ -16,6 +18,9 @@ std::string asw::input::text_input;
 
 void asw::input::reset()
 {
+    // Snapshot action states before raw input arrays are cleared.
+    asw::input::update_actions();
+
     auto& k_state = asw::input::keyboard;
     auto& m_state = asw::input::mouse;
     auto& c_state = asw::input::controller;
