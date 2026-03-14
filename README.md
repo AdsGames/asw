@@ -29,3 +29,14 @@ FetchContent_MakeAvailable(asw)
 cmake --preset debug
 cmake --build --preset debug
 ```
+
+Output is in the `lib/` directory.
+
+### Building Examples
+
+```sh
+cmake --preset debug -DASW_BUILD_EXAMPLES=ON
+cmake --build --preset debug
+```
+
+Output is in the `bin/` directory.

@@ -21,4 +21,4 @@ GENERATE_LATEX         = NO
 HTML_OUTPUT            = docs
 HAVE_DOT               = YES
 DOT_IMAGE_FORMAT       = svg
-EXTRACT_ALL 					 = YES
+EXTRACT_ALL            = YES

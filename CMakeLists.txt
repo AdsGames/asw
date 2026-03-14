@@ -65,6 +65,12 @@ target_link_libraries(
   z
 )
 
+# Examples
+option(ASW_BUILD_EXAMPLES "Build ASW examples" OFF)
+if(ASW_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
+
 # Install
 include(CMakePackageConfigHelpers)
 
