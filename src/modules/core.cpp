@@ -148,6 +148,10 @@ void asw::core::update()
         default:
             break;
         }
+
+        if (exiting) {
+            break;
+        }
     }
 }
 
@@ -199,6 +203,10 @@ void asw::core::print_info()
 void asw::core::exit()
 {
     exiting = true;
+    SDL_DestroyRenderer(asw::display::renderer);
+    asw::display::renderer = nullptr;
+    SDL_DestroyWindow(asw::display::window);
+    asw::display::window = nullptr;
     MIX_Quit();
     TTF_Quit();
     SDL_Quit();
