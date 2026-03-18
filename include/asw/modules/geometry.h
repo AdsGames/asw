@@ -555,6 +555,14 @@ public:
     Vec2<T> size;
 };
 
+/// Type aliases for common vector and rectangle types.
+using Vec2f = Vec2<float>;
+using Vec2i = Vec2<int>;
+using Vec3f = Vec3<float>;
+using Vec3i = Vec3<int>;
+using Quadf = Quad<float>;
+using Quadi = Quad<int>;
+
 } // namespace asw
 
 #endif // ASW_GEOMETRY_H
