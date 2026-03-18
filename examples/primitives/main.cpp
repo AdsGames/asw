@@ -29,7 +29,6 @@ int main()
 
         if (asw::input::get_key_down(asw::input::Key::Escape)) {
             asw::core::exit();
-            break;
         }
 
         angle += 0.02F;
@@ -107,6 +106,8 @@ int main()
 
         asw::display::present();
     }
+
+    asw::core::cleanup();
 
     return 0;
 }

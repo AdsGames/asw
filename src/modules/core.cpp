@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <format>
 
+#include "./asw/modules/action.h"
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
 #include "./asw/modules/log.h"
@@ -18,10 +19,6 @@ bool exiting = false;
 
 void asw::core::update()
 {
-    if (exiting) {
-        return;
-    }
-
     asw::input::reset();
 
     auto& mouse = asw::input::mouse;
@@ -142,14 +139,9 @@ void asw::core::update()
 
         case SDL_EVENT_QUIT: {
             exit();
-            break;
         }
 
         default:
-            break;
-        }
-
-        if (exiting) {
             break;
         }
     }
@@ -203,10 +195,20 @@ void asw::core::print_info()
 void asw::core::exit()
 {
     exiting = true;
-    SDL_DestroyRenderer(asw::display::renderer);
-    asw::display::renderer = nullptr;
-    SDL_DestroyWindow(asw::display::window);
-    asw::display::window = nullptr;
+}
+
+void asw::core::cleanup()
+{
+    asw::input::clear_actions();
+
+    if (asw::display::renderer != nullptr) {
+        SDL_DestroyRenderer(asw::display::renderer);
+        asw::display::renderer = nullptr;
+    }
+    if (asw::display::window != nullptr) {
+        SDL_DestroyWindow(asw::display::window);
+        asw::display::window = nullptr;
+    }
     MIX_Quit();
     TTF_Quit();
     SDL_Quit();

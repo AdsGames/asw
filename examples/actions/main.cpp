@@ -67,7 +67,6 @@ int main()
 
         if (asw::input::is_action_pressed("quit")) {
             asw::core::exit();
-            break;
         }
 
         // Move using analogue strength so a controller stick gives smooth speed
@@ -143,6 +142,7 @@ int main()
         asw::display::present();
     }
 
-    asw::input::clear_actions();
+    asw::core::cleanup();
+
     return 0;
 }

@@ -62,7 +62,6 @@ int main()
 
         if (asw::input::get_key_down(asw::input::Key::Escape)) {
             asw::core::exit();
-            break;
         }
 
         // --- Draw ---
@@ -103,6 +102,8 @@ int main()
 
         asw::display::present();
     }
+
+    asw::core::cleanup();
 
     return 0;
 }
