@@ -209,6 +209,7 @@ void asw::core::cleanup()
         SDL_DestroyWindow(asw::display::window);
         asw::display::window = nullptr;
     }
+
     MIX_Quit();
     TTF_Quit();
     SDL_Quit();

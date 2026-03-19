@@ -30,7 +30,7 @@ public:
     /// @brief Default constructor for Widget.
     ///
     Widget()
-        : id_(generate_id()) { };
+        : _id(generate_id()) { };
 
     /// @brief Default virtual destructor.
     ///
@@ -53,7 +53,7 @@ public:
     ///
     WidgetId id() const
     {
-        return id_;
+        return _id;
     }
 
     /// @brief Whether the widget is visible.
@@ -118,15 +118,29 @@ public:
     /// @brief The transform (position and size) of the widget.
     asw::Quad<float> transform;
 
+    /// @brief Whether the pointer is currently over this widget.
+    bool is_hovered() const { return _hovered; }
+
+    /// @brief Whether this widget is currently being pressed.
+    bool is_pressed() const { return _pressed; }
+
+    /// @brief Whether this widget currently holds focus.
+    bool is_focused() const { return _focused; }
+
+protected:
+    bool _hovered = false;
+    bool _pressed = false;
+    bool _focused = false;
+
 private:
-    static inline int id_counter_ { 1 };
+    static inline int _id_counter { 1 };
 
     static int generate_id()
     {
-        return id_counter_++;
+        return _id_counter++;
     }
 
-    WidgetId id_;
+    WidgetId _id;
 };
 
 } // namespace asw::ui

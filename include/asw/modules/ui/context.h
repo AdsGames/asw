@@ -33,7 +33,7 @@ public:
     ///
     Widget* focused() const
     {
-        return focused_;
+        return _focused;
     }
 
     /// @brief Set focus to a specific widget.
@@ -66,8 +66,8 @@ public:
 private:
     void dfs(Widget& w);
 
-    std::vector<Widget*> focusables_;
-    Widget* focused_ = nullptr;
+    std::vector<Widget*> _focusables;
+    Widget* _focused = nullptr;
 };
 
 /// @brief Shared state for the UI system.

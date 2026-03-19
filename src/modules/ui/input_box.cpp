@@ -9,12 +9,12 @@
 
 void asw::ui::InputBox::on_focus_changed(Context& ctx, bool focused)
 {
-    focused_ = focused;
+    _focused = focused;
     (void)ctx;
 
     if (focused) {
         SDL_StartTextInput(asw::display::window);
-        cursor_pos_ = value.size();
+        _cursor_pos = value.size();
     } else {
         SDL_StopTextInput(asw::display::window);
     }
@@ -28,18 +28,18 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
 
     switch (e.type) {
     case UIEvent::Type::PointerEnter: {
-        hovered_ = true;
+        _hovered = true;
         return false;
     }
     case UIEvent::Type::PointerLeave: {
-        hovered_ = false;
+        _hovered = false;
         return false;
     }
     case UIEvent::Type::PointerDown: {
         if (transform.contains(e.pointer_pos)) {
             ctx.pointer_capture = this;
             ctx.focus.set_focus(ctx, this);
-            cursor_pos_ = value.size();
+            _cursor_pos = value.size();
             return true;
         }
         return false;
@@ -51,8 +51,8 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
         return false;
     }
     case UIEvent::Type::TextInput: {
-        value.insert(cursor_pos_, e.text);
-        cursor_pos_ += e.text.size();
+        value.insert(_cursor_pos, e.text);
+        _cursor_pos += e.text.size();
         if (on_change) {
             on_change(value);
         }
@@ -60,9 +60,9 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
     }
     case UIEvent::Type::KeyDown: {
         if (e.key == asw::input::Key::Backspace) {
-            if (cursor_pos_ > 0) {
-                value.erase(cursor_pos_ - 1, 1);
-                cursor_pos_--;
+            if (_cursor_pos > 0) {
+                value.erase(_cursor_pos - 1, 1);
+                _cursor_pos--;
                 if (on_change) {
                     on_change(value);
                 }
@@ -70,8 +70,8 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
             return true;
         }
         if (e.key == asw::input::Key::Delete) {
-            if (cursor_pos_ < value.size()) {
-                value.erase(cursor_pos_, 1);
+            if (_cursor_pos < value.size()) {
+                value.erase(_cursor_pos, 1);
                 if (on_change) {
                     on_change(value);
                 }
@@ -79,23 +79,23 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
             return true;
         }
         if (e.key == asw::input::Key::Left) {
-            if (cursor_pos_ > 0) {
-                cursor_pos_--;
+            if (_cursor_pos > 0) {
+                _cursor_pos--;
             }
             return true;
         }
         if (e.key == asw::input::Key::Right) {
-            if (cursor_pos_ < value.size()) {
-                cursor_pos_++;
+            if (_cursor_pos < value.size()) {
+                _cursor_pos++;
             }
             return true;
         }
         if (e.key == asw::input::Key::Home) {
-            cursor_pos_ = 0;
+            _cursor_pos = 0;
             return true;
         }
         if (e.key == asw::input::Key::End) {
-            cursor_pos_ = value.size();
+            _cursor_pos = value.size();
             return true;
         }
         return false;
@@ -123,7 +123,7 @@ void asw::ui::InputBox::draw(Context& ctx)
 
     // Border
     asw::Color border = ctx.theme.btn_bg;
-    if (hovered_ && enabled) {
+    if (_hovered && enabled) {
         border = ctx.theme.btn_hover;
     }
     asw::draw::rect(transform, border);
@@ -150,8 +150,8 @@ void asw::ui::InputBox::draw(Context& ctx)
     }
 
     // Cursor
-    if (focused_ && font != nullptr) {
-        const auto before_cursor = value.substr(0, cursor_pos_);
+    if (_focused && font != nullptr) {
+        const auto before_cursor = value.substr(0, _cursor_pos);
         float cursor_x = transform.position.x + text_padding;
 
         if (!before_cursor.empty()) {
@@ -171,7 +171,7 @@ void asw::ui::InputBox::draw(Context& ctx)
     SDL_SetRenderClipRect(asw::display::renderer, nullptr);
 
     // Focus ring
-    if (focused_ && ctx.theme.show_focus) {
+    if (_focused && ctx.theme.show_focus) {
         auto ring = asw::Quad<float>(transform);
         ring.position.x -= 2;
         ring.position.y -= 2;

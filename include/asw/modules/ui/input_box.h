@@ -63,9 +63,7 @@ public:
     std::string placeholder;
 
 private:
-    bool hovered_ = false;
-    bool focused_ = false;
-    std::size_t cursor_pos_ = 0;
+    std::size_t _cursor_pos = 0;
 };
 
 } // namespace asw::ui

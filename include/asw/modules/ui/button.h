@@ -53,16 +53,32 @@ public:
     ///
     void draw(Context& ctx) override;
 
+    /// @brief Padding applied inside the button on all sides.
+    float padding = 0.0f;
+
     /// @brief The font to use for the button text.
     asw::Font font;
 
     /// @brief The button text.
     std::string text;
 
-private:
-    bool hovered_ = false;
-    bool pressed_ = false;
-    bool focused_ = false;
+    /// @brief The texture to display on the button.
+    asw::Texture texture;
+
+    /// @brief Set the texture, optionally resizing the button to match.
+    ///
+    /// @param tex The texture to set.
+    /// @param auto_size If true, resizes the button to the texture dimensions.
+    ///
+    void set_texture(const asw::Texture& tex, bool auto_size = false);
+
+    /// @brief Set the text, optionally resizing the button to match.
+    ///
+    /// @param t The text to set.
+    /// @param auto_size If true, resizes the button to fit the text.
+    ///
+    void set_text(const std::string& t, bool auto_size = false);
+
 };
 
 } // namespace asw::ui
