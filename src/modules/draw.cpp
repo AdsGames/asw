@@ -156,11 +156,11 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     }
 
     const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
-    SDL_Surface* textSurface = TTF_RenderText_Solid(font.get(), text.c_str(), 0, sdlColor);
+    SDL_Surface* textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(asw::display::renderer, textSurface);
 
     SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_NEAREST);
+    SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
 
     SDL_FRect dest;
     dest.x = position.x;

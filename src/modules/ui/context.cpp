@@ -5,75 +5,75 @@
 
 void asw::ui::FocusManager::rebuild(Context& ctx, Widget& root)
 {
-    focusables_.clear();
+    _focusables.clear();
     dfs(root);
     // Keep current focus if still exists
-    if (focused_ != nullptr) {
-        auto it = std::ranges::find(focusables_, focused_);
-        if (it == focusables_.end()) {
+    if (_focused != nullptr) {
+        auto it = std::ranges::find(_focusables, _focused);
+        if (it == _focusables.end()) {
             set_focus(ctx, nullptr);
         }
     }
-    if (focused_ == nullptr && !focusables_.empty()) {
-        set_focus(ctx, focusables_.front());
+    if (_focused == nullptr && !_focusables.empty()) {
+        set_focus(ctx, _focusables.front());
     }
 }
 
 void asw::ui::FocusManager::set_focus(Context& ctx, Widget* w)
 {
-    if (focused_ == w) {
+    if (_focused == w) {
         return;
     }
-    if (focused_ != nullptr) {
-        focused_->on_focus_changed(ctx, false);
+    if (_focused != nullptr) {
+        _focused->on_focus_changed(ctx, false);
     }
-    focused_ = w;
-    if (focused_ != nullptr) {
-        focused_->on_focus_changed(ctx, true);
+    _focused = w;
+    if (_focused != nullptr) {
+        _focused->on_focus_changed(ctx, true);
     }
 }
 
 void asw::ui::FocusManager::focus_next(Context& ctx)
 {
-    if (focusables_.empty()) {
+    if (_focusables.empty()) {
         return;
     }
 
-    if (focused_ == nullptr) {
-        set_focus(ctx, focusables_.front());
+    if (_focused == nullptr) {
+        set_focus(ctx, _focusables.front());
         return;
     }
-    auto it = std::ranges::find(focusables_, focused_);
-    if (it == focusables_.end()) {
-        set_focus(ctx, focusables_.front());
+    auto it = std::ranges::find(_focusables, _focused);
+    if (it == _focusables.end()) {
+        set_focus(ctx, _focusables.front());
         return;
     }
     ++it;
-    if (it == focusables_.end()) {
-        it = focusables_.begin();
+    if (it == _focusables.end()) {
+        it = _focusables.begin();
     }
     set_focus(ctx, *it);
 }
 
 void asw::ui::FocusManager::focus_prev(Context& ctx)
 {
-    if (focusables_.empty()) {
+    if (_focusables.empty()) {
         return;
     }
 
-    if (focused_ == nullptr) {
-        set_focus(ctx, focusables_.front());
+    if (_focused == nullptr) {
+        set_focus(ctx, _focusables.front());
         return;
     }
 
-    auto it = std::ranges::find(focusables_, focused_);
-    if (it == focusables_.end()) {
-        set_focus(ctx, focusables_.front());
+    auto it = std::ranges::find(_focusables, _focused);
+    if (it == _focusables.end()) {
+        set_focus(ctx, _focusables.front());
         return;
     }
 
-    if (it == focusables_.begin()) {
-        it = focusables_.end();
+    if (it == _focusables.begin()) {
+        it = _focusables.end();
     }
     --it;
     set_focus(ctx, *it);
@@ -81,24 +81,24 @@ void asw::ui::FocusManager::focus_prev(Context& ctx)
 
 void asw::ui::FocusManager::focus_dir(Context& ctx, int dx, int dy)
 {
-    if (focusables_.empty()) {
+    if (_focusables.empty()) {
         return;
     }
 
-    if (focused_ == nullptr) {
-        set_focus(ctx, focusables_.front());
+    if (_focused == nullptr) {
+        set_focus(ctx, _focusables.front());
         return;
     }
 
-    const auto& from = focused_->transform;
+    const auto& from = _focused->transform;
     const float fx = from.get_center().x;
     const float fy = from.get_center().y;
 
     Widget* best = nullptr;
     float bestScore = 1e30f;
 
-    for (Widget* w : focusables_) {
-        if (w == focused_) {
+    for (Widget* w : _focusables) {
+        if (w == _focused) {
             continue;
         }
         const auto& to = w->transform;
@@ -138,7 +138,7 @@ void asw::ui::FocusManager::focus_dir(Context& ctx, int dx, int dy)
 void asw::ui::FocusManager::dfs(Widget& w)
 {
     if (w.visible && w.enabled && w.focusable) {
-        focusables_.push_back(&w);
+        _focusables.push_back(&w);
     }
     for (auto const& c : w.children) {
         dfs(*c);
