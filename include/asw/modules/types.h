@@ -40,11 +40,11 @@ using Texture = std::shared_ptr<SDL_Texture>;
 /// @brief Alias for a shared pointer to an TTF_Font
 using Font = std::shared_ptr<TTF_Font>;
 
-/// @brief Alias for a shared pointer to an Mix_Chunk
-using Sample = std::shared_ptr<Mix_Chunk>;
+/// @brief Alias for a shared pointer to an MIX_Audio
+using Sample = std::shared_ptr<MIX_Audio>;
 
-/// @brief Alias for a shared pointer to an Mix_Music
-using Music = std::shared_ptr<Mix_Music>;
+/// @brief Alias for a shared pointer to an MIX_Audio
+using Music = std::shared_ptr<MIX_Audio>;
 
 /// @brief Alias for a shared pointer to an SDL_Renderer
 using Renderer = SDL_Renderer;

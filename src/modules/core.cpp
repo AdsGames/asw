@@ -6,12 +6,16 @@
 #include <algorithm>
 #include <format>
 
+#include "./asw/modules/action.h"
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
 #include "./asw/modules/log.h"
+#include "./asw/modules/sound.h"
 #include "./asw/modules/util.h"
 
-bool asw::core::exit = false;
+namespace {
+bool exiting = false;
+}
 
 void asw::core::update()
 {
@@ -19,7 +23,6 @@ void asw::core::update()
 
     auto& mouse = asw::input::mouse;
     auto& keyboard = asw::input::keyboard;
-    auto& controller = asw::input::controller;
 
     SDL_Event e;
 
@@ -105,67 +108,27 @@ void asw::core::update()
         }
 
         case SDL_EVENT_GAMEPAD_AXIS_MOTION: {
-            if (e.gaxis.which >= asw::input::MAX_CONTROLLERS) {
-                break;
-            }
-
-            auto motion = static_cast<float>(e.gaxis.value) / 32768.0F;
-
-            if (auto& current = controller[e.gaxis.which]; motion > current.dead_zone) {
-                current.axis[e.gaxis.axis] = motion;
-            } else if (motion < -current.dead_zone) {
-                current.axis[e.gaxis.axis] = motion;
-            } else {
-                current.axis[e.gaxis.axis] = 0.0F;
-            }
-
+            asw::input::_controller_axis_motion(e.gaxis.which, e.gaxis.axis, e.gaxis.value);
             break;
         }
 
         case SDL_EVENT_GAMEPAD_BUTTON_DOWN: {
-            if (e.gbutton.which >= asw::input::MAX_CONTROLLERS) {
-                break;
-            }
-
-            auto button = static_cast<int>(e.gbutton.button);
-            controller[e.gbutton.which].pressed[button] = true;
-            controller[e.gbutton.which].down[button] = true;
-            controller[e.gbutton.which].any_pressed = true;
-            controller[e.gbutton.which].last_pressed = button;
+            asw::input::_controller_button_down(e.gbutton.which, e.gbutton.button);
             break;
         }
 
         case SDL_EVENT_GAMEPAD_BUTTON_UP: {
-            if (e.gbutton.which >= asw::input::MAX_CONTROLLERS) {
-                break;
-            }
-
-            auto button = static_cast<int>(e.gbutton.button);
-            controller[e.gbutton.which].released[button] = true;
-            controller[e.gbutton.which].down[button] = false;
+            asw::input::_controller_button_up(e.gbutton.which, e.gbutton.button);
             break;
         }
 
         case SDL_EVENT_GAMEPAD_ADDED: {
-            if (e.gdevice.which >= asw::input::MAX_CONTROLLERS || !SDL_IsGamepad(e.gdevice.which)) {
-                asw::log::warn(std::format("Failed to open gamepad: {}", e.gdevice.which));
-                break;
-            }
-
-            SDL_OpenGamepad(e.gdevice.which);
-
+            asw::input::_controller_added(e.gdevice.which);
             break;
         }
 
         case SDL_EVENT_GAMEPAD_REMOVED: {
-            if (e.gdevice.which >= asw::input::MAX_CONTROLLERS) {
-                break;
-            }
-
-            if (auto* existing = SDL_GetGamepadFromID(e.gdevice.which); existing != nullptr) {
-                SDL_CloseGamepad(existing);
-            }
-
+            asw::input::_controller_removed(e.gdevice.which);
             break;
         }
 
@@ -175,8 +138,7 @@ void asw::core::update()
         }
 
         case SDL_EVENT_QUIT: {
-            exit = true;
-            break;
+            exit();
         }
 
         default:
@@ -187,7 +149,7 @@ void asw::core::update()
 
 void asw::core::init(int width, int height, int scale)
 {
-    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_GAMEPAD)) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
         asw::util::abort_on_error("SDL_Init");
     }
 
@@ -195,19 +157,12 @@ void asw::core::init(int width, int height, int scale)
         asw::util::abort_on_error("TTF_Init");
     }
 
-    // Initialize SDL_mixer
-    SDL_AudioSpec spec;
-    spec.format = SDL_AUDIO_S16LE;
-    spec.freq = 44100;
-    spec.channels = 2;
-
-    if (!Mix_OpenAudio(0, &spec)) {
-        asw::util::abort_on_error("Mix_OpenAudio");
+    if (!asw::sound::_init()) {
+        asw::util::abort_on_error("Sound initialization failed");
     }
 
     asw::display::window
         = SDL_CreateWindow("", width * scale, height * scale, SDL_WINDOW_RESIZABLE);
-
     if (asw::display::window == nullptr) {
         asw::util::abort_on_error("WINDOW");
     }
@@ -232,9 +187,34 @@ void asw::core::print_info()
         renderer_name = SDL_GetRendererName(asw::display::renderer);
     }
 
-    const std::string sdl_version
-        = std::format("{}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+    asw::log::info(
+        "SDL Version: {}.{}.{}", SDL_MAJOR_VERSION, SDL_MINOR_VERSION, SDL_MICRO_VERSION);
+    asw::log::info("Renderer: {}", renderer_name);
+}
 
-    asw::log::info(std::format("SDL Version: {}", sdl_version));
-    asw::log::info(std::format("Renderer: {}", renderer_name));
+void asw::core::exit()
+{
+    exiting = true;
+}
+
+void asw::core::cleanup()
+{
+    asw::input::clear_actions();
+
+    if (asw::display::renderer != nullptr) {
+        SDL_DestroyRenderer(asw::display::renderer);
+        asw::display::renderer = nullptr;
+    }
+    if (asw::display::window != nullptr) {
+        SDL_DestroyWindow(asw::display::window);
+        asw::display::window = nullptr;
+    }
+    MIX_Quit();
+    TTF_Quit();
+    SDL_Quit();
+}
+
+bool asw::core::is_exiting()
+{
+    return exiting;
 }

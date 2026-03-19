@@ -456,17 +456,35 @@ using ControllerState = struct ControllerState {
     float dead_zone { 0.25F };
 
     std::array<float, NUM_CONTROLLER_AXES> axis { 0 };
+
+    SDL_Gamepad* gamepad { nullptr };
+    std::string name;
 };
 
 /**
- * @brief Maximum number of controllers supported
+ * @brief Controller added hook
  */
-constexpr int MAX_CONTROLLERS = 8;
+void _controller_added(SDL_JoystickID id);
 
 /**
- * @brief Global controller state.
+ * @brief Controller removed hook
  */
-extern std::array<ControllerState, MAX_CONTROLLERS> controller;
+void _controller_removed(SDL_JoystickID id);
+
+/**
+ * @brief Axis moved hook
+ */
+void _controller_axis_motion(SDL_JoystickID id, uint32_t axis, float value);
+
+/**
+ * @brief Button down hook
+ */
+void _controller_button_down(SDL_JoystickID id, uint32_t button);
+
+/**
+ * @brief Button up hook
+ */
+void _controller_button_up(SDL_JoystickID id, uint32_t button);
 
 /**
  * @brief Check if a controller button is down.

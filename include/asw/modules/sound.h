@@ -12,6 +12,18 @@
 #include "./types.h"
 
 namespace asw::sound {
+
+/// @brief Global mixer device
+extern MIX_Mixer* mixer;
+
+/// @brief Initialize the sound module. Must be called before using any other
+/// sound functions. This is called automatically by asw::core::init(),
+/// so you don't need to call it
+///
+/// @return True if initialization was successful, false otherwise.
+///
+bool _init();
+
 /// @brief Play a sample.
 ///
 /// @param sample Sample to play
@@ -27,26 +39,13 @@ void play(const asw::Sample& sample, float volume = 1.0F, float pan = 0.0F, bool
 ///
 /// @param sample Sample to play
 /// @param volume Playback volume (0.0 - 1.0).
+/// @param fade_in_s Fade-in duration in seconds.
 ///
-void play_music(const asw::Music& sample, float volume = 1.0F);
+void play_music(const asw::Music& sample, float volume = 1.0F, float fade_in_s = 0.0F);
 
 /// @brief Stop the currently playing music.
 ///
-void stop_music();
-
-/// @brief Fade in music over a duration.
-///
-/// @param music The music to play.
-/// @param volume Playback volume (0.0 - 1.0).
-/// @param duration Fade duration in seconds.
-///
-void fade_in_music(const asw::Music& music, float volume, float duration);
-
-/// @brief Fade out the currently playing music.
-///
-/// @param duration Fade duration in seconds.
-///
-void fade_out_music(float duration);
+void stop_music(float fade_out_s = 0.0F);
 
 /// @brief Pause the currently playing music.
 ///

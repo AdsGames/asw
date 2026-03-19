@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "./asw/modules/display.h"
+#include "./asw/modules/sound.h"
 #include "./asw/modules/types.h"
 #include "./asw/modules/util.h"
 
@@ -129,13 +130,13 @@ void asw::assets::unload_font(const std::string& key)
 asw::Sample asw::assets::load_sample(const std::string& filename)
 {
     const auto full_path = get_path(filename);
-    Mix_Chunk* temp = Mix_LoadWAV(full_path.c_str());
+    MIX_Audio* temp = MIX_LoadAudio(asw::sound::mixer, full_path.c_str(), true);
 
     if (temp == nullptr) {
         asw::util::abort_on_error("Failed to load sample: " + full_path);
     }
 
-    return { temp, Mix_FreeChunk };
+    return { temp, MIX_DestroyAudio };
 }
 
 asw::Sample asw::assets::load_sample(const std::string& filename, const std::string& key)
@@ -168,13 +169,13 @@ void asw::assets::unload_sample(const std::string& key)
 asw::Music asw::assets::load_music(const std::string& filename)
 {
     const auto full_path = get_path(filename);
-    Mix_Music* temp = Mix_LoadMUS(full_path.c_str());
+    MIX_Audio* temp = MIX_LoadAudio(asw::sound::mixer, full_path.c_str(), false);
 
     if (temp == nullptr) {
         asw::util::abort_on_error("Failed to load music: " + full_path);
     }
 
-    return { temp, Mix_FreeMusic };
+    return { temp, MIX_DestroyAudio };
 }
 
 asw::Music asw::assets::load_music(const std::string& filename, const std::string& key)

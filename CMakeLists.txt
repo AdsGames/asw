@@ -34,11 +34,10 @@ if(TARGET freetype AND NOT TARGET Freetype::Freetype)
   add_library(Freetype::Freetype ALIAS freetype)
 endif()
 
-CPMAddPackage("gh:libsdl-org/SDL#release-3.2.8")
-CPMAddPackage("gh:libsdl-org/SDL_image#release-3.2.4")
-CPMAddPackage("gh:libsdl-org/SDL_ttf#release-3.2.0")
-# V3 not released yet
-CPMAddPackage("gh:libsdl-org/SDL_mixer#a83eb9c59c55b48da72dc7b062c78d8dc52ec322")
+CPMAddPackage("gh:libsdl-org/SDL#release-3.4.2")
+CPMAddPackage("gh:libsdl-org/SDL_image#release-3.4.0")
+CPMAddPackage("gh:libsdl-org/SDL_ttf#release-3.2.2")
+CPMAddPackage("gh:libsdl-org/SDL_mixer#release-3.2.0")
 
 # Add include
 target_include_directories(
@@ -64,6 +63,12 @@ target_link_libraries(
   SDL3_ttf::SDL3_ttf-static
   z
 )
+
+# Examples
+option(ASW_BUILD_EXAMPLES "Build ASW examples" OFF)
+if(ASW_BUILD_EXAMPLES)
+  add_subdirectory(examples)
+endif()
 
 # Install
 include(CMakePackageConfigHelpers)

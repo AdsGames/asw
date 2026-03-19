@@ -16,6 +16,9 @@ jobs:
   build:
     name: Test Build
     runs-on: ubuntu-latest
+    env:
+      EM_VERSION: 5.0.3
+      EM_CACHE_FOLDER: "emsdk-cache"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,20 +26,20 @@ jobs:
       - name: Setup cache
         uses: actions/cache@v4
         with:
-          path: "_deps"
-          key: deps-${{ runner.os }}
+          path: ${{ env.EM_CACHE_FOLDER }}
+          key: ${{ env.EM_VERSION }}-${{ runner.os }}
 
       - uses: mymindstorm/setup-emsdk@v14
         with:
-          version: 4.0.6
-          actions-cache-folder: "emsdk-cache"
+          version: ${{ env.EM_VERSION }}
+          actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
 
       - name: Download ports
         run: |
           embuilder build harfbuzz
 
-      - name: Run CMake
-        run: emcmake cmake --preset release
+      - name: Run CMake (Release & Examples)
+        run: emcmake cmake --preset release -DASW_BUILD_EXAMPLES=ON
 
       - name: Make
         run: cmake --build --preset release
