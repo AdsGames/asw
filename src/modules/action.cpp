@@ -32,21 +32,21 @@ bool binding_is_down(const asw::input::ActionBinding& binding, float& out_streng
             using T = std::decay_t<decltype(b)>;
 
             if constexpr (std::is_same_v<T, asw::input::KeyBinding>) {
-                if (asw::input::keyboard.down[static_cast<int>(b.key)]) {
+                if (asw::input::get_key(b.key)) {
                     out_strength = std::max(out_strength, 1.0F);
                     return true;
                 }
                 return false;
 
             } else if constexpr (std::is_same_v<T, asw::input::MouseButtonBinding>) {
-                if (asw::input::mouse.down[static_cast<int>(b.button)]) {
+                if (asw::input::get_mouse_button(b.button)) {
                     out_strength = std::max(out_strength, 1.0F);
                     return true;
                 }
                 return false;
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerButtonBinding>) {
-                if (asw::input::get_controller_button_down(b.controller_index, b.button)) {
+                if (asw::input::get_controller_button(b.controller_index, b.button)) {
                     out_strength = std::max(out_strength, 1.0F);
                     return true;
                 }
