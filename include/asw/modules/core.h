@@ -38,7 +38,7 @@ bool is_exiting();
 
 /// @brief Cleanup resources used by the core module. Should be called on application exit.
 ///
-void cleanup();
+void shutdown();
 
 } // namespace asw::core
 

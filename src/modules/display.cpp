@@ -23,6 +23,7 @@ void asw::display::set_icon(const std::string& path)
     }
 
     SDL_SetWindowIcon(asw::display::window, icon);
+    SDL_DestroySurface(icon);
 }
 
 void asw::display::set_fullscreen(bool fullscreen)

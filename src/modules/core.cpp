@@ -181,7 +181,7 @@ void asw::core::exit()
     exiting = true;
 }
 
-void asw::core::cleanup()
+void asw::core::shutdown()
 {
     asw::input::clear_actions();
 
@@ -194,8 +194,8 @@ void asw::core::cleanup()
         asw::display::window = nullptr;
     }
 
-    MIX_Quit();
     TTF_Quit();
+    MIX_Quit();
     SDL_Quit();
 }
 
