@@ -31,20 +31,28 @@ int main()
     asw::input::bind_action("move_left", asw::input::KeyBinding { asw::input::Key::A });
     asw::input::bind_action("move_left", asw::input::KeyBinding { asw::input::Key::Left });
     asw::input::bind_action("move_left",
+        asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadLeft, 0 });
+    asw::input::bind_action("move_left",
         asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftX, 0, 0.2F, false });
 
     asw::input::bind_action("move_right", asw::input::KeyBinding { asw::input::Key::D });
     asw::input::bind_action("move_right", asw::input::KeyBinding { asw::input::Key::Right });
     asw::input::bind_action("move_right",
+        asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadRight, 0 });
+    asw::input::bind_action("move_right",
         asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftX, 0, 0.2F, true });
 
     asw::input::bind_action("move_up", asw::input::KeyBinding { asw::input::Key::W });
     asw::input::bind_action("move_up", asw::input::KeyBinding { asw::input::Key::Up });
+    asw::input::bind_action(
+        "move_up", asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadUp, 0 });
     asw::input::bind_action("move_up",
         asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftY, 0, 0.2F, false });
 
     asw::input::bind_action("move_down", asw::input::KeyBinding { asw::input::Key::S });
     asw::input::bind_action("move_down", asw::input::KeyBinding { asw::input::Key::Down });
+    asw::input::bind_action("move_down",
+        asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadDown, 0 });
     asw::input::bind_action("move_down",
         asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftY, 0, 0.2F, true });
 

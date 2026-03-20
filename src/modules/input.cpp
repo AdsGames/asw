@@ -7,12 +7,28 @@
 #include "./asw/modules/log.h"
 
 namespace {
+/// @brief Data structure for controller state, including button states and axis values.
+using ControllerState = struct ControllerState {
+    std::array<bool, asw::input::NUM_CONTROLLER_BUTTONS> pressed { false };
+    std::array<bool, asw::input::NUM_CONTROLLER_BUTTONS> released { false };
+    std::array<bool, asw::input::NUM_CONTROLLER_BUTTONS> down { false };
+
+    bool any_pressed { false };
+    int last_pressed { -1 };
+    float dead_zone { 0.25F };
+
+    std::array<float, asw::input::NUM_CONTROLLER_AXES> axis { 0 };
+
+    SDL_Gamepad* gamepad { nullptr };
+    std::string name;
+};
+
 /// @brief Active cursor stores the current active cursor. It is updated by
 /// the core.
 std::array<SDL_Cursor*, asw::input::NUM_CURSORS> cursors { nullptr };
 
 /// @brief Global controller state.
-std::vector<asw::input::ControllerState> controller {};
+std::vector<ControllerState> controller {};
 
 /// @brief Map of SDL_JoystickID to controller index in the controller vector.
 std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map {};
@@ -129,6 +145,110 @@ bool asw::input::get_key_up(asw::input::Key key)
 // ---- CONTROLLER ----
 //
 
+bool asw::input::get_controller_button(uint32_t index, asw::input::ControllerButton button)
+{
+    if (index >= controller.size()) {
+        return false;
+    }
+
+    return controller[index].down[static_cast<int>(button)];
+}
+
+bool asw::input::get_controller_button_down(uint32_t index, asw::input::ControllerButton button)
+{
+    if (index >= controller.size()) {
+        return false;
+    }
+
+    return controller[index].pressed[static_cast<int>(button)];
+}
+
+bool asw::input::get_controller_button_up(uint32_t index, asw::input::ControllerButton button)
+{
+    if (index >= controller.size()) {
+        return false;
+    }
+
+    return controller[index].released[static_cast<int>(button)];
+}
+
+float asw::input::get_controller_axis(uint32_t index, asw::input::ControllerAxis axis)
+{
+    if (index >= controller.size()) {
+        return 0.0F;
+    }
+
+    return controller[index].axis[static_cast<int>(axis)];
+}
+
+void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone)
+{
+    if (index >= controller.size()) {
+        return;
+    }
+
+    controller[index].dead_zone = dead_zone;
+}
+
+int asw::input::get_controller_count()
+{
+    return controller.size();
+}
+
+std::string asw::input::get_controller_name(uint32_t index)
+{
+    if (index >= controller.size()) {
+        return "";
+    }
+
+    return controller.at(index).name;
+}
+
+/// Event Hooks
+
+void asw::input::_key_down(SDL_Scancode scancode)
+{
+    keyboard.pressed[scancode] = true;
+    keyboard.down[scancode] = true;
+    keyboard.any_pressed = true;
+    keyboard.last_pressed = scancode;
+}
+
+void asw::input::_key_up(SDL_Scancode scancode)
+{
+    keyboard.released[scancode] = true;
+    keyboard.down[scancode] = false;
+}
+
+void asw::input::_mouse_button_down(uint8_t button)
+{
+    const auto button_int = static_cast<int>(button);
+    mouse.pressed[button_int] = true;
+    mouse.down[button_int] = true;
+    mouse.any_pressed = true;
+    mouse.last_pressed = button_int;
+}
+
+void asw::input::_mouse_button_up(uint8_t button)
+{
+    const auto button_int = static_cast<int>(button);
+    mouse.released[button_int] = true;
+    mouse.down[button_int] = false;
+}
+
+void asw::input::_mouse_motion(float x, float y, float delta_x, float delta_y)
+{
+    mouse.position.x = x;
+    mouse.position.y = y;
+    mouse.change.x = delta_x;
+    mouse.change.y = delta_y;
+}
+
+void asw::input::_mouse_wheel(float x, float y)
+{
+    mouse.z = y;
+}
+
 void asw::input::_controller_added(SDL_JoystickID id)
 {
     if (!SDL_IsGamepad(id)) {
@@ -215,63 +335,4 @@ void asw::input::_controller_button_up(SDL_JoystickID id, uint32_t button)
 
     controller[index].released[button] = true;
     controller[index].down[button] = false;
-}
-
-bool asw::input::get_controller_button(uint32_t index, asw::input::ControllerButton button)
-{
-    if (index >= controller.size()) {
-        return false;
-    }
-
-    return controller[index].down[static_cast<int>(button)];
-}
-
-bool asw::input::get_controller_button_down(uint32_t index, asw::input::ControllerButton button)
-{
-    if (index >= controller.size()) {
-        return false;
-    }
-
-    return controller[index].pressed[static_cast<int>(button)];
-}
-
-bool asw::input::get_controller_button_up(uint32_t index, asw::input::ControllerButton button)
-{
-    if (index >= controller.size()) {
-        return false;
-    }
-
-    return controller[index].released[static_cast<int>(button)];
-}
-
-float asw::input::get_controller_axis(uint32_t index, asw::input::ControllerAxis axis)
-{
-    if (index >= controller.size()) {
-        return 0.0F;
-    }
-
-    return controller[index].axis[static_cast<int>(axis)];
-}
-
-void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone)
-{
-    if (index >= controller.size()) {
-        return;
-    }
-
-    controller[index].dead_zone = dead_zone;
-}
-
-int asw::input::get_controller_count()
-{
-    return controller.size();
-}
-
-std::string asw::input::get_controller_name(uint32_t index)
-{
-    if (index >= controller.size()) {
-        return "";
-    }
-
-    return controller.at(index).name;
 }

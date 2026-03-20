@@ -21,9 +21,6 @@ void asw::core::update()
 {
     asw::input::reset();
 
-    auto& mouse = asw::input::mouse;
-    auto& keyboard = asw::input::keyboard;
-
     SDL_Event e;
 
     while (SDL_PollEvent(&e)) {
@@ -57,35 +54,25 @@ void asw::core::update()
 
         case SDL_EVENT_KEY_DOWN: {
             if (!e.key.repeat) {
-                keyboard.pressed[e.key.scancode] = true;
-                keyboard.down[e.key.scancode] = true;
-                keyboard.any_pressed = true;
-                keyboard.last_pressed = e.key.scancode;
+                asw::input::_key_down(e.key.scancode);
             }
             break;
         }
 
         case SDL_EVENT_KEY_UP: {
             if (!e.key.repeat) {
-                keyboard.released[e.key.scancode] = true;
-                keyboard.down[e.key.scancode] = false;
+                asw::input::_key_up(e.key.scancode);
             }
             break;
         }
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN: {
-            const auto button = static_cast<int>(e.button.button);
-            mouse.pressed[button] = true;
-            mouse.down[button] = true;
-            mouse.any_pressed = true;
-            mouse.last_pressed = button;
+            asw::input::_mouse_button_down(e.button.button);
             break;
         }
 
         case SDL_EVENT_MOUSE_BUTTON_UP: {
-            auto button = static_cast<int>(e.button.button);
-            mouse.released[button] = true;
-            mouse.down[button] = false;
+            asw::input::_mouse_button_up(e.button.button);
             break;
         }
 
@@ -95,15 +82,12 @@ void asw::core::update()
                 SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
             }
 
-            mouse.change.x = e.motion.xrel;
-            mouse.change.y = e.motion.yrel;
-            mouse.position.x = e.motion.x;
-            mouse.position.y = e.motion.y;
+            asw::input::_mouse_motion(e.motion.x, e.motion.y, e.motion.xrel, e.motion.yrel);
             break;
         }
 
         case SDL_EVENT_MOUSE_WHEEL: {
-            mouse.z = e.wheel.y;
+            asw::input::_mouse_wheel(e.wheel.x, e.wheel.y);
             break;
         }
 

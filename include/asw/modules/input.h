@@ -391,14 +391,10 @@ bool get_key_up(asw::input::Key key);
 ///
 void set_cursor(asw::input::CursorId cursor);
 
-/**
- * @brief Number of buttons on a game controller
- */
+/// @brief Number of buttons on a game controller
 constexpr int NUM_CONTROLLER_BUTTONS = SDL_GAMEPAD_BUTTON_COUNT;
 
-/**
- * @brief Mappings from SDL game controller buttons to ASW buttons
- */
+/// @brief Mappings from SDL game controller buttons to ASW buttons
 enum class ControllerButton {
     A = SDL_GAMEPAD_BUTTON_SOUTH,
     B = SDL_GAMEPAD_BUTTON_EAST,
@@ -424,14 +420,10 @@ enum class ControllerButton {
     NumControllerButtons = NUM_CONTROLLER_BUTTONS
 };
 
-/**
- * @brief Number of axes on a game controller
- */
+/// @brief Number of axes on a game controller
 constexpr int NUM_CONTROLLER_AXES = SDL_GAMEPAD_AXIS_COUNT;
 
-/**
- * @brief Mappings from SDL game controller axes to ASW axes
- */
+/// @brief Mappings from SDL game controller axes to ASW axes
 enum class ControllerAxis {
     LeftX = SDL_GAMEPAD_AXIS_LEFTX,
     LeftY = SDL_GAMEPAD_AXIS_LEFTY,
@@ -442,111 +434,87 @@ enum class ControllerAxis {
     NumControllerAxes = NUM_CONTROLLER_AXES
 };
 
-/**
- * @brief Controller state stores the current state of a controller. It is
- * updated by the core.
- */
-using ControllerState = struct ControllerState {
-    std::array<bool, NUM_CONTROLLER_BUTTONS> pressed { false };
-    std::array<bool, NUM_CONTROLLER_BUTTONS> released { false };
-    std::array<bool, NUM_CONTROLLER_BUTTONS> down { false };
-
-    bool any_pressed { false };
-    int last_pressed { -1 };
-    float dead_zone { 0.25F };
-
-    std::array<float, NUM_CONTROLLER_AXES> axis { 0 };
-
-    SDL_Gamepad* gamepad { nullptr };
-    std::string name;
-};
-
-/**
- * @brief Controller added hook
- */
-void _controller_added(SDL_JoystickID id);
-
-/**
- * @brief Controller removed hook
- */
-void _controller_removed(SDL_JoystickID id);
-
-/**
- * @brief Axis moved hook
- */
-void _controller_axis_motion(SDL_JoystickID id, uint32_t axis, float value);
-
-/**
- * @brief Button down hook
- */
-void _controller_button_down(SDL_JoystickID id, uint32_t button);
-
-/**
- * @brief Button up hook
- */
-void _controller_button_up(SDL_JoystickID id, uint32_t button);
-
-/**
- * @brief Check if a controller button is down.
- *
- * @param index The index of the controller to check.
- * @param button The button to check.
- * @return true - If the button is down.
- * @return false - If the button is not down.
- */
+/// @brief Check if a controller button is down.
+/// @param index The index of the controller to check.
+/// @param button The button to check.
+/// @return true - If the button is down.
+/// @return false - If the button is not down.
+///
 bool get_controller_button(uint32_t index, asw::input::ControllerButton button);
 
-/**
- * @brief Check if a controller button was pressed since the last update.
- *
- * @param index The index of the controller to check.
- * @param button The button to check.
- * @return true - If the button was pressed.
- * @return false - If the button was not pressed.
- */
+/// @brief Check if a controller button was pressed since the last update.
+/// @param index The index of the controller to check.
+/// @param button The button to check.
+/// @return true - If the button was pressed.
+/// @return false - If the button was not pressed.
+///
 bool get_controller_button_down(uint32_t index, asw::input::ControllerButton button);
 
-/**
- * @brief Check if a controller button was released since the last update.
- *
- * @param index The index of the controller to check.
- * @param button The button to check.
- * @return true - If the button was released.
- * @return false - If the button was not released.
- */
+/// @brief Check if a controller button was released since the last update.
+/// @param index The index of the controller to check.
+/// @param button The button to check.
+/// @return true - If the button was released.
+/// @return false - If the button was not released.
+///
 bool get_controller_button_up(uint32_t index, asw::input::ControllerButton button);
 
-/**
- * @brief Get the value of a controller axis.
- *
- * @param index The index of the controller to check.
- * @param axis The axis to check.
- * @return float - The value of the axis between -1.0f and 1.0f.
- */
+/// @brief Get the value of a controller axis.
+/// @param index The index of the controller to check.
+/// @param axis The axis to check.
+/// @return float - The value of the axis between -1.0f and 1.0f.
+///
 float get_controller_axis(uint32_t index, asw::input::ControllerAxis axis);
 
-/**
- * @brief Set the joystick deadzone for a controller.
- */
+/// @brief Set the joystick deadzone for a controller.
 void set_controller_dead_zone(uint32_t index, float dead_zone);
 
-/**
- * @brief Get the number of controllers connected.
- */
+/// @brief Get the number of controllers connected.
 int get_controller_count();
 
-/**
- * @brief Get the name of a controller.
- */
+/// @brief Get the name of a controller.
 std::string get_controller_name(uint32_t index);
 
 /// @brief Text input received this frame.
 extern std::string text_input;
 
-/**
- * @brief Reset all input states. Called by the core.
- */
+/// @brief Reset all input states. Called by the core.
 void reset();
+
+/// Event Hooks
+
+/// @brief Key down hook
+void _key_down(SDL_Scancode scancode);
+
+/// @brief Key up hook
+void _key_up(SDL_Scancode scancode);
+
+/// Mouse button down hook
+void _mouse_button_down(uint8_t button);
+
+/// @brief Mouse button up hook
+void _mouse_button_up(uint8_t button);
+
+/// @brief Mouse motion hook
+void _mouse_motion(float x, float y, float delta_x, float delta_y);
+
+/// @brief Mouse wheel hook
+void _mouse_wheel(float delta_x, float delta_y);
+
+/// @brief Controller added hook
+void _controller_added(SDL_JoystickID id);
+
+/// @brief Controller removed hook
+void _controller_removed(SDL_JoystickID id);
+
+/// @brief Axis moved hook
+void _controller_axis_motion(SDL_JoystickID id, uint32_t axis, float value);
+
+/// @brief Button down hook
+void _controller_button_down(SDL_JoystickID id, uint32_t button);
+
+/// @brief Button up hook
+void _controller_button_up(SDL_JoystickID id, uint32_t button);
+
 } // namespace asw::input
 
 #endif // ASW_INPUT_H
