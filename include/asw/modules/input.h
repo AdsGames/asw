@@ -315,8 +315,11 @@ using MouseState = struct MouseState {
     std::array<bool, NUM_MOUSE_BUTTONS> down { false };
 };
 
-/// @brief Global mouse state.
-extern MouseState mouse;
+/// @brief Get the current mouse state.
+///
+/// @return Const reference to the current MouseState.
+///
+const MouseState& get_mouse();
 
 /// @brief Check if a mouse button is down.
 ///
@@ -354,9 +357,11 @@ using KeyState = struct KeyState {
     int last_pressed { -1 };
 };
 
-/// @brief Global keyboard state.
+/// @brief Get the current keyboard state.
 ///
-extern KeyState keyboard;
+/// @return Const reference to the current KeyState.
+///
+const KeyState& get_keyboard();
 
 /// @brief Check if a key is down.
 ///
@@ -474,13 +479,19 @@ int get_controller_count();
 /// @brief Get the name of a controller.
 std::string get_controller_name(uint32_t index);
 
-/// @brief Text input received this frame.
-extern std::string text_input;
+/// @brief Get the text input received this frame.
+///
+/// @return Const reference to the text input string.
+///
+const std::string& get_text_input();
 
 /// @brief Reset all input states. Called by the core.
 void reset();
 
 /// Event Hooks
+
+/// @brief Append text to this frame's text input. Called by the core.
+void _append_text(const char* text);
 
 /// @brief Key down hook
 void _key_down(SDL_Scancode scancode);

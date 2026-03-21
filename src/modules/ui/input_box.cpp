@@ -13,10 +13,10 @@ void asw::ui::InputBox::on_focus_changed(Context& ctx, bool focused)
     (void)ctx;
 
     if (focused) {
-        SDL_StartTextInput(asw::display::window);
+        SDL_StartTextInput(asw::display::get_window());
         _cursor_pos = value.size();
     } else {
-        SDL_StopTextInput(asw::display::window);
+        SDL_StopTextInput(asw::display::get_window());
     }
 }
 
@@ -135,7 +135,7 @@ void asw::ui::InputBox::draw(Context& ctx)
         static_cast<int>(transform.size.x - (text_padding * 2)),
         static_cast<int>(transform.size.y),
     };
-    SDL_SetRenderClipRect(asw::display::renderer, &clip);
+    SDL_SetRenderClipRect(asw::display::get_renderer(), &clip);
 
     // Text position (vertically centered)
     const auto display_text = value.empty() ? placeholder : value;
@@ -168,7 +168,7 @@ void asw::ui::InputBox::draw(Context& ctx)
     }
 
     // Reset clip
-    SDL_SetRenderClipRect(asw::display::renderer, nullptr);
+    SDL_SetRenderClipRect(asw::display::get_renderer(), nullptr);
 
     // Focus ring
     if (_focused && ctx.theme.show_focus) {

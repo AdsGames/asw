@@ -2,7 +2,7 @@
 /// @brief Mouse input example
 ///
 /// Demonstrates:
-///   - Reading mouse position and delta via asw::input::mouse
+///   - Reading mouse position and delta via mouse
 ///   - Polling buttons with get_mouse_button_down() / get_mouse_button_up() / get_mouse_button()
 ///   - Scroll wheel via mouse.z
 ///   - Changing cursor style with set_cursor()
@@ -28,17 +28,18 @@ int main()
 
     while (!asw::core::is_exiting()) {
         asw::core::update();
+        const auto& mouse = asw::input::get_mouse();
 
         // --- Button events ---
         if (asw::input::get_mouse_button_down(asw::input::MouseButton::Left)) {
             circle_color = asw::color::red;
-            asw::log::info("Left button pressed at ({:.0f}, {:.0f})", asw::input::mouse.position.x,
-                asw::input::mouse.position.y);
+            asw::log::info(
+                "Left button pressed at ({:.0f}, {:.0f})", mouse.position.x, mouse.position.y);
         }
         if (asw::input::get_mouse_button_down(asw::input::MouseButton::Right)) {
             circle_color = asw::color::blue;
-            asw::log::info("Right button pressed at ({:.0f}, {:.0f})", asw::input::mouse.position.x,
-                asw::input::mouse.position.y);
+            asw::log::info(
+                "Right button pressed at ({:.0f}, {:.0f})", mouse.position.x, mouse.position.y);
         }
         if (asw::input::get_mouse_button_up(asw::input::MouseButton::Left)
             || asw::input::get_mouse_button_up(asw::input::MouseButton::Right)) {
@@ -46,9 +47,9 @@ int main()
         }
 
         // --- Scroll wheel ---
-        if (asw::input::mouse.z != 0.0F) {
-            radius = std::clamp(radius + asw::input::mouse.z * 5.0F, 5.0F, 150.0F);
-            asw::log::info("Scroll: {:.1f}  radius: {:.0f}", asw::input::mouse.z, radius);
+        if (mouse.z != 0.0F) {
+            radius = std::clamp(radius + mouse.z * 5.0F, 5.0F, 150.0F);
+            asw::log::info("Scroll: {:.1f}  radius: {:.0f}", mouse.z, radius);
         }
 
         // --- Cursor style based on button held ---
@@ -67,7 +68,7 @@ int main()
         // --- Draw ---
         asw::display::clear(asw::color::darkslategray);
 
-        const auto& mp = asw::input::mouse.position;
+        const auto& mp = mouse.position;
 
         // Crosshair lines
         const auto win = asw::display::get_logical_size();
@@ -79,7 +80,7 @@ int main()
         asw::draw::circle(mp, radius, asw::color::white);
 
         // Delta indicator (shows mouse movement direction)
-        const auto& delta = asw::input::mouse.change;
+        const auto& delta = mouse.change;
         if (delta.x != 0.0F || delta.y != 0.0F) {
             asw::draw::line(
                 mp, { mp.x + delta.x * 10.0F, mp.y + delta.y * 10.0F }, asw::color::yellow);
@@ -103,7 +104,7 @@ int main()
         asw::display::present();
     }
 
-    asw::core::cleanup();
+    asw::core::shutdown();
 
     return 0;
 }

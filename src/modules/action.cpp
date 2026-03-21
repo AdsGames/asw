@@ -77,10 +77,10 @@ bool binding_is_pressed(const asw::input::ActionBinding& binding)
             using T = std::decay_t<decltype(b)>;
 
             if constexpr (std::is_same_v<T, asw::input::KeyBinding>) {
-                return asw::input::keyboard.pressed[static_cast<int>(b.key)];
+                return asw::input::get_key_down(b.key);
 
             } else if constexpr (std::is_same_v<T, asw::input::MouseButtonBinding>) {
-                return asw::input::mouse.pressed[static_cast<int>(b.button)];
+                return asw::input::get_mouse_button_down(b.button);
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerButtonBinding>) {
                 return asw::input::get_controller_button_down(b.controller_index, b.button);
@@ -101,10 +101,10 @@ bool binding_is_released(const asw::input::ActionBinding& binding)
             using T = std::decay_t<decltype(b)>;
 
             if constexpr (std::is_same_v<T, asw::input::KeyBinding>) {
-                return asw::input::keyboard.released[static_cast<int>(b.key)];
+                return asw::input::get_key_up(b.key);
 
             } else if constexpr (std::is_same_v<T, asw::input::MouseButtonBinding>) {
-                return asw::input::mouse.released[static_cast<int>(b.button)];
+                return asw::input::get_mouse_button_up(b.button);
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerButtonBinding>) {
                 return asw::input::get_controller_button_up(b.controller_index, b.button);

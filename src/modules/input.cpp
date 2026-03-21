@@ -32,21 +32,39 @@ std::vector<ControllerState> controller {};
 
 /// @brief Map of SDL_JoystickID to controller index in the controller vector.
 std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map {};
+
+asw::input::KeyState keyboard {};
+asw::input::MouseState mouse {};
+std::string text_input;
 } // namespace
 
-asw::input::KeyState asw::input::keyboard {};
+const asw::input::KeyState& asw::input::get_keyboard()
+{
+    return keyboard;
+}
 
-asw::input::MouseState asw::input::mouse {};
+const asw::input::MouseState& asw::input::get_mouse()
+{
+    return mouse;
+}
 
-std::string asw::input::text_input;
+const std::string& asw::input::get_text_input()
+{
+    return text_input;
+}
+
+void asw::input::_append_text(const char* text)
+{
+    text_input += text;
+}
 
 void asw::input::reset()
 {
     // Snapshot action states before raw input arrays are cleared.
     asw::input::update_actions();
 
-    auto& k_state = asw::input::keyboard;
-    auto& m_state = asw::input::mouse;
+    auto& k_state = keyboard;
+    auto& m_state = mouse;
 
     // Clear key state
     k_state.any_pressed = false;
@@ -74,7 +92,7 @@ void asw::input::reset()
     }
 
     // Clear text input
-    asw::input::text_input.clear();
+    text_input.clear();
 
     // Clear controller state
     for (auto& cont : controller) {

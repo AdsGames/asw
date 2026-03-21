@@ -150,7 +150,7 @@ int main()
         asw::display::present();
     }
 
-    asw::core::cleanup();
+    asw::core::shutdown();
 
     return 0;
 }

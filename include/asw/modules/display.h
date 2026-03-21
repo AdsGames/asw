@@ -17,11 +17,31 @@
 
 namespace asw::display {
 
-/// @brief The renderer for the display module.
-extern asw::Renderer* renderer;
+/// @brief Initialize the display module. Called by asw::core::init().
+///
+/// @param width The logical width of the display.
+/// @param height The logical height of the display.
+/// @param scale The initial window scale factor.
+///
+void _init(int width, int height, int scale);
 
-/// @brief The window for the display module.
-extern asw::Window* window;
+/// @brief Shut down the display module. Called by asw::core::shutdown().
+/// Nulls the renderer and window pointers before destroying them, so any
+/// outstanding shared_ptr asset deleters see a null renderer and become no-ops.
+///
+void _shutdown();
+
+/// @brief Get the SDL renderer.
+///
+/// @return Pointer to the SDL_Renderer, or nullptr if not initialized.
+///
+asw::Renderer* get_renderer();
+
+/// @brief Get the SDL window.
+///
+/// @return Pointer to the SDL_Window, or nullptr if not initialized.
+///
+asw::Window* get_window();
 
 /// @brief Set the title of the window.
 ///

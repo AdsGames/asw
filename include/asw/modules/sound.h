@@ -13,16 +13,21 @@
 
 namespace asw::sound {
 
-/// @brief Global mixer device
-extern MIX_Mixer* mixer;
-
-/// @brief Initialize the sound module. Must be called before using any other
-/// sound functions. This is called automatically by asw::core::init(),
-/// so you don't need to call it
+/// @brief Initialize the sound module. Called automatically by asw::core::init().
 ///
 /// @return True if initialization was successful, false otherwise.
 ///
 bool _init();
+
+/// @brief Shut down the sound module. Called automatically by asw::core::shutdown().
+///
+void _shutdown();
+
+/// @brief Get the SDL mixer device.
+///
+/// @return Pointer to the MIX_Mixer, or nullptr if not initialized.
+///
+MIX_Mixer* get_mixer();
 
 /// @brief Play a sample.
 ///
