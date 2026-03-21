@@ -37,7 +37,7 @@ std::string asw::assets::get_path(const std::string& filename)
 asw::Texture asw::assets::load_texture(const std::string& filename)
 {
     const auto full_path = get_path(filename);
-    SDL_Texture* temp = IMG_LoadTexture(asw::display::renderer, full_path.c_str());
+    SDL_Texture* temp = IMG_LoadTexture(asw::display::get_renderer(), full_path.c_str());
 
     if (temp == nullptr) {
         asw::util::abort_on_error("Failed to load texture: " + full_path);
@@ -46,7 +46,14 @@ asw::Texture asw::assets::load_texture(const std::string& filename)
     SDL_SetTextureScaleMode(temp, SDL_SCALEMODE_NEAREST);
     SDL_SetTextureBlendMode(temp, SDL_BLENDMODE_BLEND);
 
-    return { temp, SDL_DestroyTexture };
+    // Guard: if the renderer is already gone when the deleter fires (e.g. a
+    // shared_ptr outliving core::shutdown()), skip the SDL call - SDL has
+    // already freed the texture via SDL_DestroyRenderer.
+    return { temp, [](SDL_Texture* t) {
+                if (asw::display::get_renderer() != nullptr) {
+                    SDL_DestroyTexture(t);
+                }
+            } };
 }
 
 asw::Texture asw::assets::load_texture(const std::string& filename, const std::string& key)
@@ -76,14 +83,19 @@ void asw::assets::unload_texture(const std::string& key)
 
 asw::Texture asw::assets::create_texture(int w, int h)
 {
-    if (asw::display::renderer == nullptr) {
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr) {
         asw::util::abort_on_error("Renderer not initialized");
     }
 
-    SDL_Texture* text = SDL_CreateTexture(
-        asw::display::renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+    SDL_Texture* text
+        = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
 
-    return { text, SDL_DestroyTexture };
+    return { text, [](SDL_Texture* t) {
+                if (asw::display::get_renderer() != nullptr) {
+                    SDL_DestroyTexture(t);
+                }
+            } };
 }
 
 // --- Font ---
@@ -97,7 +109,13 @@ asw::Font asw::assets::load_font(const std::string& filename, float size)
         asw::util::abort_on_error("Failed to load font: " + full_path);
     }
 
-    return { temp, TTF_CloseFont };
+    // Use renderer as proxy for "SDL still alive" - renderer is nulled in
+    // display::_shutdown() before TTF_Quit() is called.
+    return { temp, [](TTF_Font* f) {
+                if (asw::display::get_renderer() != nullptr) {
+                    TTF_CloseFont(f);
+                }
+            } };
 }
 
 asw::Font asw::assets::load_font(const std::string& filename, float size, const std::string& key)
@@ -130,13 +148,17 @@ void asw::assets::unload_font(const std::string& key)
 asw::Sample asw::assets::load_sample(const std::string& filename)
 {
     const auto full_path = get_path(filename);
-    MIX_Audio* temp = MIX_LoadAudio(asw::sound::mixer, full_path.c_str(), true);
+    MIX_Audio* temp = MIX_LoadAudio(asw::sound::get_mixer(), full_path.c_str(), true);
 
     if (temp == nullptr) {
         asw::util::abort_on_error("Failed to load sample: " + full_path);
     }
 
-    return { temp, MIX_DestroyAudio };
+    return { temp, [](MIX_Audio* a) {
+                if (asw::sound::get_mixer() != nullptr) {
+                    MIX_DestroyAudio(a);
+                }
+            } };
 }
 
 asw::Sample asw::assets::load_sample(const std::string& filename, const std::string& key)
@@ -169,13 +191,17 @@ void asw::assets::unload_sample(const std::string& key)
 asw::Music asw::assets::load_music(const std::string& filename)
 {
     const auto full_path = get_path(filename);
-    MIX_Audio* temp = MIX_LoadAudio(asw::sound::mixer, full_path.c_str(), false);
+    MIX_Audio* temp = MIX_LoadAudio(asw::sound::get_mixer(), full_path.c_str(), false);
 
     if (temp == nullptr) {
         asw::util::abort_on_error("Failed to load music: " + full_path);
     }
 
-    return { temp, MIX_DestroyAudio };
+    return { temp, [](MIX_Audio* a) {
+                if (asw::sound::get_mixer() != nullptr) {
+                    MIX_DestroyAudio(a);
+                }
+            } };
 }
 
 asw::Music asw::assets::load_music(const std::string& filename, const std::string& key)

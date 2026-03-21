@@ -7,6 +7,7 @@
 #include <format>
 
 #include "./asw/modules/action.h"
+#include "./asw/modules/assets.h"
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
 #include "./asw/modules/log.h"
@@ -26,17 +27,17 @@ void asw::core::update()
     while (SDL_PollEvent(&e)) {
         switch (e.type) {
         case SDL_EVENT_WINDOW_RESIZED: {
-            if (asw::display::renderer == nullptr) {
+            auto* r = asw::display::get_renderer();
+            if (r == nullptr) {
                 break;
             }
 
             // Maintain aspect ratio
             SDL_Point window_size;
-            SDL_GetRenderOutputSize(asw::display::renderer, &window_size.x, &window_size.y);
+            SDL_GetRenderOutputSize(r, &window_size.x, &window_size.y);
 
             SDL_Point render_size;
-            SDL_GetRenderLogicalPresentation(
-                asw::display::renderer, &render_size.x, &render_size.y, nullptr);
+            SDL_GetRenderLogicalPresentation(r, &render_size.x, &render_size.y, nullptr);
 
             const auto x_scale
                 = static_cast<float>(window_size.x) / static_cast<float>(render_size.x);
@@ -46,7 +47,7 @@ void asw::core::update()
 
             const auto scale = std::min(x_scale, y_scale);
 
-            SDL_SetWindowSize(asw::display::window,
+            SDL_SetWindowSize(asw::display::get_window(),
                 static_cast<int>(static_cast<float>(render_size.x) * scale),
                 static_cast<int>(static_cast<float>(render_size.y) * scale));
             break;
@@ -78,8 +79,9 @@ void asw::core::update()
 
         case SDL_EVENT_MOUSE_MOTION: {
             // Ensure scale is applied to mouse coordinates
-            if (asw::display::renderer != nullptr) {
-                SDL_ConvertEventToRenderCoordinates(asw::display::renderer, &e);
+            auto* r = asw::display::get_renderer();
+            if (r != nullptr) {
+                SDL_ConvertEventToRenderCoordinates(r, &e);
             }
 
             asw::input::_mouse_motion(e.motion.x, e.motion.y, e.motion.xrel, e.motion.yrel);
@@ -117,7 +119,7 @@ void asw::core::update()
         }
 
         case SDL_EVENT_TEXT_INPUT: {
-            asw::input::text_input += e.text.text;
+            asw::input::_append_text(e.text.text);
             break;
         }
 
@@ -145,20 +147,7 @@ void asw::core::init(int width, int height, int scale)
         asw::util::abort_on_error("Sound initialization failed");
     }
 
-    asw::display::window
-        = SDL_CreateWindow("", width * scale, height * scale, SDL_WINDOW_RESIZABLE);
-    if (asw::display::window == nullptr) {
-        asw::util::abort_on_error("WINDOW");
-    }
-
-    // Hints
-    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
-
-    // Get window surface
-    asw::display::renderer = SDL_CreateRenderer(asw::display::window, nullptr);
-
-    SDL_SetRenderLogicalPresentation(
-        asw::display::renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    asw::display::_init(width, height, scale);
 }
 
 void asw::core::print_info()
@@ -167,8 +156,8 @@ void asw::core::print_info()
     asw::log::info("========");
 
     const char* renderer_name = "none";
-    if (asw::display::renderer != nullptr) {
-        renderer_name = SDL_GetRendererName(asw::display::renderer);
+    if (auto* r = asw::display::get_renderer(); r != nullptr) {
+        renderer_name = SDL_GetRendererName(r);
     }
 
     asw::log::info(
@@ -185,17 +174,21 @@ void asw::core::shutdown()
 {
     asw::input::clear_actions();
 
-    if (asw::display::renderer != nullptr) {
-        SDL_DestroyRenderer(asw::display::renderer);
-        asw::display::renderer = nullptr;
-    }
-    if (asw::display::window != nullptr) {
-        SDL_DestroyWindow(asw::display::window);
-        asw::display::window = nullptr;
-    }
+    // Clear asset caches while SDL resources are still valid — SDL_Destroy*
+    // calls in the shared_ptr deleters are safe at this point.
+    asw::assets::clear_all();
+
+    // _shutdown() nulls the renderer/window pointers BEFORE calling
+    // SDL_DestroyRenderer/SDL_DestroyWindow.  Any outstanding shared_ptr<SDL_Texture>
+    // held by user code will see a null renderer in their deleter and skip the
+    // SDL_DestroyTexture call, preventing use-after-free.
+    asw::display::_shutdown();
+
+    // Same pattern for sound: null mixer pointer before teardown so any
+    // surviving Sample/Music shared_ptrs become no-ops.
+    asw::sound::_shutdown();
 
     TTF_Quit();
-    MIX_Quit();
     SDL_Quit();
 }
 

@@ -14,6 +14,7 @@ float music_volume = 1.0F;
 
 std::array<MIX_Track*, 16> tracks;
 MIX_Track* music_track = nullptr;
+MIX_Mixer* mixer = nullptr;
 
 float compute_sfx_volume(float vol)
 {
@@ -39,7 +40,20 @@ int find_free_track()
 
 } // namespace
 
-MIX_Mixer* asw::sound::mixer = nullptr;
+MIX_Mixer* asw::sound::get_mixer()
+{
+    return mixer;
+}
+
+void asw::sound::_shutdown()
+{
+    auto* m = mixer;
+    mixer = nullptr;
+    if (m != nullptr) {
+        MIX_DestroyMixer(m);
+    }
+    MIX_Quit();
+}
 
 bool asw::sound::_init()
 {

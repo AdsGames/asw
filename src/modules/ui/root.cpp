@@ -95,6 +95,7 @@ void asw::ui::Root::update()
     root.layout(ctx);
 
     // --- Mouse ---
+    const auto& mouse = get_mouse();
 
     // Hover and Unhover events
     if (mouse.change.x != 0.0F || mouse.change.y != 0.0F) {
@@ -142,8 +143,8 @@ void asw::ui::Root::update()
     }
 
     // --- Text Input ---
-    if (!input::text_input.empty()) {
-        const UIEvent ti { .type = UIEvent::Type::TextInput, .text = input::text_input };
+    if (!input::get_text_input().empty()) {
+        const UIEvent ti { .type = UIEvent::Type::TextInput, .text = input::get_text_input() };
         dispatch_to_focused(ti);
     }
 

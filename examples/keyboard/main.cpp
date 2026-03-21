@@ -26,6 +26,8 @@ int main()
     while (!asw::core::is_exiting()) {
         asw::core::update();
 
+        const auto& keyboard = asw::input::get_keyboard();
+
         // --- Movement (held) ---
         if (asw::input::get_key(asw::input::Key::W) || asw::input::get_key(asw::input::Key::Up)) {
             pos.y -= speed;
@@ -68,15 +70,15 @@ int main()
         }
 
         // --- Text input ---
-        if (!asw::input::text_input.empty()) {
-            asw::log::info("Text input: {}", asw::input::text_input);
+        if (!asw::input::get_text_input().empty()) {
+            asw::log::info("Text input: {}", asw::input::get_text_input());
         }
 
         // --- Draw ---
         asw::display::clear(asw::color::darkslategray);
 
         // Box - turns cyan when any key is held
-        const bool any_held = asw::input::keyboard.any_pressed;
+        const bool any_held = keyboard.any_pressed;
         asw::draw::rect_fill(
             { pos, { box_size, box_size } }, any_held ? asw::color::cyan : asw::color::white);
         asw::draw::rect({ pos, { box_size, box_size } }, asw::color::gray);
