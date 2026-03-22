@@ -262,9 +262,9 @@ void asw::input::_mouse_motion(float x, float y, float delta_x, float delta_y)
     mouse.change.y = delta_y;
 }
 
-void asw::input::_mouse_wheel(float x, float y)
+void asw::input::_mouse_wheel(float delta_z)
 {
-    mouse.z = y;
+    mouse.z = delta_z;
 }
 
 void asw::input::_controller_added(SDL_JoystickID id)

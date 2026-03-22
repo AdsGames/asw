@@ -509,7 +509,7 @@ void _mouse_button_up(uint8_t button);
 void _mouse_motion(float x, float y, float delta_x, float delta_y);
 
 /// @brief Mouse wheel hook
-void _mouse_wheel(float delta_x, float delta_y);
+void _mouse_wheel(float delta_z);
 
 /// @brief Controller added hook
 void _controller_added(SDL_JoystickID id);

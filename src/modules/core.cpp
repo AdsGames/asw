@@ -89,7 +89,7 @@ void asw::core::update()
         }
 
         case SDL_EVENT_MOUSE_WHEEL: {
-            asw::input::_mouse_wheel(e.wheel.x, e.wheel.y);
+            asw::input::_mouse_wheel(e.wheel.y);
             break;
         }
 

@@ -11,10 +11,11 @@
 /// Example:
 /// @code
 ///   asw::input::bind_action("jump", asw::input::KeyBinding{asw::input::Key::Space});
-///   asw::input::bind_action("jump", asw::input::ControllerButtonBinding{asw::input::ControllerButton::A});
+///   asw::input::bind_action("jump",
+///   asw::input::ControllerButtonBinding{asw::input::ControllerButton::A});
 ///
 ///   // In game loop:
-///   if (asw::input::is_action_pressed("jump")) { /* ... */ }
+///   if (asw::input::is_action_down("jump")) { /* ... */ }
 /// @endcode
 
 #ifndef ASW_ACTION_H
@@ -56,7 +57,8 @@ struct ControllerAxisBinding {
 };
 
 /// @brief A single input binding — keyboard, mouse button, controller button, or controller axis.
-using ActionBinding = std::variant<KeyBinding, MouseButtonBinding, ControllerButtonBinding, ControllerAxisBinding>;
+using ActionBinding
+    = std::variant<KeyBinding, MouseButtonBinding, ControllerButtonBinding, ControllerAxisBinding>;
 
 /// @brief Register a binding for a named action.
 ///
@@ -83,21 +85,21 @@ void clear_actions();
 /// @param name The action name.
 /// @return true if any binding transitioned to active this frame.
 ///
-bool is_action_pressed(std::string_view name);
+bool is_action_down(std::string_view name);
 
 /// @brief Check if an action was released this frame.
 ///
 /// @param name The action name.
 /// @return true if any binding transitioned to inactive this frame.
 ///
-bool is_action_released(std::string_view name);
+bool is_action_up(std::string_view name);
 
 /// @brief Check if an action is currently held down.
 ///
 /// @param name The action name.
 /// @return true if any binding is currently active.
 ///
-bool is_action_down(std::string_view name);
+bool is_action(std::string_view name);
 
 /// @brief Get the analogue strength of an action (0.0 – 1.0).
 ///
