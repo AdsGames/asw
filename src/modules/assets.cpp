@@ -88,10 +88,13 @@ asw::Texture asw::assets::create_texture(int w, int h)
         asw::util::abort_on_error("Renderer not initialized");
     }
 
-    SDL_Texture* text
+    SDL_Texture* txr
         = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
 
-    return { text, [](SDL_Texture* t) {
+    SDL_SetTextureScaleMode(txr, SDL_SCALEMODE_NEAREST);
+    SDL_SetTextureBlendMode(txr, SDL_BLENDMODE_BLEND);
+
+    return { txr, [](SDL_Texture* t) {
                 if (asw::display::get_renderer() != nullptr) {
                     SDL_DestroyTexture(t);
                 }

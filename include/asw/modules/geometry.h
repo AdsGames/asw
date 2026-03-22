@@ -134,6 +134,16 @@ public:
         return Vec2(x / scalar, y / scalar);
     }
 
+    /// @brief Modulo the Vec2 object by a scalar
+    ///
+    /// @param scalar The scalar to modulo by
+    /// @return Vec2 The result of the modulo operation.
+    ///
+    Vec2 operator%(const T scalar) const
+    {
+        return Vec2(x % scalar, y % scalar);
+    }
+
     /// @brief Addition assignment operator for the Vec2 class.
     ///
     /// @param other The vector to add.
@@ -179,6 +189,18 @@ public:
     {
         x /= scalar;
         y /= scalar;
+        return *this;
+    }
+
+    /// @brief Modulo assignment operator for the Vec2 class.
+    ///
+    /// @param scalar The scalar to modulo by.
+    /// @return Vec2& The result of the modulo operation.
+    ///
+    Vec2& operator%=(const T scalar)
+    {
+        x %= scalar;
+        y %= scalar;
         return *this;
     }
 
@@ -311,6 +333,16 @@ public:
         return Vec3(x / scalar, y / scalar, z / scalar);
     }
 
+    /// @brief Modulo the Vec3 object by a scalar
+    ///
+    /// @param scalar The scalar to modulo by
+    /// @return Vec3 The result of the modulo
+    ///
+    Vec3 operator%(const T scalar) const
+    {
+        return Vec3(x % scalar, y % scalar, z % scalar);
+    }
+
     /// @brief Addition assignment operator for the Vec3 class.
     ///
     /// @param other The vector to add.
@@ -360,6 +392,19 @@ public:
         x /= scalar;
         y /= scalar;
         z /= scalar;
+        return *this;
+    }
+
+    /// @brief Modulo assignment operator for the Vec3 class.
+    ///
+    /// @param scalar The scalar to modulo by.
+    /// @return Vec3& The result of the modulo operation.
+    ///
+    Vec3& operator%=(const T scalar)
+    {
+        x %= scalar;
+        y %= scalar;
+        z %= scalar;
         return *this;
     }
 

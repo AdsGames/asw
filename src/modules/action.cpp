@@ -138,19 +138,19 @@ void asw::input::clear_actions()
     action_map.clear();
 }
 
-bool asw::input::is_action_pressed(std::string_view name)
+bool asw::input::get_action_down(std::string_view name)
 {
     auto it = action_map.find(std::string(name));
     return it != action_map.end() && it->second.pressed;
 }
 
-bool asw::input::is_action_released(std::string_view name)
+bool asw::input::get_action_up(std::string_view name)
 {
     auto it = action_map.find(std::string(name));
     return it != action_map.end() && it->second.released;
 }
 
-bool asw::input::is_action_down(std::string_view name)
+bool asw::input::get_action(std::string_view name)
 {
     auto it = action_map.find(std::string(name));
     return it != action_map.end() && it->second.down;

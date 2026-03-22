@@ -4,7 +4,7 @@
 /// Demonstrates:
 ///   - Registering named actions with bind_action()
 ///   - Binding the same action to multiple input sources (keyboard + controller)
-///   - is_action_down(), is_action_pressed(), is_action_released()
+///   - get_action_down(), get_action_up(), get_action()
 ///   - get_action_strength() for analogue movement via a controller axis
 ///
 /// Bindings:
@@ -73,7 +73,7 @@ int main()
     while (!asw::core::is_exiting()) {
         asw::core::update();
 
-        if (asw::input::is_action_pressed("quit")) {
+        if (asw::input::get_action("quit")) {
             asw::core::exit();
         }
 
@@ -99,7 +99,7 @@ int main()
         }
 
         // Fire
-        if (asw::input::is_action_pressed("fire")) {
+        if (asw::input::get_action("fire")) {
             fire_frames = 12;
             asw::log::info("Fire!");
         }
@@ -118,9 +118,9 @@ int main()
         }
 
         // Player box
-        const bool moving = asw::input::is_action_down("move_left")
-            || asw::input::is_action_down("move_right") || asw::input::is_action_down("move_up")
-            || asw::input::is_action_down("move_down");
+        const bool moving = asw::input::get_action("move_left")
+            || asw::input::get_action("move_right") || asw::input::get_action("move_up")
+            || asw::input::get_action("move_down");
         asw::draw::rect_fill({ pos, { box_size, box_size } },
             moving ? asw::color::cornflowerblue : asw::color::steelblue);
         asw::draw::rect({ pos, { box_size, box_size } }, asw::color::white);
