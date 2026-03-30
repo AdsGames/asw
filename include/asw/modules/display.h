@@ -25,6 +25,14 @@ namespace asw::display {
 ///
 void _init(int width, int height, int scale);
 
+/// @brief Initialize the display module with OpenGL support. Called by asw::core::init().
+///
+/// @param width The logical width of the display.
+/// @param height The logical height of the display.
+/// @param scale The initial window scale factor.
+///
+void _init_opengl(int width, int height, int scale);
+
 /// @brief Shut down the display module. Called by asw::core::shutdown().
 /// Nulls the renderer and window pointers before destroying them, so any
 /// outstanding shared_ptr asset deleters see a null renderer and become no-ops.
@@ -123,6 +131,17 @@ void present();
 /// @param mode The blend mode to set.
 ///
 void set_blend_mode(asw::BlendMode mode);
+
+/// @brief Warp mouse in window
+///
+/// @param x The x coordinate to warp to.
+/// @param y The y coordinate to warp to.
+///
+void warp_mouse(float x, float y);
+
+/// @brief Swap window (gl)
+///
+void swap_window();
 
 } // namespace asw::display
 

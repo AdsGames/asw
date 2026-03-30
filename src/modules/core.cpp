@@ -150,6 +150,29 @@ void asw::core::init(int width, int height, int scale)
     asw::display::_init(width, height, scale);
 }
 
+void asw::core::init_opengl(int width, int height, int scale)
+{
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
+        asw::util::abort_on_error("SDL_Init");
+    }
+
+    if (!TTF_Init()) {
+        asw::util::abort_on_error("TTF_Init");
+    }
+
+    if (!asw::sound::_init()) {
+        asw::util::abort_on_error("Sound initialization failed");
+    }
+
+    // --- Set GL attributes before creating the window ---
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3); // Request OpenGL 3.x
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+
+    asw::display::_init_opengl(width, height, scale);
+}
+
 void asw::core::print_info()
 {
     asw::log::info("ASW Info");
