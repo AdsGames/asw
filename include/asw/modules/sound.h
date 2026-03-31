@@ -38,7 +38,7 @@ MIX_Mixer* get_mixer();
 /// @param loop Whether to loop the sample (false = no loop, true = infinite
 /// loop).
 ///
-void play(const asw::Sample& sample, float volume = 1.0F, float pan = 0.0F, bool loop = false);
+void play(const asw::Sample& sample, float volume = 1.0F, float pan = 0.5F, bool loop = false);
 
 /// @brief Play a music sample.
 ///
