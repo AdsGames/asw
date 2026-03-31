@@ -23,8 +23,25 @@ void asw::display::_init(int width, int height, int scale)
 
     renderer = SDL_CreateRenderer(window, nullptr);
 
-    SDL_SetRenderLogicalPresentation(
-        renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderLogicalPresentation(renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+}
+
+void asw::display::_init_opengl(int width, int height, int scale)
+{
+    window = SDL_CreateWindow(
+        "", width * scale, height * scale, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+    if (window == nullptr) {
+        asw::util::abort_on_error("WINDOW");
+    }
+
+    SDL_GLContext glcontext = SDL_GL_CreateContext(window);
+    if (glcontext == nullptr) {
+        asw::util::abort_on_error("SDL_GL_CreateContext");
+    }
+
+    if (!SDL_GL_MakeCurrent(window, glcontext)) {
+        asw::util::abort_on_error("SDL_GL_MakeCurrent");
+    }
 }
 
 void asw::display::_shutdown()
@@ -72,6 +89,7 @@ void asw::display::set_icon(const std::string& path)
 void asw::display::set_fullscreen(bool fullscreen)
 {
     SDL_SetWindowFullscreen(window, fullscreen);
+    SDL_SyncWindow(window);
 }
 
 void asw::display::set_resolution(int w, int h)
@@ -160,4 +178,14 @@ void asw::display::present()
 void asw::display::set_blend_mode(asw::BlendMode mode)
 {
     SDL_SetRenderDrawBlendMode(renderer, static_cast<SDL_BlendMode>(mode));
+}
+
+void asw::display::warp_mouse(float x, float y)
+{
+    SDL_WarpMouseInWindow(window, x, y);
+}
+
+void asw::display::swap_window()
+{
+    SDL_GL_SwapWindow(window);
 }

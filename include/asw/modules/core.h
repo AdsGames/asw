@@ -23,6 +23,14 @@ void update();
 ///
 void init(int width, int height, int scale = 1);
 
+/// @brief Initializes the core module for opengl.
+///
+/// @param width The width of the window.
+/// @param height The height of the window.
+/// @param scale The scale of the window.
+///
+void init_opengl(int width, int height, int scale = 1);
+
 /// @brief Prints information about the core module.
 ///
 void print_info();
