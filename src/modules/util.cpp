@@ -18,7 +18,7 @@ struct TextSizeCacheKeyHash {
     std::size_t operator()(const TextSizeCacheKey& key) const
     {
         std::size_t seed = std::hash<asw::Font> {}(key.font);
-        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };

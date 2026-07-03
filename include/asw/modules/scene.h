@@ -80,9 +80,7 @@ public:
                 obj->update(dt);
             }
 
-            if (!obj->alive) {
-                _has_dead_objects = true;
-            }
+            _has_dead_objects |= !obj->alive;
         }
 
         // Create new objects
@@ -144,7 +142,7 @@ public:
     {
         _objects.push_back(obj);
         _needs_sort = true;
-        _has_dead_objects = _has_dead_objects || !obj->alive;
+        _has_dead_objects |= !obj->alive;
     }
 
     /// @brief Create a new game object in the scene.

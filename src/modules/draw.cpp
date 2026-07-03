@@ -30,9 +30,9 @@ struct TextCacheKeyHash {
     std::size_t operator()(const TextCacheKey& key) const
     {
         std::size_t seed = std::hash<asw::Renderer*> {}(key.renderer);
-        seed ^= std::hash<asw::Font> {}(key.font) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-        seed ^= std::hash<uint32_t> {}(key.color) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        seed ^= std::hash<asw::Font> {}(key.font) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> {}(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
