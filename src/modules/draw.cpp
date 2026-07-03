@@ -48,6 +48,8 @@ uint32_t pack_color(const asw::Color color)
 
 asw::Texture make_cached_texture(SDL_Texture* texture)
 {
+    // Cached text is explicitly cleared before renderer teardown in the normal
+    // shutdown path, mirroring the renderer-guarded asset deleters.
     return { texture, [](SDL_Texture* t) {
                 if (asw::display::get_renderer() != nullptr) {
                     SDL_DestroyTexture(t);
@@ -234,6 +236,8 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         SDL_DestroySurface(textSurface);
 
         if (text_cache.size() >= TEXT_CACHE_LIMIT) {
+            // Keep the cache bounded without introducing a heavier eviction
+            // structure in this hot path.
             text_cache.clear();
         }
 

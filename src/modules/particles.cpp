@@ -75,7 +75,6 @@ void ParticleEmitter::update(float dt)
 void ParticleEmitter::draw()
 {
     float last_alpha = 1.0F;
-    bool texture_alpha_dirty = false;
 
     for (uint32_t i = 0; i < alive_count; ++i) {
         const auto& p = particles[i];
@@ -89,10 +88,9 @@ void ParticleEmitter::draw()
             const auto dest = Quad<float>(
                 p.position.x - (size / 2.0F), p.position.y - (size / 2.0F), size, size);
 
-            if (!texture_alpha_dirty || alpha != last_alpha) {
+            if (alpha != last_alpha) {
                 draw::set_alpha(config.texture, alpha);
                 last_alpha = alpha;
-                texture_alpha_dirty = true;
             }
 
             draw::stretch_sprite(config.texture, dest);
@@ -113,7 +111,7 @@ void ParticleEmitter::draw()
         }
     }
 
-    if (texture_alpha_dirty && last_alpha != 1.0F) {
+    if (last_alpha != 1.0F) {
         draw::set_alpha(config.texture, 1.0F);
     }
 }

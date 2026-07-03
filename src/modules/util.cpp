@@ -58,6 +58,8 @@ asw::Vec2<int> asw::util::get_text_size(const asw::Font& font, const std::string
     TTF_DestroyText(ttf_text);
 
     if (text_size_cache.size() >= TEXT_SIZE_CACHE_LIMIT) {
+        // Keep the shared cache bounded while still avoiding repeated
+        // measurement work for the common stable UI strings.
         text_size_cache.clear();
     }
 

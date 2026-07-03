@@ -87,12 +87,14 @@ public:
 
         // Create new objects
         if (!_obj_to_create.empty()) {
+            _objects.reserve(_objects.size() + _obj_to_create.size());
             _objects.insert(_objects.end(), _obj_to_create.begin(), _obj_to_create.end());
             _needs_sort = true;
 
             for (auto const& obj : _obj_to_create) {
                 if (!obj->alive) {
                     _has_dead_objects = true;
+                    break;
                 }
             }
         }
