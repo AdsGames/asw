@@ -68,19 +68,33 @@ public:
     ///
     virtual void update(float dt)
     {
-        // Erase inactive objects
-        std::erase_if(_objects, [](const auto& obj) { return !obj->alive; });
+        // Remove dead objects only after a frame actually marks any for cleanup.
+        if (_has_dead_objects) {
+            std::erase_if(_objects, [](const auto& obj) { return !obj->alive; });
+            _has_dead_objects = false;
+        }
 
         // Update all objects in the scene
         for (auto const& obj : _objects) {
             if (obj->active && obj->alive) {
                 obj->update(dt);
             }
+
+            if (!obj->alive) {
+                _has_dead_objects = true;
+            }
         }
 
         // Create new objects
-        for (auto const& obj : _obj_to_create) {
-            _objects.push_back(obj);
+        if (!_obj_to_create.empty()) {
+            _objects.insert(_objects.end(), _obj_to_create.begin(), _obj_to_create.end());
+            _needs_sort = true;
+
+            for (auto const& obj : _obj_to_create) {
+                if (!obj->alive) {
+                    _has_dead_objects = true;
+                }
+            }
         }
 
         // Clear the objects to create
@@ -93,8 +107,13 @@ public:
     ///
     virtual void draw()
     {
-        // Sort objects by z-index
-        std::ranges::sort(_objects, std::less {}, &game::GameObject::z_index);
+        // Keep draw order stable, but skip the full sort when objects are
+        // already in z-order.
+        if (_needs_sort
+            || !std::ranges::is_sorted(_objects, std::less {}, &game::GameObject::z_index)) {
+            std::ranges::sort(_objects, std::less {}, &game::GameObject::z_index);
+            _needs_sort = false;
+        }
 
         for (auto const& obj : _objects) {
             if (obj->active) {
@@ -111,6 +130,8 @@ public:
     virtual void cleanup()
     {
         _objects.clear();
+        _needs_sort = false;
+        _has_dead_objects = false;
     };
 
     /// @brief Add a game object to the scene.
@@ -120,6 +141,8 @@ public:
     void register_object(const std::shared_ptr<game::GameObject>& obj)
     {
         _objects.push_back(obj);
+        _needs_sort = true;
+        _has_dead_objects = _has_dead_objects || !obj->alive;
     }
 
     /// @brief Create a new game object in the scene.
@@ -178,6 +201,12 @@ private:
 
     /// @brief Objects to be created in the next frame.
     std::vector<std::shared_ptr<game::GameObject>> _obj_to_create;
+
+    /// @brief Tracks when draw order may need to be rebuilt.
+    bool _needs_sort { false };
+
+    /// @brief Tracks whether a cleanup pass is needed for dead objects.
+    bool _has_dead_objects { false };
 };
 
 /// @brief SceneManager class for managing game scenes.
@@ -244,8 +273,9 @@ public:
         int frames = 0;
 
         while (!asw::core::is_exiting()) {
-            auto delta_time = std::chrono::high_resolution_clock::now() - time_start;
-            time_start = std::chrono::high_resolution_clock::now();
+            const auto now = std::chrono::high_resolution_clock::now();
+            auto delta_time = now - time_start;
+            time_start = now;
             lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
             while (lag >= this->_timestep) {
@@ -258,7 +288,7 @@ public:
 
             frames++;
 
-            if (std::chrono::high_resolution_clock::now() - last_second >= 1s) {
+            if (now - last_second >= 1s) {
                 _fps = frames;
                 frames = 0;
                 last_second = last_second + 1s;
@@ -393,8 +423,9 @@ private:
     static void loop_emscripten()
     {
         if (instance_ != nullptr) {
-            auto delta_time = std::chrono::high_resolution_clock::now() - SceneManager::em_time_;
-            SceneManager::em_time_ = std::chrono::high_resolution_clock::now();
+            const auto now = std::chrono::high_resolution_clock::now();
+            auto delta_time = now - SceneManager::em_time_;
+            SceneManager::em_time_ = now;
 
             instance_->update(std::chrono::duration<float>(delta_time).count());
             instance_->draw();
