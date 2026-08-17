@@ -8,6 +8,7 @@
 #include <unordered_map>
 
 #include "./asw/modules/display.h"
+#include "./asw/modules/draw.h"
 #include "./asw/modules/sound.h"
 #include "./asw/modules/types.h"
 #include "./asw/modules/util.h"
@@ -144,6 +145,7 @@ asw::Font asw::assets::get_font(const std::string& key)
 void asw::assets::unload_font(const std::string& key)
 {
     fonts.erase(key);
+    asw::draw::clear_text_cache();
 }
 
 // --- Sample ---
@@ -236,6 +238,7 @@ void asw::assets::unload_music(const std::string& key)
 
 void asw::assets::clear_all()
 {
+    asw::draw::clear_text_cache();
     textures.clear();
     fonts.clear();
     samples.clear();
