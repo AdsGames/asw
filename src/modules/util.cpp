@@ -63,7 +63,7 @@ asw::Vec2<int> asw::util::get_text_size(const asw::Font& font, const std::string
         text_size_cache.clear();
     }
 
-    text_size_cache.emplace(cache_key, size);
+    text_size_cache.try_emplace(cache_key, size);
     return size;
 }
 
