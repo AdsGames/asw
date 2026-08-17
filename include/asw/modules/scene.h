@@ -68,8 +68,11 @@ public:
     ///
     virtual void update(float dt)
     {
-        // Erase inactive objects
-        std::erase_if(_objects, [](const auto& obj) { return !obj->alive; });
+        // Erase inactive objects. Scanning first keeps the compaction pass off
+        // frames where nothing actually died.
+        if (std::ranges::any_of(_objects, [](const auto& obj) { return !obj->alive; })) {
+            std::erase_if(_objects, [](const auto& obj) { return !obj->alive; });
+        }
 
         // Update all objects in the scene
         for (auto const& obj : _objects) {
@@ -79,8 +82,9 @@ public:
         }
 
         // Create new objects
-        for (auto const& obj : _obj_to_create) {
-            _objects.push_back(obj);
+        if (!_obj_to_create.empty()) {
+            _objects.reserve(_objects.size() + _obj_to_create.size());
+            _objects.insert(_objects.end(), _obj_to_create.begin(), _obj_to_create.end());
         }
 
         // Clear the objects to create
@@ -93,8 +97,11 @@ public:
     ///
     virtual void draw()
     {
-        // Sort objects by z-index
-        std::ranges::sort(_objects, std::less {}, &game::GameObject::z_index);
+        // Sort objects by z-index. The check is a linear read, so already
+        // ordered scenes skip the sort entirely.
+        if (!std::ranges::is_sorted(_objects, std::less {}, &game::GameObject::z_index)) {
+            std::ranges::sort(_objects, std::less {}, &game::GameObject::z_index);
+        }
 
         for (auto const& obj : _objects) {
             if (obj->active) {
@@ -244,8 +251,9 @@ public:
         int frames = 0;
 
         while (!asw::core::is_exiting()) {
-            auto delta_time = std::chrono::high_resolution_clock::now() - time_start;
-            time_start = std::chrono::high_resolution_clock::now();
+            const auto now = std::chrono::high_resolution_clock::now();
+            auto delta_time = now - time_start;
+            time_start = now;
             lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
 
             while (lag >= this->_timestep) {
@@ -258,7 +266,7 @@ public:
 
             frames++;
 
-            if (std::chrono::high_resolution_clock::now() - last_second >= 1s) {
+            if (now - last_second >= 1s) {
                 _fps = frames;
                 frames = 0;
                 last_second = last_second + 1s;
@@ -393,8 +401,9 @@ private:
     static void loop_emscripten()
     {
         if (instance_ != nullptr) {
-            auto delta_time = std::chrono::high_resolution_clock::now() - SceneManager::em_time_;
-            SceneManager::em_time_ = std::chrono::high_resolution_clock::now();
+            const auto now = std::chrono::high_resolution_clock::now();
+            auto delta_time = now - SceneManager::em_time_;
+            SceneManager::em_time_ = now;
 
             instance_->update(std::chrono::duration<float>(delta_time).count());
             instance_->draw();
