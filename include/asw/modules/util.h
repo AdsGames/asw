@@ -39,6 +39,13 @@ asw::Vec2<float> get_texture_size(const asw::Texture& tex);
 ///
 asw::Vec2<int> get_text_size(const asw::Font& font, const std::string& text);
 
+/// @brief Clear cached text metrics.
+///
+/// Text size caching is shared across widgets and text drawing helpers, so it
+/// should be cleared when font resources are unloaded.
+///
+void clear_text_size_cache();
+
 /// @brief Lerp between two values
 ///
 /// @param a Start value
