@@ -144,6 +144,7 @@ asw::Font asw::assets::get_font(const std::string& key)
 void asw::assets::unload_font(const std::string& key)
 {
     fonts.erase(key);
+    asw::util::clear_text_size_cache();
 }
 
 // --- Sample ---
@@ -236,6 +237,7 @@ void asw::assets::unload_music(const std::string& key)
 
 void asw::assets::clear_all()
 {
+    asw::util::clear_text_size_cache();
     textures.clear();
     fonts.clear();
     samples.clear();
