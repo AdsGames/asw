@@ -87,6 +87,13 @@ void stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Quad<float>&
 void text(const asw::Font& font, const std::string& text, const asw::Vec2<float>& position,
     asw::Color color, asw::TextJustify justify = asw::TextJustify::Left);
 
+/// @brief Clear cached rendered text textures.
+///
+/// Cached text depends on the active renderer and font resources, so shutdown
+/// paths clear it explicitly before SDL teardown.
+///
+void clear_text_cache();
+
 /// @brief Draw a point.
 ///
 /// @param position The position of the point.
