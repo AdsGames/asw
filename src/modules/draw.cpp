@@ -157,13 +157,21 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     const asw::Vec2<float>& position, asw::Color color, asw::TextJustify justify)
 {
     auto* r = asw::display::get_renderer();
-    if (text.empty() || r == nullptr) {
+    if (text.empty() || font == nullptr || r == nullptr) {
         return;
     }
 
     const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
     SDL_Surface* textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
+    if (textSurface == nullptr) {
+        return;
+    }
+
     SDL_Texture* textTexture = SDL_CreateTextureFromSurface(r, textSurface);
+    if (textTexture == nullptr) {
+        SDL_DestroySurface(textSurface);
+        return;
+    }
 
     SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
     SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
