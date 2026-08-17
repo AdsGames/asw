@@ -241,7 +241,7 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
             text_cache.clear();
         }
 
-        cached_text = text_cache.emplace(std::move(cache_key), std::move(entry)).first;
+        cached_text = text_cache.try_emplace(std::move(cache_key), std::move(entry)).first;
     }
 
     SDL_FRect dest;
