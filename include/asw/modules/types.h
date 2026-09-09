@@ -13,11 +13,17 @@
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <memory>
+#include <type_traits>
 
 namespace asw {
 
 /// @brief Mappings from SDL_BLENDMODE to ASW BlendMode
-enum class BlendMode {
+///
+/// @details The underlying type matches SDL_BlendMode so conversions between
+/// the two are casts to the underlying type rather than to an unrelated
+/// integral type.
+///
+enum class BlendMode : SDL_BlendMode {
     None = SDL_BLENDMODE_NONE,
     Blend = SDL_BLENDMODE_BLEND,
     BlendPremultiplied = SDL_BLENDMODE_BLEND_PREMULTIPLIED,
@@ -26,6 +32,9 @@ enum class BlendMode {
     Modulate = SDL_BLENDMODE_MOD,
     Multiply = SDL_BLENDMODE_MUL,
 };
+
+static_assert(std::is_same_v<std::underlying_type_t<BlendMode>, SDL_BlendMode>,
+    "BlendMode must share SDL_BlendMode's underlying type");
 
 /// @brief Text justification options for text rendering
 enum class TextJustify {

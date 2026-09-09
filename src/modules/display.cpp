@@ -4,6 +4,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <string>
 
+#include "./asw/modules/draw.h"
 #include "./asw/modules/types.h"
 #include "./asw/modules/util.h"
 
@@ -46,6 +47,9 @@ void asw::display::_init_opengl(int width, int height, int scale)
 
 void asw::display::_shutdown()
 {
+    // Release cached text textures while their renderer is still alive.
+    asw::draw::clear_text_cache();
+
     auto* r = renderer;
     renderer = nullptr;
     if (r != nullptr) {

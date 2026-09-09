@@ -5,9 +5,58 @@
 #include <SDL3_ttf/SDL_ttf.h>
 #include <cmath>
 #include <numbers>
+#include <unordered_map>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
+
+namespace {
+struct TextCacheKey {
+    asw::Renderer* renderer;
+    asw::Font font;
+    std::string text;
+    uint32_t color;
+
+    bool operator==(const TextCacheKey&) const = default;
+};
+
+struct TextCacheEntry {
+    asw::Texture texture;
+    int width { 0 };
+    int height { 0 };
+};
+
+struct TextCacheKeyHash {
+    std::size_t operator()(const TextCacheKey& key) const
+    {
+        std::size_t seed = std::hash<asw::Renderer*> {}(key.renderer);
+        seed ^= std::hash<asw::Font> {}(key.font) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> {}(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        return seed;
+    }
+};
+
+constexpr std::size_t TEXT_CACHE_LIMIT = 256;
+std::unordered_map<TextCacheKey, TextCacheEntry, TextCacheKeyHash> text_cache;
+
+uint32_t pack_color(const asw::Color color)
+{
+    return (static_cast<uint32_t>(color.r) << 24U) | (static_cast<uint32_t>(color.g) << 16U)
+        | (static_cast<uint32_t>(color.b) << 8U) | static_cast<uint32_t>(color.a);
+}
+
+asw::Texture make_cached_texture(SDL_Texture* texture)
+{
+    // Cached text is explicitly cleared before renderer teardown in the normal
+    // shutdown path, mirroring the renderer-guarded asset deleters.
+    return { texture, [](SDL_Texture* t) {
+                if (asw::display::get_renderer() != nullptr) {
+                    SDL_DestroyTexture(t);
+                }
+            } };
+}
+} // namespace
 
 void asw::draw::clear_color(asw::Color color)
 {
@@ -157,22 +206,49 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     const asw::Vec2<float>& position, asw::Color color, asw::TextJustify justify)
 {
     auto* r = asw::display::get_renderer();
-    if (text.empty() || r == nullptr) {
+    if (text.empty() || font == nullptr || r == nullptr) {
         return;
     }
 
-    const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
-    SDL_Surface* textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
-    SDL_Texture* textTexture = SDL_CreateTextureFromSurface(r, textSurface);
+    TextCacheKey cache_key { r, font, text, pack_color(color) };
+    auto cached_text = text_cache.find(cache_key);
+    if (cached_text == text_cache.end()) {
+        const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
+        SDL_Surface* textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
+        if (textSurface == nullptr) {
+            return;
+        }
 
-    SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
-    SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
+        SDL_Texture* textTexture = SDL_CreateTextureFromSurface(r, textSurface);
+        if (textTexture == nullptr) {
+            SDL_DestroySurface(textSurface);
+            return;
+        }
+
+        SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
+        SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
+
+        TextCacheEntry entry {
+            make_cached_texture(textTexture),
+            textSurface->w,
+            textSurface->h,
+        };
+        SDL_DestroySurface(textSurface);
+
+        if (text_cache.size() >= TEXT_CACHE_LIMIT) {
+            // Keep the cache bounded without introducing a heavier eviction
+            // structure in this hot path.
+            text_cache.clear();
+        }
+
+        cached_text = text_cache.try_emplace(std::move(cache_key), std::move(entry)).first;
+    }
 
     SDL_FRect dest;
     dest.x = position.x;
     dest.y = position.y;
-    dest.w = float(textSurface->w);
-    dest.h = float(textSurface->h);
+    dest.w = static_cast<float>(cached_text->second.width);
+    dest.h = static_cast<float>(cached_text->second.height);
 
     // Justification settings
     if (justify == asw::TextJustify::Center) {
@@ -181,9 +257,12 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         dest.x -= dest.w;
     }
 
-    SDL_RenderTexture(r, textTexture, nullptr, &dest);
-    SDL_DestroySurface(textSurface);
-    SDL_DestroyTexture(textTexture);
+    SDL_RenderTexture(r, cached_text->second.texture.get(), nullptr, &dest);
+}
+
+void asw::draw::clear_text_cache()
+{
+    text_cache.clear();
 }
 
 void asw::draw::point(const asw::Vec2<float>& position, asw::Color color)
