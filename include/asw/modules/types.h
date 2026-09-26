@@ -43,6 +43,15 @@ enum class TextJustify {
     Right,
 };
 
+/// @brief How a font's glyphs are rendered
+enum class FontStyle {
+    /// Anti-aliased glyphs with linear filtering, for regular fonts.
+    Smooth,
+
+    /// Hard edged glyphs with nearest filtering, for pixel art fonts.
+    Pixel,
+};
+
 /// @brief Alias for a shared pointer to an SDL_Texture
 using Texture = std::shared_ptr<SDL_Texture>;
 

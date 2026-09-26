@@ -25,6 +25,16 @@ namespace asw::assets {
 /// @return The full path to the asset.
 std::string get_path(const std::string& filename);
 
+/// @brief Get a writable folder for save files and settings, unique to the
+/// organisation and application. The folder is created if needed.
+///
+/// @param org The organisation name.
+/// @param app The application name.
+/// @return The folder path ending in a path separator, or an empty string if
+/// it can not be determined.
+///
+std::string get_save_path(const std::string& org, const std::string& app);
+
 // --- Texture ---
 
 /// @brief Loads a texture from a file. Formats supported are PNG, ICO, CUR,
@@ -74,18 +84,22 @@ asw::Texture create_texture(int w, int h);
 ///
 /// @param filename The path to the font file.
 /// @param size The size of the font.
+/// @param style Smooth for regular fonts, Pixel for pixel art fonts.
 /// @return The loaded Font object.
 ///
-asw::Font load_font(const std::string& filename, float size);
+asw::Font load_font(
+    const std::string& filename, float size, asw::FontStyle style = asw::FontStyle::Smooth);
 
 /// @brief Load a font from a file and cache it.
 ///
 /// @param filename The path to the font file.
 /// @param size The size of the font.
 /// @param key The key to associate with the loaded font for caching.
+/// @param style Smooth for regular fonts, Pixel for pixel art fonts.
 /// @return The loaded Font object.
 ///
-asw::Font load_font(const std::string& filename, float size, const std::string& key);
+asw::Font load_font(const std::string& filename, float size, const std::string& key,
+    asw::FontStyle style = asw::FontStyle::Smooth);
 
 /// @brief Get a cached font.
 ///

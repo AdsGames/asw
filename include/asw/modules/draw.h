@@ -76,7 +76,8 @@ void stretch_sprite_blit(
 void stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Quad<float>& source,
     const asw::Quad<float>& dest, float angle);
 
-/// @brief Draw text
+/// @brief Draw text. The position is rounded to whole pixels after
+/// justification so glyphs stay sharp.
 ///
 /// @param font The font to use.
 /// @param text The text to draw.
@@ -152,6 +153,15 @@ void set_blend_mode(const asw::Texture& texture, asw::BlendMode mode);
 /// @param alpha The alpha to set.
 ///
 void set_alpha(const asw::Texture& texture, float alpha);
+
+/// @brief Set the tint of a texture. Each colour channel is multiplied by the
+/// tint when drawn, white draws the texture unchanged. Alpha is ignored, use
+/// set_alpha for transparency.
+///
+/// @param texture The texture to tint.
+/// @param tint The tint colour.
+///
+void set_tint(const asw::Texture& texture, asw::Color tint);
 } // namespace asw::draw
 
 #endif // ASW_DRAW_H
