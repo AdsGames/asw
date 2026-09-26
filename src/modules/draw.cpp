@@ -210,21 +210,19 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         return;
     }
 
-    TextCacheKey cache_key { r, font, text, pack_color(color) };
+    // Alpha is applied when drawing, so fading text reuses one cached texture
+    const auto opaque = asw::Color(color.r, color.g, color.b, 255);
+    TextCacheKey cache_key { r, font, text, pack_color(opaque) };
     auto cached_text = text_cache.find(cache_key);
     if (cached_text == text_cache.end()) {
         // Pixel fonts (mono hinting) render without anti-aliasing. Blended
         // output can still hold partial alpha, solid output never does.
         const bool pixel_font = TTF_GetFontHinting(font.get()) == TTF_HINTING_MONO;
 
-        SDL_Surface* textSurface = nullptr;
-        if (pixel_font) {
-            const auto opaque = SDL_Color { color.r, color.g, color.b, 255 };
-            textSurface = TTF_RenderText_Solid(font.get(), text.c_str(), 0, opaque);
-        } else {
-            const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
-            textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
-        }
+        const auto sdlColor = SDL_Color { color.r, color.g, color.b, 255 };
+        SDL_Surface* textSurface = pixel_font
+            ? TTF_RenderText_Solid(font.get(), text.c_str(), 0, sdlColor)
+            : TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
 
         if (textSurface == nullptr) {
             return;
@@ -239,8 +237,6 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
 
         if (pixel_font) {
-            // Solid text is opaque, apply the colour's alpha to the texture
-            SDL_SetTextureAlphaMod(textTexture, color.a);
             SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_NEAREST);
         } else {
             SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
@@ -280,6 +276,7 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     dest.x = std::round(dest.x);
     dest.y = std::round(dest.y);
 
+    SDL_SetTextureAlphaMod(cached_text->second.texture.get(), color.a);
     SDL_RenderTexture(r, cached_text->second.texture.get(), nullptr, &dest);
 }
 
@@ -424,4 +421,9 @@ void asw::draw::set_alpha(const asw::Texture& texture, float alpha)
 void asw::draw::set_tint(const asw::Texture& texture, asw::Color tint)
 {
     SDL_SetTextureColorMod(texture.get(), tint.r, tint.g, tint.b);
+}
+
+void asw::draw::set_scale_mode(const asw::Texture& texture, asw::ScaleMode mode)
+{
+    SDL_SetTextureScaleMode(texture.get(), static_cast<SDL_ScaleMode>(mode));
 }

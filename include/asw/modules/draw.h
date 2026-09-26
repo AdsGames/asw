@@ -162,6 +162,14 @@ void set_alpha(const asw::Texture& texture, float alpha);
 /// @param tint The tint colour.
 ///
 void set_tint(const asw::Texture& texture, asw::Color tint);
+
+/// @brief Set the scale mode of a texture. Nearest keeps hard pixel edges,
+/// linear smooths the texture when it is scaled.
+///
+/// @param texture The texture to set the scale mode of.
+/// @param mode The scale mode to set.
+///
+void set_scale_mode(const asw::Texture& texture, asw::ScaleMode mode);
 } // namespace asw::draw
 
 #endif // ASW_DRAW_H
