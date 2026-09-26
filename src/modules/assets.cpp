@@ -4,6 +4,8 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <unordered_map>
 
@@ -105,6 +107,62 @@ asw::Texture asw::assets::create_texture(int w, int h)
         = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
 
     SDL_SetTextureScaleMode(txr, SDL_SCALEMODE_NEAREST);
+    SDL_SetTextureBlendMode(txr, SDL_BLENDMODE_BLEND);
+
+    return { txr, [](SDL_Texture* t) {
+                if (asw::display::get_renderer() != nullptr) {
+                    SDL_DestroyTexture(t);
+                }
+            } };
+}
+
+asw::Texture asw::assets::create_radial_gradient(int size, asw::Color inner, asw::Color outer)
+{
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr) {
+        asw::util::abort_on_error("Renderer not initialized");
+    }
+
+    SDL_Surface* surface = SDL_CreateSurface(size, size, SDL_PIXELFORMAT_RGBA32);
+    if (surface == nullptr) {
+        asw::util::abort_on_error("Failed to create gradient surface");
+    }
+
+    const auto* details = SDL_GetPixelFormatDetails(surface->format);
+    const float half = static_cast<float>(size) / 2.0F;
+
+    auto mix = [](uint8_t a, uint8_t b, float t) {
+        return static_cast<uint8_t>(
+            std::lround(static_cast<float>(a) + (static_cast<float>(b) - a) * t));
+    };
+
+    for (int y = 0; y < size; y++) {
+        auto* row = reinterpret_cast<uint32_t*>(
+            static_cast<uint8_t*>(surface->pixels) + y * surface->pitch);
+
+        for (int x = 0; x < size; x++) {
+            const float distance = std::hypot(static_cast<float>(x) + 0.5F - half,
+                                       static_cast<float>(y) + 0.5F - half)
+                / half;
+
+            // Smoothstep from the centre to the edge
+            const float t = std::clamp(distance, 0.0F, 1.0F);
+            const float amount = t * t * (3.0F - 2.0F * t);
+
+            row[x] = SDL_MapRGBA(details, nullptr, mix(inner.r, outer.r, amount),
+                mix(inner.g, outer.g, amount), mix(inner.b, outer.b, amount),
+                mix(inner.a, outer.a, amount));
+        }
+    }
+
+    SDL_Texture* txr = SDL_CreateTextureFromSurface(r, surface);
+    SDL_DestroySurface(surface);
+
+    if (txr == nullptr) {
+        asw::util::abort_on_error("Failed to create gradient texture");
+    }
+
+    SDL_SetTextureScaleMode(txr, SDL_SCALEMODE_LINEAR);
     SDL_SetTextureBlendMode(txr, SDL_BLENDMODE_BLEND);
 
     return { txr, [](SDL_Texture* t) {

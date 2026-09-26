@@ -36,6 +36,12 @@ enum class BlendMode : SDL_BlendMode {
 static_assert(std::is_same_v<std::underlying_type_t<BlendMode>, SDL_BlendMode>,
     "BlendMode must share SDL_BlendMode's underlying type");
 
+/// @brief Mappings from SDL_SCALEMODE to ASW ScaleMode
+enum class ScaleMode {
+    Nearest = SDL_SCALEMODE_NEAREST,
+    Linear = SDL_SCALEMODE_LINEAR,
+};
+
 /// @brief Text justification options for text rendering
 enum class TextJustify {
     Left,
