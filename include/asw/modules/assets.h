@@ -19,11 +19,11 @@ namespace asw::assets {
 
 // --- Paths ---
 
-/// @brief Get the full path to an asset given its filename. This assumes that all assets are
-/// located in an "assets" directory relative to the base path of the application. This will abort
-/// if the base path cannot be determined.
-/// @param filename
-/// @return The full path to the asset.
+/// @brief Get the full path to an asset given its filename. The filename is relative to the base
+/// path of the application (the executable directory, or Contents/Resources in a macOS bundle).
+/// @param filename The asset filename, relative to the base path.
+/// @return The full path to the asset, or the filename unchanged if the base path can not be
+/// determined.
 std::string get_path(const std::string& filename);
 
 /// @brief Get a writable folder for save files and settings, unique to the
