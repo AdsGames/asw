@@ -29,10 +29,10 @@ struct TextCacheEntry {
 struct TextCacheKeyHash {
     std::size_t operator()(const TextCacheKey& key) const
     {
-        std::size_t seed = std::hash<asw::Renderer*> {}(key.renderer);
-        seed ^= std::hash<asw::Font> {}(key.font) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<uint32_t> {}(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        std::size_t seed = std::hash<asw::Renderer*> { }(key.renderer);
+        seed ^= std::hash<asw::Font> { }(key.font) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<std::string> { }(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> { }(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
@@ -213,8 +213,19 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     TextCacheKey cache_key { r, font, text, pack_color(color) };
     auto cached_text = text_cache.find(cache_key);
     if (cached_text == text_cache.end()) {
-        const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
-        SDL_Surface* textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
+        // Pixel fonts (mono hinting) render without anti-aliasing. Blended
+        // output can still hold partial alpha, solid output never does.
+        const bool pixel_font = TTF_GetFontHinting(font.get()) == TTF_HINTING_MONO;
+
+        SDL_Surface* textSurface = nullptr;
+        if (pixel_font) {
+            const auto opaque = SDL_Color { color.r, color.g, color.b, 255 };
+            textSurface = TTF_RenderText_Solid(font.get(), text.c_str(), 0, opaque);
+        } else {
+            const auto sdlColor = SDL_Color { color.r, color.g, color.b, color.a };
+            textSurface = TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
+        }
+
         if (textSurface == nullptr) {
             return;
         }
@@ -226,7 +237,14 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         }
 
         SDL_SetTextureBlendMode(textTexture, SDL_BLENDMODE_BLEND);
-        SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
+
+        if (pixel_font) {
+            // Solid text is opaque, apply the colour's alpha to the texture
+            SDL_SetTextureAlphaMod(textTexture, color.a);
+            SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_NEAREST);
+        } else {
+            SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
+        }
 
         TextCacheEntry entry {
             make_cached_texture(textTexture),
@@ -256,6 +274,11 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     } else if (justify == asw::TextJustify::Right) {
         dest.x -= dest.w;
     }
+
+    // Snap to whole pixels. Centred odd width text lands on a half pixel,
+    // which blurs the glyphs.
+    dest.x = std::round(dest.x);
+    dest.y = std::round(dest.y);
 
     SDL_RenderTexture(r, cached_text->second.texture.get(), nullptr, &dest);
 }
@@ -396,4 +419,9 @@ void asw::draw::set_blend_mode(const asw::Texture& texture, asw::BlendMode mode)
 void asw::draw::set_alpha(const asw::Texture& texture, float alpha)
 {
     SDL_SetTextureAlphaModFloat(texture.get(), alpha);
+}
+
+void asw::draw::set_tint(const asw::Texture& texture, asw::Color tint)
+{
+    SDL_SetTextureColorMod(texture.get(), tint.r, tint.g, tint.b);
 }

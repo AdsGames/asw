@@ -34,10 +34,10 @@ if(TARGET freetype AND NOT TARGET Freetype::Freetype)
   add_library(Freetype::Freetype ALIAS freetype)
 endif()
 
-CPMAddPackage("gh:libsdl-org/SDL#release-3.4.2")
-CPMAddPackage("gh:libsdl-org/SDL_image#release-3.4.0")
+CPMAddPackage("gh:libsdl-org/SDL#release-3.4.16")
+CPMAddPackage("gh:libsdl-org/SDL_image#release-3.4.6")
 CPMAddPackage("gh:libsdl-org/SDL_ttf#release-3.2.2")
-CPMAddPackage("gh:libsdl-org/SDL_mixer#release-3.2.0")
+CPMAddPackage("gh:libsdl-org/SDL_mixer#release-3.2.4")
 
 # Add include
 target_include_directories(

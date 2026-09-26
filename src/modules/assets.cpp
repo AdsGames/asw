@@ -33,6 +33,18 @@ std::string asw::assets::get_path(const std::string& filename)
     return std::string(base_path) + filename;
 }
 
+std::string asw::assets::get_save_path(const std::string& org, const std::string& app)
+{
+    char* pref_path = SDL_GetPrefPath(org.c_str(), app.c_str());
+    if (pref_path == nullptr) {
+        return "";
+    }
+
+    std::string path(pref_path);
+    SDL_free(pref_path);
+    return path;
+}
+
 // --- Texture ---
 
 asw::Texture asw::assets::load_texture(const std::string& filename)
@@ -104,13 +116,19 @@ asw::Texture asw::assets::create_texture(int w, int h)
 
 // --- Font ---
 
-asw::Font asw::assets::load_font(const std::string& filename, float size)
+asw::Font asw::assets::load_font(const std::string& filename, float size, asw::FontStyle style)
 {
     const auto full_path = get_path(filename);
     TTF_Font* temp = TTF_OpenFont(full_path.c_str(), size);
 
     if (temp == nullptr) {
         asw::util::abort_on_error("Failed to load font: " + full_path);
+    }
+
+    // Mono hinting renders glyphs without anti-aliasing. draw::text reads it
+    // back to pick nearest filtering.
+    if (style == asw::FontStyle::Pixel) {
+        TTF_SetFontHinting(temp, TTF_HINTING_MONO);
     }
 
     // Use renderer as proxy for "SDL still alive" - renderer is nulled in
@@ -122,13 +140,14 @@ asw::Font asw::assets::load_font(const std::string& filename, float size)
             } };
 }
 
-asw::Font asw::assets::load_font(const std::string& filename, float size, const std::string& key)
+asw::Font asw::assets::load_font(
+    const std::string& filename, float size, const std::string& key, asw::FontStyle style)
 {
     if (auto it = fonts.find(key); it != fonts.end()) {
         return it->second;
     }
 
-    Font font = load_font(filename, size);
+    Font font = load_font(filename, size, style);
     fonts.try_emplace(key, font);
     return font;
 }
