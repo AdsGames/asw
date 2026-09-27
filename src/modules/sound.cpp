@@ -106,8 +106,8 @@ void asw::sound::play(const asw::Sample& sample, float volume, float pan, bool l
         MIX_SetTrackGain(track, compute_sfx_volume(volume));
 
         // Stereo gains for panning using equal power panning
-        const float left = std::sqrtf((1.0F - pan) * 0.5F);
-        const float right = std::sqrtf((1.0F + pan) * 0.5F);
+        const float left = std::sqrt((1.0F - pan) * 0.5F);
+        const float right = std::sqrt((1.0F + pan) * 0.5F);
 
         MIX_StereoGains gains;
         gains.left = left;
