@@ -48,7 +48,7 @@ public:
     /// @brief Padding applied inside the button on all sides.
     float padding = 0.0f;
 
-    /// @brief The font to use for the button text.
+    /// @brief The font for the text. Uses the theme font when empty.
     asw::Font font;
 
     /// @brief The button text.
@@ -89,6 +89,19 @@ public:
     /// @param auto_size If true, resizes the button to the texture dimensions.
     ///
     void set_texture(const asw::Texture& tex, bool auto_size = false);
+
+    /// @brief Make an image button: set the state textures, turn off the
+    /// background, and optionally size the button to the normal texture.
+    ///
+    /// @param normal Texture when idle.
+    /// @param hover Texture while hovered or focused, optional.
+    /// @param pressed Texture while pressed, optional.
+    /// @param disabled Texture while disabled, optional.
+    /// @param auto_size If true, resizes the button to the normal texture.
+    ///
+    void set_images(const asw::Texture& normal, const asw::Texture& hover = nullptr,
+        const asw::Texture& pressed = nullptr, const asw::Texture& disabled = nullptr,
+        bool auto_size = true);
 
     /// @brief Set the text, optionally resizing the button to match.
     ///

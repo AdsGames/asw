@@ -61,7 +61,7 @@ public:
     ///
     void draw(Context& ctx) override;
 
-    /// @brief The font to use for the input text.
+    /// @brief The font for the text. Uses the theme font when empty.
     asw::Font font;
 
     /// @brief The current text value.

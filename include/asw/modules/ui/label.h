@@ -9,6 +9,7 @@
 #ifndef ASW_MODULES_UI_LABEL_H
 #define ASW_MODULES_UI_LABEL_H
 
+#include <optional>
 #include <string>
 
 #include "../types.h"
@@ -34,7 +35,7 @@ public:
     ///
     void draw(Context& ctx) override;
 
-    /// @brief The font to use for rendering.
+    /// @brief The font. Uses the theme font when empty.
     asw::Font font;
 
     /// @brief The text to display.
@@ -43,8 +44,8 @@ public:
     /// @brief The text justification.
     asw::TextJustify justify = asw::TextJustify::Left;
 
-    /// @brief The text color.
-    asw::Color color;
+    /// @brief The text color. Uses the theme text color when empty.
+    std::optional<asw::Color> color;
 };
 
 } // namespace asw::ui

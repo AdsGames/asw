@@ -34,6 +34,16 @@ void asw::ui::Button::set_texture(const asw::Texture& tex, bool auto_size)
     }
 }
 
+void asw::ui::Button::set_images(const asw::Texture& normal, const asw::Texture& hover,
+    const asw::Texture& pressed, const asw::Texture& disabled, bool auto_size)
+{
+    texture_hover = hover;
+    texture_pressed = pressed;
+    texture_disabled = disabled;
+    draw_background = false;
+    set_texture(normal, auto_size);
+}
+
 void asw::ui::Button::set_text(const std::string& t, bool auto_size)
 {
     text = t;
@@ -75,7 +85,7 @@ void asw::ui::Button::draw(Context& ctx)
         asw::draw::stretch_sprite(tex, inner);
     }
 
-    if (!text.empty() && font != nullptr) {
+    if (const auto& f = pick_font(font, ctx.theme); !text.empty() && f != nullptr) {
         asw::Color color = s.text;
         if (!enabled) {
             color = s.text_disabled;
@@ -83,8 +93,9 @@ void asw::ui::Button::draw(Context& ctx)
             color = s.text_hover;
         }
 
-        const auto text_size = asw::util::get_text_size(font, text);
-        const float text_y = inner.position.y + ((inner.size.y - text_size.y) / 2.0F);
+        const auto text_size = asw::util::get_text_size(f, text);
+        const float text_y
+            = inner.position.y + ((inner.size.y - static_cast<float>(text_size.y)) / 2.0F);
 
         float text_x = inner.get_center().x - (text_size.x / 2.0F);
         if (s.text_align == asw::TextJustify::Left) {
@@ -93,7 +104,7 @@ void asw::ui::Button::draw(Context& ctx)
             text_x = inner.position.x + inner.size.x - text_size.x;
         }
 
-        asw::draw::text(font, text, { text_x, text_y }, color, asw::TextJustify::Left);
+        asw::draw::text(f, text, { text_x, text_y }, color, asw::TextJustify::Left);
     }
 
     Widget::draw(ctx);

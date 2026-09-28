@@ -75,13 +75,13 @@ void asw::ui::Checkbox::draw(Context& ctx)
             asw::draw::rect_fill(mark, enabled ? s.mark : s.mark_disabled);
         }
 
-        if (!text.empty() && font != nullptr) {
-            const auto text_size = asw::util::get_text_size(font, text);
+        if (const auto& f = pick_font(font, ctx.theme); !text.empty() && f != nullptr) {
+            const auto text_size = asw::util::get_text_size(f, text);
             const float text_y
                 = inner.position.y + ((inner.size.y - static_cast<float>(text_size.y)) / 2.0F);
             const float text_x
                 = box_right ? inner.position.x : inner.position.x + box_size + ctx.theme.gap;
-            asw::draw::text(font, text, { text_x, text_y }, enabled ? s.text : s.text_disabled,
+            asw::draw::text(f, text, { text_x, text_y }, enabled ? s.text : s.text_disabled,
                 asw::TextJustify::Left);
         }
     }

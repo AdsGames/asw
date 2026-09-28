@@ -1,0 +1,81 @@
+#include "./asw/modules/ui/layout.h"
+
+#include <algorithm>
+#include <vector>
+
+void asw::ui::Stack::layout(Context& ctx)
+{
+    const bool vertical = direction == Direction::Vertical;
+    const auto& area = transform;
+
+    // Along is the stacking axis, across the other one
+    float along = (vertical ? area.position.y : area.position.x) + padding;
+    const float across_start = (vertical ? area.position.x : area.position.y) + padding;
+    const float across_size = (vertical ? area.size.x : area.size.y) - (padding * 2.0F);
+
+    for (auto const& c : children) {
+        if (!c->visible) {
+            continue;
+        }
+
+        auto& t = c->transform;
+        float& child_across_size = vertical ? t.size.x : t.size.y;
+        if (align == Align::Stretch) {
+            child_across_size = across_size;
+        }
+
+        float across = across_start;
+        if (align == Align::Center) {
+            across += (across_size - child_across_size) / 2.0F;
+        } else if (align == Align::End) {
+            across += across_size - child_across_size;
+        }
+
+        if (vertical) {
+            t.position = { across, along };
+        } else {
+            t.position = { along, across };
+        }
+
+        c->layout(ctx);
+        along += (vertical ? t.size.y : t.size.x) + gap;
+    }
+}
+
+void asw::ui::Grid::layout(Context& ctx)
+{
+    const std::size_t cols = std::max<std::size_t>(columns, 1);
+    const float inner_w = transform.size.x - (padding * 2.0F);
+    const float cell_w
+        = std::max(0.0F, (inner_w - (gap * static_cast<float>(cols - 1))) / static_cast<float>(cols));
+
+    std::vector<Widget*> shown;
+    for (auto const& c : children) {
+        if (c->visible) {
+            shown.push_back(c.get());
+        }
+    }
+
+    float y = transform.position.y + padding;
+    for (std::size_t row = 0; row * cols < shown.size(); ++row) {
+        const std::size_t first = row * cols;
+        const std::size_t last = std::min(first + cols, shown.size());
+
+        float h = row_height;
+        if (h <= 0.0F) {
+            for (std::size_t i = first; i < last; ++i) {
+                h = std::max(h, shown[i]->transform.size.y);
+            }
+        }
+
+        for (std::size_t i = first; i < last; ++i) {
+            const auto col = static_cast<float>(i - first);
+            auto& t = shown[i]->transform;
+            t.position = { transform.position.x + padding + (col * (cell_w + gap)), y };
+            t.size = { cell_w, h };
+            shown[i]->layout(ctx);
+        }
+
+        y += h + gap;
+    }
+}

@@ -3,8 +3,9 @@
 ///
 /// Demonstrates:
 ///   - asw::ui::Root driving input, layout and drawing
-///   - asw::ui::Panel, VBox, Label, Button, Checkbox and InputBox
-///   - Button on_click, Checkbox and InputBox on_change callbacks
+///   - asw::ui::Panel, Stack, Label, Button, Choice, Slider, Checkbox and InputBox
+///   - Button on_click, and Choice, Slider, Checkbox and InputBox on_change
+///   - Theme font, so widgets do not each need one
 ///   - Keyboard and controller navigation through action bindings
 ///     (asw::ui::bind_default_navigation) and Root::on_back
 ///   - Editing asw::ui::Theme at runtime, and a per-button ButtonStyle
@@ -21,7 +22,7 @@
 ///
 /// Scripted run:
 ///   ASW_EXAMPLE_AUTORUN=1 SDL_VIDEO_DRIVER=dummy ./example_ui
-///   Fills in a name, clicks Greet, Theme and the checkbox, moves focus with
+///   Fills in a name, clicks Greet, Theme, the slider and the checkbox, moves focus with
 ///   the down action, saves autorun.png and quits.
 
 #include <array>
@@ -84,6 +85,9 @@ void apply_palette(asw::ui::Root& ui, const Palette& p)
     theme.checkbox.box_pressed = p.pressed;
     theme.checkbox.mark = p.accent;
 
+    theme.slider.track = p.button;
+    theme.slider.fill = p.accent;
+
     theme.input.border = p.button;
     theme.input.border_hover = p.hover;
 
@@ -93,10 +97,10 @@ void apply_palette(asw::ui::Root& ui, const Palette& p)
     ui.root.bg = p.panel.darken(0.4F);
 }
 
-asw::ui::Button& add_button(asw::ui::Widget& parent, const asw::Font& font, const std::string& text)
+asw::ui::Button& add_button(asw::ui::Widget& parent, const std::string& text)
 {
+    // No font set, buttons use the theme font
     auto& button = parent.add_child<asw::ui::Button>();
-    button.font = font;
     button.text = text;
     button.transform.size.y = ROW_H;
     return button;
@@ -113,13 +117,15 @@ int main()
     const auto font = asw::assets::load_font("assets/font.ttf", 16.0F, asw::FontStyle::Pixel);
     const auto title_font = asw::assets::load_font("assets/font.ttf", 32.0F, asw::FontStyle::Pixel);
 
+    // The root follows the screen size and is see through
     asw::ui::Root ui;
+    ui.ctx.theme.font = font;
 
     // Centred card holding a vertical stack of widgets
     auto& card = ui.root.add_child<asw::ui::Panel>();
     card.transform = asw::Quad<float>((SCREEN_W - 400.0F) / 2.0F, 40.0F, 400.0F, 500.0F);
 
-    auto& stack = card.add_child<asw::ui::VBox>();
+    auto& stack = card.add_child<asw::ui::Stack>();
     stack.transform = card.transform;
     stack.padding = 24.0F;
     stack.gap = 12.0F;
@@ -131,42 +137,60 @@ int main()
     title.transform.size.y = 48.0F;
 
     auto& prompt = stack.add_child<asw::ui::Label>();
-    prompt.font = font;
     prompt.text = "Your name";
     prompt.color = asw::color::lightgray;
     prompt.transform.size.y = 20.0F;
 
     auto& name = stack.add_child<asw::ui::InputBox>();
-    name.font = font;
     name.placeholder = "Type here...";
     name.value = load_name(save_file());
     name.transform.size.y = ROW_H;
 
     auto& greeting = stack.add_child<asw::ui::Label>();
-    greeting.font = font;
     greeting.color = asw::color::gold;
     greeting.transform.size.y = 28.0F;
 
-    auto& greet = add_button(stack, font, "Greet");
+    // A row: a button and a choice side by side
+    auto& row = stack.add_child<asw::ui::Stack>();
+    row.direction = asw::ui::Direction::Horizontal;
+    row.transform.size.y = ROW_H;
+
+    auto& greet = add_button(row, "Greet");
+    greet.transform.size.x = 150.0F;
+
+    auto& theme = row.add_child<asw::ui::Choice>();
+    theme.options = { "Theme: Dark", "Theme: Ocean", "Theme: Rose" };
+    theme.transform.size.x = 194.0F;
+
 #ifndef __EMSCRIPTEN__
     // Browsers have no native file chooser or message boxes, and quitting
     // would only freeze the page, so the web build leaves these out
-    auto& load = add_button(stack, font, "Load name from file...");
+    auto& load = add_button(stack, "Load name from file...");
 #endif
-    auto& theme = add_button(stack, font, "Theme");
+
+    // Another row: a label and a slider
+    auto& volume_row = stack.add_child<asw::ui::Stack>();
+    volume_row.direction = asw::ui::Direction::Horizontal;
+    volume_row.transform.size.y = 20.0F;
+
+    auto& volume_label = volume_row.add_child<asw::ui::Label>();
+    volume_label.text = "Volume";
+    volume_label.transform.size.x = 100.0F;
+
+    auto& volume = volume_row.add_child<asw::ui::Slider>();
+    volume.value = asw::sound::get_master_volume();
+    volume.transform.size.x = 244.0F;
 
     auto& remember = stack.add_child<asw::ui::Checkbox>();
-    remember.font = font;
     remember.text = "Remember my name";
     remember.checked = true;
     remember.transform.size.y = 24.0F;
 #ifndef __EMSCRIPTEN__
-    auto& quit = add_button(stack, font, "Quit");
+    auto& quit = add_button(stack, "Quit");
 #endif
 
     // Card background follows the theme
-    std::size_t palette = 0;
-    apply_palette(ui, PALETTES[palette]);
+    apply_palette(ui, PALETTES[0]);
     card.bg = ui.ctx.theme.panel_bg;
 
     name.on_change = [&greeting](const std::string& value) {
@@ -194,11 +218,12 @@ int main()
     };
 #endif
 
-    theme.on_click = [&ui, &card, &palette]() {
-        palette = (palette + 1) % PALETTES.size();
-        apply_palette(ui, PALETTES[palette]);
+    theme.on_change = [&ui, &card](std::size_t index) {
+        apply_palette(ui, PALETTES[index]);
         card.bg = ui.ctx.theme.panel_bg;
     };
+
+    volume.on_change = [](float value) { asw::sound::set_master_volume(value); };
 
     remember.on_change = [&greeting](bool checked) {
         greeting.text = checked ? "Greet will save your name" : "Greet will not save your name";
@@ -254,10 +279,17 @@ int main()
             if (frame == 20) {
                 click(theme);
             }
+            if (frame == 25) {
+                // A quarter of the way along the slider
+                asw::input::simulate_mouse_move({ volume.transform.position.x
+                        + (volume.transform.size.x * 0.25F),
+                    volume.transform.get_center().y });
+                asw::input::simulate_mouse_button_down(asw::input::MouseButton::Left);
+            }
             if (frame == 30) {
                 click(remember);
             }
-            if (frame == 11 || frame == 21 || frame == 31) {
+            if (frame == 11 || frame == 21 || frame == 26 || frame == 31) {
                 asw::input::simulate_mouse_button_up(asw::input::MouseButton::Left);
             }
 
@@ -297,6 +329,8 @@ int main()
             asw::log::info(saved ? "Saved autorun.png" : "Screenshot failed");
             asw::log::info("Greeting: " + greeting.text);
             asw::log::info(std::string("Remember name: ") + (remember.checked ? "yes" : "no"));
+            asw::log::info("Theme: " + theme.options[theme.index]);
+            asw::log::info("Volume: " + std::to_string(volume.value));
             asw::core::exit();
         }
 
