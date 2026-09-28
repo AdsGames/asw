@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <format>
 
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include "./asw/modules/action.h"
 #include "./asw/modules/assets.h"
 #include "./asw/modules/display.h"
@@ -238,6 +242,38 @@ void asw::core::shutdown()
 
     TTF_Quit();
     SDL_Quit();
+}
+
+void asw::core::run(const std::function<void()>& frame)
+{
+#ifdef __EMSCRIPTEN__
+    // The browser calls the loop, so keep the frame alive after run() returns
+    // control to it
+    static std::function<void()> run_frame;
+    run_frame = frame;
+
+    emscripten_set_main_loop(
+        []() {
+            if (exiting) {
+                emscripten_cancel_main_loop();
+
+                // Let the page know, for example to offer a restart
+                EM_ASM({
+                    if (Module.onStop) {
+                        Module.onStop();
+                    }
+                });
+                return;
+            }
+
+            run_frame();
+        },
+        0, true);
+#else
+    while (!exiting) {
+        frame();
+    }
+#endif
 }
 
 bool asw::core::is_exiting()

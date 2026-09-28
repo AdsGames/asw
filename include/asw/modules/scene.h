@@ -249,7 +249,8 @@ public:
     void start()
     {
 #ifdef __EMSCRIPTEN__
-        emscripten_set_main_loop(SceneManager::loop_emscripten, 0, 1);
+        // Same browser loop as asw::core::run(), so exit() stops it
+        asw::core::run(SceneManager::loop_emscripten);
 #else
 
         using namespace std::chrono_literals;
