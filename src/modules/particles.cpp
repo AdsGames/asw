@@ -8,6 +8,7 @@
 
 #include "asw/modules/particles.h"
 
+#include <algorithm>
 #include <cmath>
 
 #include "asw/modules/draw.h"
@@ -80,7 +81,8 @@ void ParticleEmitter::draw()
 
     for (uint32_t i = 0; i < alive_count; ++i) {
         const auto& p = particles[i];
-        const float t = p.age / p.lifetime;
+        // A zero lifetime would divide by zero, treat it as already over
+        const float t = p.lifetime > 0.0F ? std::min(p.age / p.lifetime, 1.0F) : 1.0F;
 
         // Interpolate visuals
         const float size = util::lerp(config.size_start, config.size_end, t);

@@ -1,5 +1,6 @@
 #include "./asw/modules/random.h"
 
+#include <algorithm>
 #include <random>
 
 namespace asw::random {
@@ -9,27 +10,28 @@ namespace {
     std::mt19937 rng(rd());
 } // namespace
 
+// The std distributions are undefined when min > max, so order the range
 int random(int max)
 {
-    std::uniform_int_distribution dist(0, max);
-    return dist(rng);
+    return between(0, max);
 }
 
 int between(int min, int max)
 {
-    std::uniform_int_distribution dist(min, max);
+    const auto [lo, hi] = std::minmax(min, max);
+    std::uniform_int_distribution dist(lo, hi);
     return dist(rng);
 }
 
 float random(float max)
 {
-    std::uniform_real_distribution dist(0.0F, max);
-    return dist(rng);
+    return between(0.0F, max);
 }
 
 float between(float min, float max)
 {
-    std::uniform_real_distribution dist(min, max);
+    const auto [lo, hi] = std::minmax(min, max);
+    std::uniform_real_distribution dist(lo, hi);
     return dist(rng);
 }
 
