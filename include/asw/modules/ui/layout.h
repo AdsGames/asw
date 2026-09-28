@@ -101,6 +101,18 @@ public:
     void layout(Context& ctx) override;
 };
 
+/// @brief Whether a widget sits in a row with other widgets that can take
+/// focus: its parent is a horizontal Stack, or a Grid with more than one
+/// column, holding another visible, enabled, focusable child.
+///
+/// @details Value widgets (Choice, Slider) use this to leave left and right
+/// for moving between the widgets in the row.
+///
+/// @param w The widget.
+/// @return True if left and right should move focus within the row.
+///
+bool in_row_with_focusables(const Widget& w);
+
 } // namespace asw::ui
 
 #endif // ASW_MODULES_UI_LAYOUT_H

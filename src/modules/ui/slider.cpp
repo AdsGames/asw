@@ -4,12 +4,35 @@
 #include <cmath>
 
 #include "./asw/modules/draw.h"
+#include "./asw/modules/ui/layout.h"
 
 void asw::ui::Slider::set_value(float v)
 {
     const float lo = std::min(min, max);
     const float hi = std::max(min, max);
     value = std::clamp(v, lo, hi);
+}
+
+bool asw::ui::Slider::adjusts_left_right() const
+{
+    return adjust_on_left_right.value_or(!in_row_with_focusables(*this));
+}
+
+void asw::ui::Slider::activate(Context& ctx)
+{
+    // Only keyboard and controller activation edits, clicks set the value
+    if (!ctx.show_focus) {
+        return;
+    }
+    _editing = !adjusts_left_right() && !_editing;
+}
+
+void asw::ui::Slider::on_focus_changed(Context& ctx, bool focused)
+{
+    (void)ctx;
+    if (!focused) {
+        _editing = false;
+    }
 }
 
 void asw::ui::Slider::change(float v)
@@ -57,7 +80,16 @@ bool asw::ui::Slider::on_event(Context& ctx, const UIEvent& e)
             return true;
         }
         return false;
+    case UIEvent::Type::Back:
+        if (_editing) {
+            _editing = false;
+            return true;
+        }
+        return false;
     case UIEvent::Type::KeyDown:
+        if (!adjusts_left_right() && !_editing) {
+            return false;
+        }
         if (e.key == asw::input::Key::Left) {
             change(value - step);
             return true;
@@ -93,6 +125,8 @@ void asw::ui::Slider::draw(Context& ctx)
     asw::Color knob_color = s.knob;
     if (!enabled) {
         knob_color = s.disabled;
+    } else if (_editing) {
+        knob_color = s.knob_editing;
     } else if (is_highlighted(ctx)) {
         knob_color = s.knob_hover;
     }

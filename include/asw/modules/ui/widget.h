@@ -66,6 +66,18 @@ public:
     /// also the ones the pointer can press.
     bool focusable = false;
 
+    /// @brief Widget to focus on up, instead of the nearest one. Optional.
+    Widget* nav_up = nullptr;
+
+    /// @brief Widget to focus on down, instead of the nearest one. Optional.
+    Widget* nav_down = nullptr;
+
+    /// @brief Widget to focus on left, instead of the nearest one. Optional.
+    Widget* nav_left = nullptr;
+
+    /// @brief Widget to focus on right, instead of the nearest one. Optional.
+    Widget* nav_right = nullptr;
+
     /// @brief Draw the theme focus ring around this widget while it has
     /// visible focus. Turn off for widgets that show focus themselves.
     bool focus_ring = true;

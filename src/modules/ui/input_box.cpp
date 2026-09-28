@@ -110,11 +110,18 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
             }
             return true;
         }
+        // At either end left and right fall through to move focus
         if (e.key == asw::input::Key::Left) {
+            if (_cursor_pos == 0) {
+                return false;
+            }
             _cursor_pos = prev_char(value, _cursor_pos);
             return true;
         }
         if (e.key == asw::input::Key::Right) {
+            if (_cursor_pos >= value.size()) {
+                return false;
+            }
             _cursor_pos = next_char(value, _cursor_pos);
             return true;
         }

@@ -79,3 +79,23 @@ void asw::ui::Grid::layout(Context& ctx)
         y += h + gap;
     }
 }
+
+bool asw::ui::in_row_with_focusables(const Widget& w)
+{
+    const Widget* parent = w.parent;
+    if (parent == nullptr) {
+        return false;
+    }
+
+    const auto* stack = dynamic_cast<const Stack*>(parent);
+    const auto* grid = dynamic_cast<const Grid*>(parent);
+    const bool row = (stack != nullptr && stack->direction == Direction::Horizontal)
+        || (grid != nullptr && grid->columns > 1);
+    if (!row) {
+        return false;
+    }
+
+    return std::ranges::any_of(parent->children, [&w](const std::unique_ptr<Widget>& c) {
+        return c.get() != &w && c->visible && c->enabled && c->focusable;
+    });
+}

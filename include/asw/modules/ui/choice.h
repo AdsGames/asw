@@ -11,6 +11,7 @@
 
 #include <cstddef>
 #include <functional>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -22,7 +23,9 @@ namespace asw::ui {
 /// window mode.
 ///
 /// @details Clicking or activating moves to the next option. While focused,
-/// the left and right navigation move back and forward. Each option shows
+/// left and right move back and forward, unless the choice sits in a row
+/// with other focusable widgets, where they move focus instead (see
+/// adjust_on_left_right). Each option shows
 /// its label from options, its texture from images, or both. The rest of the
 /// look is the Button style.
 ///
@@ -40,7 +43,18 @@ public:
     /// @brief Wrap around at either end.
     bool wrap = true;
 
-    /// @brief Show < and > at the sides while highlighted, when there is text.
+    /// @brief Whether left and right change the option. Empty to decide from
+    /// the layout: off in a row with other focusable widgets, on otherwise.
+    std::optional<bool> adjust_on_left_right;
+
+    /// @brief Whether left and right change the option right now.
+    ///
+    /// @return adjust_on_left_right, or the layout default.
+    ///
+    bool adjusts_left_right() const;
+
+    /// @brief Show < and > at the sides while highlighted, when there is text
+    /// and left and right change the option.
     bool show_arrows = true;
 
     /// @brief Callback invoked with the new index when the user changes it.

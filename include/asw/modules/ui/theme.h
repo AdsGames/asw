@@ -152,6 +152,9 @@ struct SliderStyle {
     /// @brief Knob color while hovered, pressed, or focused with focus shown.
     asw::Color knob_hover { 255, 255, 255, 255 };
 
+    /// @brief Knob color while editing with left and right, see Slider.
+    asw::Color knob_editing { 255, 200, 80, 255 };
+
     /// @brief Knob and fill color while disabled.
     asw::Color disabled { 90, 90, 90, 255 };
 

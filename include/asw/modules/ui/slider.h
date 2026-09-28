@@ -19,8 +19,10 @@ namespace asw::ui {
 
 /// @brief A horizontal slider for a value between min and max, e.g. volume.
 ///
-/// @details Drag or click the track to set the value. While focused, the
-/// left and right navigation move it by step. Up and down still move focus.
+/// @details Drag or click the track to set the value. While focused, left
+/// and right move it by step and up and down move focus. In a row with other
+/// focusable widgets left and right move focus instead: activate the slider
+/// to edit it with left and right, then activate or go back to finish.
 ///
 class Slider : public Widget {
 public:
@@ -50,6 +52,27 @@ public:
     /// @brief Callback invoked with the new value when the user changes it.
     std::function<void(float)> on_change;
 
+    /// @brief Whether left and right change the value without editing first.
+    /// Empty to decide from the layout: off in a row with other focusable
+    /// widgets, on otherwise.
+    std::optional<bool> adjust_on_left_right;
+
+    /// @brief Whether left and right change the value right now, without
+    /// editing.
+    ///
+    /// @return adjust_on_left_right, or the layout default.
+    ///
+    bool adjusts_left_right() const;
+
+    /// @brief Whether the slider is in edit mode.
+    ///
+    /// @return True while left and right edit the value after activating.
+    ///
+    bool is_editing() const
+    {
+        return _editing;
+    }
+
     /// @brief Style for this slider only. Uses the theme slider style when empty.
     std::optional<SliderStyle> style;
 
@@ -69,6 +92,19 @@ public:
     ///
     void set_value(float v);
 
+    /// @brief Enter or leave edit mode when left and right move focus.
+    ///
+    /// @param ctx The UI context.
+    ///
+    void activate(Context& ctx) override;
+
+    /// @brief Leave edit mode when focus moves away.
+    ///
+    /// @param ctx The UI context.
+    /// @param focused Whether the widget is now focused.
+    ///
+    void on_focus_changed(Context& ctx, bool focused) override;
+
     /// @brief Handle dragging and left and right while focused.
     ///
     /// @param ctx The UI context.
@@ -84,6 +120,8 @@ public:
     void draw(Context& ctx) override;
 
 private:
+    bool _editing = false;
+
     void change(float v);
     void set_from_pointer(float x);
 };
