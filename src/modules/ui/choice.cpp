@@ -3,11 +3,17 @@
 #include <algorithm>
 
 #include "./asw/modules/draw.h"
+#include "./asw/modules/ui/layout.h"
 #include "./asw/modules/util.h"
 
 std::size_t asw::ui::Choice::count() const
 {
     return std::max(options.size(), images.size());
+}
+
+bool asw::ui::Choice::adjusts_left_right() const
+{
+    return adjust_on_left_right.value_or(!in_row_with_focusables(*this));
 }
 
 void asw::ui::Choice::select(std::size_t i)
@@ -65,7 +71,7 @@ void asw::ui::Choice::activate(Context& ctx)
 bool asw::ui::Choice::on_event(Context& ctx, const UIEvent& e)
 {
     (void)ctx;
-    if (!enabled || e.type != UIEvent::Type::KeyDown) {
+    if (!enabled || e.type != UIEvent::Type::KeyDown || !adjusts_left_right()) {
         return false;
     }
     if (e.key == asw::input::Key::Left) {
@@ -90,7 +96,8 @@ void asw::ui::Choice::draw(Context& ctx)
     Button::draw(ctx);
 
     const auto& f = pick_font(font, ctx.theme);
-    if (!show_arrows || text.empty() || f == nullptr || !enabled || !is_highlighted(ctx)) {
+    if (!show_arrows || !adjusts_left_right() || text.empty() || f == nullptr || !enabled
+        || !is_highlighted(ctx)) {
         return;
     }
 

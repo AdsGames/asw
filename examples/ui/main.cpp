@@ -16,20 +16,24 @@
 ///
 /// Controls:
 ///   Mouse - click buttons, click the box to type
-///   Tab / Shift+Tab / Arrows, D-pad, left stick, shoulders - move focus
-///   Enter / Space / A - press the focused button
+///   Arrows, D-pad, left stick - move focus, or change a choice or slider
+///     that is not in a row
+///   Tab / Shift+Tab, LB / RB - move focus in order, from anywhere
+///   Enter / Space / A - press the focused button, or edit a slider in a row
 ///   Escape / B - quit (asks first)
 ///
 /// Scripted run:
 ///   ASW_EXAMPLE_AUTORUN=1 SDL_VIDEO_DRIVER=dummy ./example_ui
-///   Fills in a name, clicks Greet, Theme, the slider and the checkbox, moves focus with
-///   the down action, saves autorun.png and quits.
+///   Fills in a name, clicks Greet, Theme, the slider and the checkbox, moves
+///   focus down, left, right and down from the name box, saves autorun.png and
+///   quits.
 
 #include <array>
 #include <asw/asw.h>
 #include <cstdlib>
 #include <fstream>
 #include <string>
+#include <utility>
 
 namespace {
 constexpr float SCREEN_W = 800.0F;
@@ -262,6 +266,42 @@ int main()
 
     int frame = 0;
 
+    // Scripted navigation steps: frame and key
+    const std::array<std::pair<int, asw::input::Key>, 4> NAV_STEPS { {
+        { 36, asw::input::Key::Down },
+        { 38, asw::input::Key::Left },
+        { 40, asw::input::Key::Right },
+        { 42, asw::input::Key::Down },
+    } };
+    std::string nav_path;
+    const auto focus_name = [&]() -> std::string {
+        const asw::ui::Widget* f = ui.ctx.focus.focused();
+        if (f == &name) {
+            return "name";
+        }
+        if (f == &greet) {
+            return "greet";
+        }
+        if (f == &theme) {
+            return "theme";
+        }
+        if (f == &volume) {
+            return "volume";
+        }
+        if (f == &remember) {
+            return "remember";
+        }
+#ifndef __EMSCRIPTEN__
+        if (f == &load) {
+            return "load";
+        }
+        if (f == &quit) {
+            return "quit";
+        }
+#endif
+        return "none";
+    };
+
     asw::core::run([&]() {
         // Scripted input: fill in a name, click Greet, then Theme
         if (autorun) {
@@ -293,18 +333,28 @@ int main()
                 asw::input::simulate_mouse_button_up(asw::input::MouseButton::Left);
             }
 
-            // The down action moves focus from the checkbox and shows the ring
+            // Navigation: from the name box down into the row, across it,
+            // and down again. The choice leaves left and right to the row.
             if (frame == 35) {
-                asw::input::simulate_key_down(asw::input::Key::Down);
+                ui.focus(name, true);
             }
-            if (frame == 36) {
-                asw::input::simulate_key_up(asw::input::Key::Down);
+            for (const auto& [at, key] : NAV_STEPS) {
+                if (frame == at) {
+                    asw::input::simulate_key_down(key);
+                }
+                if (frame == at + 1) {
+                    asw::input::simulate_key_up(key);
+                }
             }
         }
 
         asw::core::update();
 
         ui.update();
+
+        if (autorun && (frame == 35 || frame == 37 || frame == 39 || frame == 41 || frame == 43)) {
+            nav_path += (nav_path.empty() ? "" : " > ") + focus_name();
+        }
 
 #ifndef __EMSCRIPTEN__
         if (const auto path = asw::dialog::take_file()) {
@@ -321,16 +371,18 @@ int main()
         asw::display::clear();
         ui.draw();
 
-        asw::draw::text(font, "Tab to move focus, Enter to press", { SCREEN_W / 2.0F, 540.0F },
+        asw::draw::text(font, "Arrows or Tab (LB / RB) move, Enter (A) presses",
+            { SCREEN_W / 2.0F, 540.0F },
             asw::color::gray, asw::TextJustify::Center);
 
-        if (autorun && frame == 40) {
+        if (autorun && frame == 45) {
             const bool saved = asw::display::screenshot("autorun.png");
             asw::log::info(saved ? "Saved autorun.png" : "Screenshot failed");
             asw::log::info("Greeting: " + greeting.text);
             asw::log::info(std::string("Remember name: ") + (remember.checked ? "yes" : "no"));
             asw::log::info("Theme: " + theme.options[theme.index]);
             asw::log::info("Volume: " + std::to_string(volume.value));
+            asw::log::info("Navigation: " + nav_path);
             asw::core::exit();
         }
 

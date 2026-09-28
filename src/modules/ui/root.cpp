@@ -338,6 +338,7 @@ void asw::ui::Root::update_keys()
             ctx.show_focus = true;
             _used = true;
         } else if (Widget* f = ctx.focus.focused(); f != nullptr) {
+            ctx.show_focus = true;
             activate(*f);
         }
     }

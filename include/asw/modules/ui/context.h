@@ -9,6 +9,7 @@
 #ifndef ASW_UI_CONTEXT_H
 #define ASW_UI_CONTEXT_H
 
+#include <optional>
 #include <vector>
 
 #include "navigation.h"
@@ -61,6 +62,11 @@ public:
 
     /// @brief Move focus in a direction based on widget positions.
     ///
+    /// @details A widget's nav_up, nav_down, nav_left or nav_right wins when
+    /// set. Otherwise widgets in the same lane (overlapping across the
+    /// direction) win over the rest, then the nearest edge to edge, then the
+    /// one closest to the lane repeated moves started in.
+    ///
     /// @param ctx The UI context.
     /// @param dx Horizontal direction (-1, 0, or 1).
     /// @param dy Vertical direction (-1, 0, or 1).
@@ -84,6 +90,10 @@ private:
 
     std::vector<Widget*> _focusables;
     Widget* _focused = nullptr;
+
+    // Across position kept during repeated moves one way
+    std::optional<float> _lane_x;
+    std::optional<float> _lane_y;
 };
 
 /// @brief Shared state for the UI system.
