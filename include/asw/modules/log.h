@@ -16,7 +16,7 @@
 namespace asw::log {
 
 /// @brief Log severity levels
-enum class Level { DEBUG, INFO, WARN, ERROR };
+enum class Level { Debug, Info, Warn, Error };
 
 /// @brief Log a message at the specified level. Messages below the current log level are ignored.
 ///
