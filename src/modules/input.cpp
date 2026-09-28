@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <type_traits>
 #include <unordered_map>
 #include <vector>
 
@@ -236,35 +237,44 @@ SDL_WindowID simulated_window_id()
     return window != nullptr ? SDL_GetWindowID(window) : 0;
 }
 
+// Each event struct is filled on its own and then assigned into the union, so
+// the member written is the active one
+
 void push_simulated_key(asw::input::Key key, bool down)
 {
+    SDL_KeyboardEvent key_event {};
+    key_event.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
+    key_event.windowID = simulated_window_id();
+    key_event.scancode
+        = static_cast<SDL_Scancode>(static_cast<std::underlying_type_t<asw::input::Key>>(key));
+    key_event.down = down;
+
     SDL_Event e {};
-    e.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
-    e.key.windowID = simulated_window_id();
-    e.key.scancode = static_cast<SDL_Scancode>(key);
-    e.key.down = down;
+    e.key = key_event;
     SDL_PushEvent(&e);
 }
 
 void push_simulated_mouse_button(asw::input::MouseButton button, bool down)
 {
-    SDL_Event e {};
-    e.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
-    e.button.windowID = simulated_window_id();
-    e.button.button = static_cast<uint8_t>(button);
-    e.button.down = down;
-    e.button.clicks = 1;
+    SDL_MouseButtonEvent button_event {};
+    button_event.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
+    button_event.windowID = simulated_window_id();
+    button_event.button = static_cast<uint8_t>(
+        static_cast<std::underlying_type_t<asw::input::MouseButton>>(button));
+    button_event.down = down;
+    button_event.clicks = 1;
 
     // SDL events carry window coordinates, the mouse position is in render
     // coordinates
-    e.button.x = mouse.position.x;
-    e.button.y = mouse.position.y;
-    auto* renderer = asw::display::get_renderer();
-    if (renderer != nullptr) {
+    button_event.x = mouse.position.x;
+    button_event.y = mouse.position.y;
+    if (auto* renderer = asw::display::get_renderer(); renderer != nullptr) {
         SDL_RenderCoordinatesToWindow(
-            renderer, mouse.position.x, mouse.position.y, &e.button.x, &e.button.y);
+            renderer, mouse.position.x, mouse.position.y, &button_event.x, &button_event.y);
     }
 
+    SDL_Event e {};
+    e.button = button_event;
     SDL_PushEvent(&e);
 }
 } // namespace
@@ -285,21 +295,23 @@ void asw::input::simulate_mouse_move(const asw::Vec2<float>& position)
     // other way here
     auto window_pos = position;
     auto window_prev = mouse.position;
-    auto* renderer = asw::display::get_renderer();
-    if (renderer != nullptr) {
+    if (auto* renderer = asw::display::get_renderer(); renderer != nullptr) {
         SDL_RenderCoordinatesToWindow(
             renderer, position.x, position.y, &window_pos.x, &window_pos.y);
         SDL_RenderCoordinatesToWindow(
             renderer, mouse.position.x, mouse.position.y, &window_prev.x, &window_prev.y);
     }
 
+    SDL_MouseMotionEvent motion {};
+    motion.type = SDL_EVENT_MOUSE_MOTION;
+    motion.windowID = simulated_window_id();
+    motion.x = window_pos.x;
+    motion.y = window_pos.y;
+    motion.xrel = window_pos.x - window_prev.x;
+    motion.yrel = window_pos.y - window_prev.y;
+
     SDL_Event e {};
-    e.type = SDL_EVENT_MOUSE_MOTION;
-    e.motion.windowID = simulated_window_id();
-    e.motion.x = window_pos.x;
-    e.motion.y = window_pos.y;
-    e.motion.xrel = window_pos.x - window_prev.x;
-    e.motion.yrel = window_pos.y - window_prev.y;
+    e.motion = motion;
     SDL_PushEvent(&e);
 }
 
