@@ -29,6 +29,9 @@ void asw::ui::Choice::step(int dir)
         return;
     }
 
+    // options may have shrunk since the last change, step from a valid index
+    select(index);
+
     std::size_t next_index = index;
     if (dir > 0) {
         if (index + 1 < n) {

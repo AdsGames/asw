@@ -157,20 +157,30 @@ void asw::ui::InputBox::draw(Context& ctx)
             transform, (_hovered && enabled) ? s.border_hover : s.border, s.border_width);
     }
 
-    // Clip text to input bounds
-    const SDL_Rect clip {
+    // Clip text to input bounds, inside any clip already set, which is put
+    // back after
+    SDL_Renderer* renderer = asw::display::get_renderer();
+    const bool had_clip = SDL_RenderClipEnabled(renderer);
+    SDL_Rect old_clip {};
+    if (had_clip) {
+        SDL_GetRenderClipRect(renderer, &old_clip);
+    }
+
+    const SDL_Rect box_clip {
         static_cast<int>(transform.position.x + text_padding),
         static_cast<int>(transform.position.y),
         static_cast<int>(transform.size.x - (text_padding * 2)),
         static_cast<int>(transform.size.y),
     };
-    SDL_SetRenderClipRect(asw::display::get_renderer(), &clip);
+    SDL_Rect clip = box_clip;
+    const bool text_visible = !had_clip || SDL_GetRectIntersection(&box_clip, &old_clip, &clip);
+    SDL_SetRenderClipRect(renderer, &clip);
 
     // Text position (vertically centered)
     const auto display_text = value.empty() ? placeholder : value;
     const auto display_color = value.empty() ? s.placeholder : s.text;
 
-    if (!display_text.empty() && f != nullptr) {
+    if (text_visible && !display_text.empty() && f != nullptr) {
         const auto text_size = asw::util::get_text_size(f, display_text);
         const float text_y = transform.position.y + ((transform.size.y - text_size.y) / 2.0F);
         const asw::Vec2 text_pos { transform.position.x + text_padding, text_y };
@@ -180,7 +190,7 @@ void asw::ui::InputBox::draw(Context& ctx)
 
     // Cursor
     _cursor_pos = std::min(_cursor_pos, value.size());
-    if (_focused && f != nullptr) {
+    if (text_visible && _focused && f != nullptr) {
         const auto before_cursor = value.substr(0, _cursor_pos);
         float cursor_x = transform.position.x + text_padding;
 
@@ -197,8 +207,8 @@ void asw::ui::InputBox::draw(Context& ctx)
             { cursor_x, cursor_y + static_cast<float>(text_height.y) }, s.caret);
     }
 
-    // Reset clip
-    SDL_SetRenderClipRect(asw::display::get_renderer(), nullptr);
+    // Put back the clip from before
+    SDL_SetRenderClipRect(renderer, had_clip ? &old_clip : nullptr);
 
     Widget::draw(ctx);
 }

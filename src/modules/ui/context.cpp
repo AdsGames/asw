@@ -198,10 +198,14 @@ void asw::ui::FocusManager::focus_dir(Context& ctx, int dx, int dy)
 
 void asw::ui::FocusManager::dfs(Widget& w)
 {
-    if (w.visible && w.enabled && w.focusable) {
+    // A hidden or disabled widget hides or disables its children too
+    if (!w.visible || !w.enabled) {
+        return;
+    }
+    if (w.focusable) {
         _focusables.push_back(&w);
     }
-    for (auto const& c : w.children) {
+    for (auto const& c : w.children()) {
         dfs(*c);
     }
 }

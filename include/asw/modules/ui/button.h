@@ -105,10 +105,25 @@ public:
 
     /// @brief Set the text, optionally resizing the button to match.
     ///
+    /// @details Without its own font the button is sized with the theme font
+    /// when it is next measured, before its parent places it.
+    ///
     /// @param t The text to set.
     /// @param auto_size If true, resizes the button to fit the text.
     ///
     void set_text(const std::string& t, bool auto_size = false);
+
+    /// @brief Size to the text if set_text asked for it.
+    ///
+    /// @param ctx The UI context.
+    ///
+    void measure(Context& ctx) override;
+
+    /// @brief Measure, in case the parent did not, then lay out the children.
+    ///
+    /// @param ctx The UI context.
+    ///
+    void layout(Context& ctx) override;
 
 protected:
     /// @brief Get the texture for the current state.
@@ -117,6 +132,12 @@ protected:
     /// @return The texture to draw, may be nullptr.
     ///
     const asw::Texture& current_texture(const Context& ctx) const;
+
+private:
+    // set_text asked to fit the text, waiting for the theme font at layout
+    bool _fit_text = false;
+
+    void fit_text(const asw::Font& f);
 };
 
 } // namespace asw::ui
