@@ -13,7 +13,16 @@ if(PROJECT_IS_TOP_LEVEL)
   set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/bin)
 endif()
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# Build Release when no build type is given, unless a multi config generator
+# picks it per build
 set(DEFAULT_BUILD_TYPE "Release")
+if(PROJECT_IS_TOP_LEVEL AND NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+  set(CMAKE_BUILD_TYPE ${DEFAULT_BUILD_TYPE} CACHE STRING "Build type" FORCE)
+endif()
+
+# Install rules for a find_package(asw) package, off by default
+option(ASW_INSTALL "Install asw and the SDL libraries it links" OFF)
 
 # Add sources
 file(GLOB_RECURSE SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
@@ -24,25 +33,48 @@ add_library(${PROJECT_NAME} STATIC ${SOURCES} ${HEADERS})
 add_library(${PROJECT_NAME}::${PROJECT_NAME} ALIAS ${PROJECT_NAME})
 
 # Add compile options
-target_compile_options(${PROJECT_NAME} PRIVATE -O2 -Wall -Wextra -pedantic)
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -pedantic)
 
 # SDL Flags
 set(BUILD_SHARED_LIBS OFF)
 set(SDL_SHARED OFF)
 set(SDL_STATIC ON)
 
-# Fetch deps
+# Fetch deps. They stay out of the default build and install, as with CPM's
+# short form, unless asw installs them for its package: the installed asw
+# package needs freetype and the SDL packages installed next to it.
+if(ASW_INSTALL)
+  set(ASW_DEPS_EXCLUDE_FROM_ALL NO)
+else()
+  set(ASW_DEPS_EXCLUDE_FROM_ALL YES)
+endif()
+
 include(cmake/get_cpm.cmake)
-CPMAddPackage("gh:freetype/freetype#VER-2-14-1")
+CPMAddPackage(NAME freetype GITHUB_REPOSITORY freetype/freetype GIT_TAG VER-2-14-1
+  EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES)
 
 if(TARGET freetype AND NOT TARGET Freetype::Freetype)
   add_library(Freetype::Freetype ALIAS freetype)
 endif()
 
-CPMAddPackage("gh:libsdl-org/SDL#release-3.4.16")
-CPMAddPackage("gh:libsdl-org/SDL_image#release-3.4.6")
-CPMAddPackage("gh:libsdl-org/SDL_ttf#release-3.2.2")
-CPMAddPackage("gh:libsdl-org/SDL_mixer#release-3.2.4")
+# SDL_ttf exports its targets into the build tree when it installs, which
+# needs freetype exported there too
+if(ASW_INSTALL AND TARGET freetype)
+  export(EXPORT freetype-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/freetype-targets.cmake)
+endif()
+
+CPMAddPackage(NAME SDL GITHUB_REPOSITORY libsdl-org/SDL GIT_TAG release-3.4.16
+  EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
+  OPTIONS "SDL_INSTALL ${ASW_INSTALL}")
+CPMAddPackage(NAME SDL_image GITHUB_REPOSITORY libsdl-org/SDL_image GIT_TAG release-3.4.6
+  EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
+  OPTIONS "SDLIMAGE_INSTALL ${ASW_INSTALL}")
+CPMAddPackage(NAME SDL_ttf GITHUB_REPOSITORY libsdl-org/SDL_ttf GIT_TAG release-3.2.2
+  EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
+  OPTIONS "SDLTTF_INSTALL ${ASW_INSTALL}")
+CPMAddPackage(NAME SDL_mixer GITHUB_REPOSITORY libsdl-org/SDL_mixer GIT_TAG release-3.2.4
+  EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
+  OPTIONS "SDLMIXER_INSTALL ${ASW_INSTALL}")
 
 # Add include
 target_include_directories(
@@ -76,21 +108,49 @@ if(ASW_BUILD_EXAMPLES)
 endif()
 
 # Install
-include(CMakePackageConfigHelpers)
+if(ASW_INSTALL)
+  include(GNUInstallDirs)
+  include(CMakePackageConfigHelpers)
 
-configure_package_config_file(
-  cmake/${PROJECT_NAME}Config.cmake.in
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
+  install(TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}Targets
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+  )
 
-write_basic_package_version_file(
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  VERSION ${PROJECT_VERSION}
-  COMPATIBILITY AnyNewerVersion
-)
+  install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
 
-install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
-  ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
-  DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
-)
+  # freetype's installed config does not find the libraries it links, so the
+  # asw config finds the ones freetype was built with
+  set(ASW_FREETYPE_DEPENDENCIES "")
+  if(TARGET freetype)
+    get_target_property(freetype_libs freetype LINK_LIBRARIES)
+    foreach(dep IN ITEMS ZLIB BZip2 PNG)
+      if("${dep}::${dep}" IN_LIST freetype_libs)
+        list(APPEND ASW_FREETYPE_DEPENDENCIES ${dep})
+      endif()
+    endforeach()
+  endif()
+
+  install(EXPORT ${PROJECT_NAME}Targets
+    NAMESPACE ${PROJECT_NAME}::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
+
+  configure_package_config_file(
+    cmake/${PROJECT_NAME}Config.cmake.in
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
+
+  write_basic_package_version_file(
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    VERSION ${PROJECT_VERSION}
+    COMPATIBILITY AnyNewerVersion
+  )
+
+  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}Config.cmake
+    ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}ConfigVersion.cmake
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
+endif()
