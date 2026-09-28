@@ -109,17 +109,8 @@ void ParticleEmitter::draw_offset(const Vec2<float>& offset)
 
             draw::stretch_sprite(config.texture, dest);
         } else {
-            auto r = static_cast<uint8_t>(util::lerp(static_cast<float>(config.color_start.r),
-                static_cast<float>(config.color_end.r), t));
-            auto g = static_cast<uint8_t>(util::lerp(static_cast<float>(config.color_start.g),
-                static_cast<float>(config.color_end.g), t));
-            auto b = static_cast<uint8_t>(util::lerp(static_cast<float>(config.color_start.b),
-                static_cast<float>(config.color_end.b), t));
-            auto a = static_cast<uint8_t>(util::lerp(static_cast<float>(config.color_start.a),
-                                              static_cast<float>(config.color_end.a), t)
-                * alpha);
-
-            const Color color { r, g, b, a };
+            auto color = config.color_start.lerp(config.color_end, t);
+            color.a = Color::to_channel(color.a * alpha);
 
             draw::circle_fill(p.position - offset, size / 2.0F, color);
         }
@@ -150,7 +141,7 @@ void ParticleEmitter::spawn_particle()
 
     const float speed = random::between(config.speed_min, config.speed_max);
     const float angle = random::between(config.angle_min, config.angle_max);
-    p.velocity = Vec2<float>(std::cos(angle) * speed, std::sin(angle) * speed);
+    p.velocity = Vec2<float>::from_angle(angle, speed);
 
     p.size = config.size_start;
     p.rotation = 0.0F;
