@@ -114,8 +114,9 @@ float get_action_strength(std::string_view name);
 
 /// @brief Update cached action states from current raw input.
 ///
-/// Called automatically by asw::input::reset() — you do not need to call
-/// this yourself unless you are managing the input loop manually.
+/// Called automatically by asw::core::update() after events are processed —
+/// you do not need to call this yourself unless you are managing the input
+/// loop manually.
 ///
 void update_actions();
 

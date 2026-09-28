@@ -488,6 +488,9 @@ const std::string& get_text_input();
 /// @brief Reset all input states. Called by the core.
 void reset();
 
+/// @brief Free cached cursors. Called by asw::core::shutdown().
+void _shutdown();
+
 /// Event Hooks
 
 /// @brief Append text to this frame's text input. Called by the core.
