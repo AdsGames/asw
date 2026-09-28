@@ -54,6 +54,19 @@ void stretch_sprite(const asw::Texture& tex, const asw::Quad<float>& position);
 ///
 void rotate_sprite(const asw::Texture& tex, const asw::Vec2<float>& position, float angle);
 
+/// @brief Draw a sprite stretched to a quad, rotated around its centre and
+/// optionally flipped.
+///
+/// @param tex The texture to draw.
+/// @param dest The quad defining the position and size to stretch the sprite
+/// to.
+/// @param angle The angle to rotate the sprite by in radians.
+/// @param flip_x Whether or not to flip the sprite on the x axis.
+/// @param flip_y Whether or not to flip the sprite on the y axis.
+///
+void stretch_sprite_rotate(const asw::Texture& tex, const asw::Quad<float>& dest, float angle,
+    bool flip_x = false, bool flip_y = false);
+
 /// @brief Draw a sprite with the option to stretch a portion of it.
 ///
 /// @param tex The texture to draw.
@@ -72,9 +85,11 @@ void stretch_sprite_blit(
 /// @param dest The quad defining the position and size to stretch the sprite
 /// to.
 /// @param angle The angle to rotate the sprite by in radians.
+/// @param flip_x Whether or not to flip the sprite on the x axis.
+/// @param flip_y Whether or not to flip the sprite on the y axis.
 ///
 void stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Quad<float>& source,
-    const asw::Quad<float>& dest, float angle);
+    const asw::Quad<float>& dest, float angle, bool flip_x = false, bool flip_y = false);
 
 /// @brief Draw text. The position is rounded to whole pixels after
 /// justification so glyphs stay sharp.
@@ -87,6 +102,22 @@ void stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Quad<float>&
 ///
 void text(const asw::Font& font, const std::string& text, const asw::Vec2<float>& position,
     asw::Color color, asw::TextJustify justify = asw::TextJustify::Left);
+
+/// @brief Draw text with a drop shadow behind it, so it reads on any
+/// background. The shadow fades with the text colour's alpha.
+///
+/// @param font The font to use.
+/// @param text The text to draw.
+/// @param position The position to draw the text at.
+/// @param color The color of the text.
+/// @param shadow The color of the shadow.
+/// @param offset How far the shadow sits from the text.
+/// @param justify The justification of the text.
+///
+void text_shadow(const asw::Font& font, const std::string& text, const asw::Vec2<float>& position,
+    asw::Color color, asw::Color shadow = asw::Color(0, 0, 0),
+    const asw::Vec2<float>& offset = asw::Vec2<float>(2.0F, 2.0F),
+    asw::TextJustify justify = asw::TextJustify::Left);
 
 /// @brief Clear cached rendered text textures.
 ///
@@ -114,8 +145,9 @@ void line(const asw::Vec2<float>& position1, const asw::Vec2<float>& position2, 
 ///
 /// @param position The quad defining the position and size of the rectangle.
 /// @param color The color of the rectangle.
+/// @param thickness Width of the outline in pixels, drawn inside the quad.
 ///
-void rect(const asw::Quad<float>& position, asw::Color color);
+void rect(const asw::Quad<float>& position, asw::Color color, float thickness = 1.0F);
 
 /// @brief Draw a filled rectangle.
 ///
@@ -123,6 +155,16 @@ void rect(const asw::Quad<float>& position, asw::Color color);
 /// @param color The color of the rectangle.
 ///
 void rect_fill(const asw::Quad<float>& position, asw::Color color);
+
+/// @brief Draw a filled rectangle rotated around its centre.
+///
+/// @param position The quad defining the position and size of the rectangle
+/// before rotation.
+/// @param angle The angle to rotate the rectangle by in radians, clockwise
+/// like the sprite rotation functions.
+/// @param color The color of the rectangle.
+///
+void rect_fill_rotate(const asw::Quad<float>& position, float angle, asw::Color color);
 
 /// @brief Draw a circle.
 ///
