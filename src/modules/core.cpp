@@ -16,10 +16,23 @@
 
 namespace {
 bool exiting = false;
-}
+
+// Longest frame get_delta_time() reports
+constexpr float MAX_DELTA_TIME = 0.25F;
+
+uint64_t last_update_ns = 0;
+float delta_time = 0.0F;
+} // namespace
 
 void asw::core::update()
 {
+    const uint64_t now = SDL_GetTicksNS();
+    if (last_update_ns != 0) {
+        delta_time = std::min(
+            static_cast<float>(now - last_update_ns) / 1'000'000'000.0F, MAX_DELTA_TIME);
+    }
+    last_update_ns = now;
+
     asw::input::reset();
 
     SDL_Event e;
@@ -135,6 +148,11 @@ void asw::core::update()
 
     // After the events, so actions match raw input on the same frame
     asw::input::update_actions();
+}
+
+float asw::core::get_delta_time()
+{
+    return delta_time;
 }
 
 void asw::core::init(int width, int height, int scale)

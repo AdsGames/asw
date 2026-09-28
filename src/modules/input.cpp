@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "./asw/modules/action.h"
+#include "./asw/modules/display.h"
 #include "./asw/modules/log.h"
 
 namespace {
@@ -150,6 +151,100 @@ void asw::input::set_cursor(asw::input::CursorId cursor)
     }
 
     SDL_SetCursor(cursors[cursor_int]);
+}
+
+void asw::input::set_cursor_visible(bool visible)
+{
+    if (visible) {
+        SDL_ShowCursor();
+    } else {
+        SDL_HideCursor();
+    }
+}
+
+namespace {
+// Window the simulated event belongs to, so render scaling is applied to it
+SDL_WindowID simulated_window_id()
+{
+    auto* window = asw::display::get_window();
+    return window != nullptr ? SDL_GetWindowID(window) : 0;
+}
+
+void push_simulated_key(asw::input::Key key, bool down)
+{
+    SDL_Event e {};
+    e.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
+    e.key.windowID = simulated_window_id();
+    e.key.scancode = static_cast<SDL_Scancode>(key);
+    e.key.down = down;
+    SDL_PushEvent(&e);
+}
+
+void push_simulated_mouse_button(asw::input::MouseButton button, bool down)
+{
+    SDL_Event e {};
+    e.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
+    e.button.windowID = simulated_window_id();
+    e.button.button = static_cast<uint8_t>(button);
+    e.button.down = down;
+    e.button.clicks = 1;
+
+    // SDL events carry window coordinates, the mouse position is in render
+    // coordinates
+    e.button.x = mouse.position.x;
+    e.button.y = mouse.position.y;
+    auto* renderer = asw::display::get_renderer();
+    if (renderer != nullptr) {
+        SDL_RenderCoordinatesToWindow(
+            renderer, mouse.position.x, mouse.position.y, &e.button.x, &e.button.y);
+    }
+
+    SDL_PushEvent(&e);
+}
+} // namespace
+
+void asw::input::simulate_key_down(asw::input::Key key)
+{
+    push_simulated_key(key, true);
+}
+
+void asw::input::simulate_key_up(asw::input::Key key)
+{
+    push_simulated_key(key, false);
+}
+
+void asw::input::simulate_mouse_move(const asw::Vec2<float>& position)
+{
+    // Core converts motion from window to render coordinates, so go the
+    // other way here
+    auto window_pos = position;
+    auto window_prev = mouse.position;
+    auto* renderer = asw::display::get_renderer();
+    if (renderer != nullptr) {
+        SDL_RenderCoordinatesToWindow(
+            renderer, position.x, position.y, &window_pos.x, &window_pos.y);
+        SDL_RenderCoordinatesToWindow(
+            renderer, mouse.position.x, mouse.position.y, &window_prev.x, &window_prev.y);
+    }
+
+    SDL_Event e {};
+    e.type = SDL_EVENT_MOUSE_MOTION;
+    e.motion.windowID = simulated_window_id();
+    e.motion.x = window_pos.x;
+    e.motion.y = window_pos.y;
+    e.motion.xrel = window_pos.x - window_prev.x;
+    e.motion.yrel = window_pos.y - window_prev.y;
+    SDL_PushEvent(&e);
+}
+
+void asw::input::simulate_mouse_button_down(asw::input::MouseButton button)
+{
+    push_simulated_mouse_button(button, true);
+}
+
+void asw::input::simulate_mouse_button_up(asw::input::MouseButton button)
+{
+    push_simulated_mouse_button(button, false);
 }
 
 // ---- KEYBOARD ----

@@ -396,6 +396,49 @@ bool get_key_up(asw::input::Key key);
 ///
 void set_cursor(asw::input::CursorId cursor);
 
+/// @brief Show or hide the mouse cursor, for games that draw their own.
+///
+/// @param visible Whether the cursor is shown.
+///
+void set_cursor_visible(bool visible);
+
+/// Simulated input
+///
+/// These queue the same events a real device sends, so they reach the game
+/// through the normal input path on the next core update. Use them to script
+/// demos or automated test runs.
+
+/// @brief Simulate a key being pressed.
+///
+/// @param key The key.
+///
+void simulate_key_down(asw::input::Key key);
+
+/// @brief Simulate a key being released.
+///
+/// @param key The key.
+///
+void simulate_key_up(asw::input::Key key);
+
+/// @brief Simulate the mouse moving.
+///
+/// @param position The new position in logical (render) coordinates, the same
+/// space get_mouse() reports.
+///
+void simulate_mouse_move(const asw::Vec2<float>& position);
+
+/// @brief Simulate a mouse button being pressed.
+///
+/// @param button The button.
+///
+void simulate_mouse_button_down(asw::input::MouseButton button);
+
+/// @brief Simulate a mouse button being released.
+///
+/// @param button The button.
+///
+void simulate_mouse_button_up(asw::input::MouseButton button);
+
 /// @brief Number of buttons on a game controller
 constexpr int NUM_CONTROLLER_BUTTONS = SDL_GAMEPAD_BUTTON_COUNT;
 

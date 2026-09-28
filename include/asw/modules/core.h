@@ -15,6 +15,14 @@ namespace asw::core {
 ///
 void update();
 
+/// @brief Get the time between the last two calls to update(). Capped at a
+/// quarter of a second, so a breakpoint or a stalled window does not send
+/// things flying.
+///
+/// @return The frame time in seconds, 0 before the second update.
+///
+float get_delta_time();
+
 /// @brief Initializes the core module.
 ///
 /// @param width The width of the window.
