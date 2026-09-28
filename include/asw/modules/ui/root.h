@@ -76,15 +76,17 @@ public:
 
 private:
     void fit_to_screen();
+    bool attached(const Widget* w) const;
     void validate();
+    void free_removed(Widget& w);
     Widget* hit_test(Widget& w, const asw::Vec2<float>& pointer_pos);
+    bool bubble(Widget* target, const UIEvent& e);
     bool dispatch_pointer(const UIEvent& e);
     bool dispatch_to_focused(const UIEvent& e);
     void update_pointer();
     void update_keys();
     void activate(Widget& w);
 
-    std::vector<Widget*> _live;
     bool _used = false;
 };
 

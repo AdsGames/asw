@@ -12,8 +12,42 @@
 #include <algorithm>
 #include <concepts>
 #include <functional>
+#include <limits>
+#include <type_traits>
 
 namespace asw::easing {
+
+namespace detail {
+
+/// @brief a + (b - a) * f. Integer types are worked in floating point, so a
+/// falling unsigned range does not wrap, and a result past the range of T,
+/// e.g. from an overshooting easing, is clamped to it.
+///
+/// @param a Start value
+/// @param b End value
+/// @param f Amount of the way from a to b
+/// @return The value f of the way from a to b
+///
+template <typename T> T mix(const T& a, const T& b, float f)
+{
+    if constexpr (std::is_integral_v<T>) {
+        const auto lo = static_cast<double>(std::numeric_limits<T>::lowest());
+        const auto hi = static_cast<double>(std::numeric_limits<T>::max());
+        const double v = static_cast<double>(a)
+            + ((static_cast<double>(b) - static_cast<double>(a)) * static_cast<double>(f));
+        if (v <= lo) {
+            return std::numeric_limits<T>::lowest();
+        }
+        if (v >= hi) {
+            return std::numeric_limits<T>::max();
+        }
+        return static_cast<T>(v);
+    } else {
+        return a + (b - a) * f;
+    }
+}
+
+} // namespace detail
 
 // --- Linear ---
 float linear(float t);
@@ -63,7 +97,7 @@ template <typename T, typename Func> T ease(const T& a, const T& b, float t, Fun
     static_assert(std::is_invocable_r_v<float, Func, float>,
         "Func must be a callable that takes a float and returns a float");
 
-    return a + (b - a) * func(std::clamp(t, 0.0F, 1.0F));
+    return detail::mix(a, b, func(std::clamp(t, 0.0F, 1.0F)));
 }
 
 } // namespace asw::easing

@@ -47,12 +47,43 @@ void asw::ui::Button::set_images(const asw::Texture& normal, const asw::Texture&
 void asw::ui::Button::set_text(const std::string& t, bool auto_size)
 {
     text = t;
-    if (auto_size && font != nullptr && !text.empty()) {
-        const auto size = asw::util::get_text_size(font, text);
-        transform.size = asw::Vec2<float>(
-            size.x + padding * 2.0f,
-            size.y + padding * 2.0f);
+    _fit_text = false;
+    if (!auto_size || text.empty()) {
+        return;
     }
+
+    if (font != nullptr) {
+        fit_text(font);
+    } else {
+        // The theme font is only known at layout
+        _fit_text = true;
+    }
+}
+
+void asw::ui::Button::fit_text(const asw::Font& f)
+{
+    const auto size = asw::util::get_text_size(f, text);
+    transform.size = asw::Vec2<float>(
+        size.x + padding * 2.0f,
+        size.y + padding * 2.0f);
+}
+
+void asw::ui::Button::measure(Context& ctx)
+{
+    if (_fit_text) {
+        if (const auto& f = pick_font(font, ctx.theme); f != nullptr) {
+            fit_text(f);
+            _fit_text = false;
+        }
+    }
+}
+
+void asw::ui::Button::layout(Context& ctx)
+{
+    // A parent that places children without measuring them still gets a
+    // button sized to its text, one layout late
+    measure(ctx);
+    Widget::layout(ctx);
 }
 
 void asw::ui::Button::draw(Context& ctx)

@@ -79,13 +79,6 @@ private:
     // Rebuild the focusable widget list from the widget tree
     void rebuild(Context& ctx, Widget& root);
 
-    // Drop the focused widget without notifying it, for when it has been
-    // removed from the tree and may already be destroyed
-    void forget_focus()
-    {
-        _focused = nullptr;
-    }
-
     void dfs(Widget& w);
 
     std::vector<Widget*> _focusables;

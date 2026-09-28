@@ -10,6 +10,7 @@
 #define ASW_MODULES_UI_LAYOUT_H
 
 #include <cstddef>
+#include <unordered_map>
 
 #include "context.h"
 #include "widget.h"
@@ -33,6 +34,54 @@ enum class Align {
     /// Children fill the stack across.
     Stretch,
 };
+
+namespace detail {
+
+/// @brief Sizes a layout forced on its children, so a child gets its own size
+/// back when the layout stops forcing it, e.g. a grid row after its tallest
+/// child is hidden.
+///
+class ForcedSizes {
+public:
+    /// @brief The child's own size: its current size, unless that is still
+    /// the size this layout forced on it last time.
+    ///
+    /// @param w The child.
+    /// @param current The child's current size.
+    /// @return The child's own size.
+    ///
+    float natural(const Widget& w, float current) const;
+
+    /// @brief Record the size forced on a child this layout.
+    ///
+    /// @param w The child.
+    /// @param natural The child's own size.
+    /// @param forced The size the layout gave it.
+    ///
+    void record(const Widget& w, float natural, float forced);
+
+    /// @brief Keep last layout's record for a child skipped this layout,
+    /// e.g. a hidden one.
+    ///
+    /// @param w The child.
+    ///
+    void keep(const Widget& w);
+
+    /// @brief End the layout. Records not made or kept this layout are dropped.
+    ///
+    void finish();
+
+private:
+    struct Entry {
+        float natural;
+        float forced;
+    };
+
+    std::unordered_map<WidgetId, Entry> _last;
+    std::unordered_map<WidgetId, Entry> _next;
+};
+
+} // namespace detail
 
 /// @brief Places children one after another, top to bottom or left to right.
 ///
@@ -59,6 +108,10 @@ public:
     /// @param ctx The UI context.
     ///
     void layout(Context& ctx) override;
+
+private:
+    // Sizes across the stack forced by Align::Stretch
+    detail::ForcedSizes _across;
 };
 
 /// @brief A vertical stack with padding, for a column of rows.
@@ -99,6 +152,10 @@ public:
     /// @param ctx The UI context.
     ///
     void layout(Context& ctx) override;
+
+private:
+    // Heights forced by the row height
+    detail::ForcedSizes _heights;
 };
 
 /// @brief Whether a widget sits in a row with other widgets that can take

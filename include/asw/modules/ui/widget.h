@@ -36,13 +36,19 @@ public:
     ///
     virtual ~Widget() = default;
 
-    /// @brief Move constructor.
+    /// @brief Move constructor. The children move over and point to the new
+    /// widget as their parent. The new widget gets its own id and no parent,
+    /// since it is not in the old parent's children. Removed children stay
+    /// with the old widget, which is where Root finds and frees them.
     ///
-    Widget(Widget&&) = default;
+    Widget(Widget&& other) noexcept;
 
-    /// @brief Move assignment operator.
+    /// @brief Move assignment operator. The children move over and point to
+    /// this widget as their parent. This widget keeps its place in the tree:
+    /// its parent, id and state. Its old children are removed as by
+    /// clear_children. Removed children of the other widget stay with it.
     ///
-    Widget& operator=(Widget&&) = default;
+    Widget& operator=(Widget&& other) noexcept;
 
     Widget(const Widget&) = delete;
     Widget& operator=(const Widget&) = delete;
@@ -85,8 +91,23 @@ public:
     /// @brief Pointer to the parent widget.
     Widget* parent = nullptr;
 
-    /// @brief Child widgets.
-    std::vector<std::unique_ptr<Widget>> children;
+    /// @brief Get the child widgets. Change them with add_child,
+    /// remove_child and clear_children, which keep removed widgets alive
+    /// until Root is done with them.
+    ///
+    /// @return The child widgets.
+    ///
+    const std::vector<std::unique_ptr<Widget>>& children() const
+    {
+        return _children;
+    }
+
+    /// @brief Set this widget's own size, before its parent places it. Does
+    /// nothing by default.
+    ///
+    /// @param ctx The UI context.
+    ///
+    virtual void measure(Context& ctx);
 
     /// @brief Lay out this widget and its children.
     ///
@@ -135,19 +156,20 @@ public:
         auto ptr = std::make_unique<T>(std::forward<Args>(args)...);
         ptr->parent = this;
         auto& ref = *ptr;
-        children.emplace_back(std::move(ptr));
+        _children.emplace_back(std::move(ptr));
         return ref;
     }
 
-    /// @brief Remove and destroy a child widget. Safe to call from a
-    /// callback, Root drops any pointer to it before the next use.
+    /// @brief Remove a child widget. It leaves the tree now and is destroyed
+    /// at the next Root::update, so a callback can remove any widget, even
+    /// the one it runs in.
     ///
     /// @param child The child to remove.
     /// @return True if it was a child of this widget.
     ///
     bool remove_child(const Widget& child);
 
-    /// @brief Remove and destroy every child widget.
+    /// @brief Remove every child widget, destroyed as for remove_child.
     ///
     void clear_children();
 
@@ -186,6 +208,19 @@ protected:
     bool _captured = false;
 
 private:
+    // Point every child at this widget as its parent
+    void adopt_children();
+
+    // Move every child to _removed
+    void detach_children();
+
+    // Child widgets, private so only add_child, remove_child and
+    // clear_children change them
+    std::vector<std::unique_ptr<Widget>> _children;
+
+    // Children removed from the tree, kept alive until Root frees them
+    std::vector<std::unique_ptr<Widget>> _removed;
+
     static inline int _id_counter { 1 };
 
     static int generate_id()

@@ -8,21 +8,6 @@
 #include "./asw/modules/sound.h"
 
 namespace {
-void collect(asw::ui::Widget& w, std::vector<asw::ui::Widget*>& out)
-{
-    out.push_back(&w);
-    for (auto const& c : w.children) {
-        collect(*c, out);
-    }
-}
-
-bool in_tree(const std::vector<asw::ui::Widget*>& live, const asw::ui::Widget* w)
-{
-    return w == nullptr || std::ranges::find(live, w) != live.end();
-}
-
-// The widget a pointer acts on: the nearest focusable widget at or above
-// the hit, so a label inside a button still presses the button
 void play_ui_sound(const asw::Sample& sample)
 {
     if (sample != nullptr) {
@@ -32,6 +17,8 @@ void play_ui_sound(const asw::Sample& sample)
     }
 }
 
+// The widget a pointer acts on: the nearest focusable widget at or above
+// the hit, so a label inside a button still presses the button
 asw::ui::Widget* interactive(asw::ui::Widget* hit)
 {
     for (auto* w = hit; w != nullptr; w = w->parent) {
@@ -72,28 +59,44 @@ void asw::ui::Root::set_size(float w, float h)
     ctx.need_focus_rebuild = true;
 }
 
+bool asw::ui::Root::attached(const Widget* w) const
+{
+    // Removed widgets have no parent, so the walk stops short of root
+    while (w != nullptr && w != &root) {
+        w = w->parent;
+    }
+    return w == &root;
+}
+
 void asw::ui::Root::validate()
 {
-    // Widgets can be removed at any time, often from inside a callback, so
-    // drop any pointer that no longer points into the tree before using it
-    _live.clear();
-    collect(root, _live);
-
-    if (!in_tree(_live, ctx.hover)) {
+    // Widgets can be removed at any time, often from inside a callback. They
+    // stay alive until the next update, so a pointer to one can still be read
+    // here and dropped.
+    if (ctx.hover != nullptr && !attached(ctx.hover)) {
+        ctx.hover->_hovered = false;
         ctx.hover = nullptr;
     }
-    if (!in_tree(_live, ctx.pointer_capture)) {
+    if (ctx.pointer_capture != nullptr && !attached(ctx.pointer_capture)) {
+        ctx.pointer_capture->_pressed = false;
+        ctx.pointer_capture->_captured = false;
         ctx.pointer_capture = nullptr;
     }
-    if (!in_tree(_live, ctx.focus.focused())) {
-        ctx.focus.forget_focus();
-    }
-    if (!in_tree(_live, ctx.focus.default_focus)) {
+    if (ctx.focus.default_focus != nullptr && !attached(ctx.focus.default_focus)) {
         ctx.focus.default_focus = nullptr;
     }
 
+    // Also drops focus from a removed widget, telling it so
     ctx.focus.rebuild(ctx, root);
     ctx.need_focus_rebuild = false;
+}
+
+void asw::ui::Root::free_removed(Widget& w)
+{
+    w._removed.clear();
+    for (auto const& c : w.children()) {
+        free_removed(*c);
+    }
 }
 
 asw::ui::Widget* asw::ui::Root::hit_test(Widget& w, const asw::Vec2<float>& pointer_pos)
@@ -103,8 +106,8 @@ asw::ui::Widget* asw::ui::Root::hit_test(Widget& w, const asw::Vec2<float>& poin
     }
 
     // traverse children in reverse for top-most
-    for (int i = (int)w.children.size() - 1; i >= 0; --i) {
-        auto const& c = w.children[i];
+    for (int i = (int)w.children().size() - 1; i >= 0; --i) {
+        auto const& c = w.children()[i];
         if (!c->visible) {
             continue;
         }
@@ -119,19 +122,22 @@ asw::ui::Widget* asw::ui::Root::hit_test(Widget& w, const asw::Vec2<float>& poin
     return w.transform.contains(pointer_pos) ? &w : nullptr;
 }
 
-bool asw::ui::Root::dispatch_pointer(const UIEvent& e)
+bool asw::ui::Root::bubble(Widget* target, const UIEvent& e)
 {
-    Widget* target = nullptr;
-
-    if (ctx.pointer_capture != nullptr) {
-        target = ctx.pointer_capture;
-    } else {
-        target = hit_test(root, e.pointer_pos);
+    // Take the chain first, a handler that removes its own widget cuts it off
+    // from its parent
+    std::vector<Widget*> chain;
+    for (Widget* w = target; w != nullptr; w = w->parent) {
+        chain.push_back(w);
     }
 
-    // Let target handle; if not handled, bubble up to parents
+    // Let target handle; if not handled, bubble up to parents. Removed
+    // widgets are still alive but take no more events.
     bool handled = false;
-    for (Widget* w = target; w != nullptr; w = w->parent) {
+    for (Widget* w : chain) {
+        if (!attached(w)) {
+            continue;
+        }
         if (w->on_event(ctx, e)) {
             handled = true;
             break;
@@ -143,23 +149,26 @@ bool asw::ui::Root::dispatch_pointer(const UIEvent& e)
     return handled;
 }
 
+bool asw::ui::Root::dispatch_pointer(const UIEvent& e)
+{
+    Widget* target = nullptr;
+
+    if (ctx.pointer_capture != nullptr) {
+        target = ctx.pointer_capture;
+    } else {
+        target = hit_test(root, e.pointer_pos);
+    }
+
+    return bubble(target, e);
+}
+
 bool asw::ui::Root::dispatch_to_focused(const UIEvent& e)
 {
     Widget* f = ctx.focus.focused();
     if (f == nullptr) {
         return false;
     }
-    bool handled = false;
-    for (Widget* w = f; w != nullptr; w = w->parent) {
-        if (w->on_event(ctx, e)) {
-            handled = true;
-            break;
-        }
-    }
-
-    // Handlers may have changed the tree
-    validate();
-    return handled;
+    return bubble(f, e);
 }
 
 void asw::ui::Root::activate(Widget& w)
@@ -181,16 +190,25 @@ void asw::ui::Root::update_pointer()
     const auto& mouse = get_mouse();
     const bool moved = mouse.change.x != 0.0F || mouse.change.y != 0.0F;
     Widget* hit = hit_test(root, mouse.position);
+    const bool over_widget = hit != nullptr && hit != &root;
 
     // Hover every frame, so it is right after a scene change or when widgets
     // move under a still mouse
     Widget* new_hover = interactive(hit);
     if (new_hover != ctx.hover) {
         if (ctx.hover != nullptr) {
-            ctx.hover->_hovered = false;
+            Widget* old_hover = ctx.hover;
+            old_hover->_hovered = false;
+            ctx.hover = nullptr;
             const UIEvent leave { .type = UIEvent::Type::PointerLeave,
                 .pointer_pos = mouse.position };
-            ctx.hover->on_event(ctx, leave);
+            old_hover->on_event(ctx, leave);
+
+            // The handler may have changed the tree, new_hover included
+            validate();
+            if (!attached(new_hover)) {
+                new_hover = nullptr;
+            }
         }
         ctx.hover = new_hover;
         if (ctx.hover != nullptr) {
@@ -198,10 +216,13 @@ void asw::ui::Root::update_pointer()
             const UIEvent enter { .type = UIEvent::Type::PointerEnter,
                 .pointer_pos = mouse.position };
             ctx.hover->on_event(ctx, enter);
+
+            // The handler may have changed the tree
+            validate();
         }
     }
 
-    if (ctx.pointer_capture != nullptr || (hit != nullptr && hit != &root)) {
+    if (ctx.pointer_capture != nullptr || over_widget) {
         _used = true;
     }
 
@@ -236,11 +257,14 @@ void asw::ui::Root::update_pointer()
         if (get_mouse_button_up(button)) {
             ctx.show_focus = false;
 
-            Widget* pressed = left ? ctx.pointer_capture : nullptr;
             const UIEvent e { .type = UIEvent::Type::PointerUp,
                 .pointer_pos = mouse.position,
                 .mouse_button = button };
             dispatch_pointer(e);
+
+            // Read after the dispatch, a handler may have removed the pressed
+            // widget and validate then dropped it, so it is not clicked
+            Widget* pressed = left ? ctx.pointer_capture : nullptr;
 
             // Click: released over the widget that was pressed
             if (pressed != nullptr) {
@@ -266,10 +290,12 @@ void asw::ui::Root::update_keys()
     using namespace asw::input;
 
     // --- Text Input ---
+    bool typed = false;
     if (!input::get_text_input().empty()) {
         const UIEvent ti { .type = UIEvent::Type::TextInput, .text = input::get_text_input() };
         if (dispatch_to_focused(ti)) {
             _used = true;
+            typed = true;
         }
     }
 
@@ -277,8 +303,13 @@ void asw::ui::Root::update_keys()
     const auto& nav = ctx.navigation;
     Widget* const focused_before = ctx.focus.focused();
 
-    // An action when one is named, else the built in key
-    const auto pressed = [](const std::string& action, Key key) {
+    // An action when one is named, else the built in key. Keys that typed
+    // text into the focused widget this frame do not also navigate, e.g.
+    // Space bound to activate or letters bound to move.
+    const auto pressed = [typed](const std::string& action, Key key) {
+        if (typed) {
+            return false;
+        }
         return action.empty() ? get_key_down(key) : get_action_down(action);
     };
 
@@ -286,7 +317,7 @@ void asw::ui::Root::update_keys()
 
     // Global focus handling first (keyboard-first UX)
     const bool next = pressed(nav.next, Key::Tab);
-    const bool prev = nav.prev.empty() ? false : get_action_down(nav.prev);
+    const bool prev = !typed && !nav.prev.empty() && get_action_down(nav.prev);
     if (next || prev) {
         if (prev || shift) {
             ctx.focus.focus_prev(ctx);
@@ -331,8 +362,8 @@ void asw::ui::Root::update_keys()
 
     // Activate the focused widget. The first press only shows where focus is.
     const bool activate_pressed = nav.activate.empty()
-        ? get_key_down(Key::Return) || get_key_down(Key::Space)
-        : get_action_down(nav.activate);
+        ? pressed({}, Key::Return) || pressed({}, Key::Space)
+        : pressed(nav.activate, Key::Return);
     if (activate_pressed) {
         if (ctx.focus.focus_start(ctx)) {
             ctx.show_focus = true;
@@ -364,10 +395,13 @@ bool asw::ui::Root::update()
         fit_to_screen();
     }
 
-    // Catch tree changes made since the last update
+    // Catch tree changes made since the last update, then free the widgets
+    // removed since, nothing points to them any more
     validate();
+    free_removed(root);
 
     // Arrange
+    root.measure(ctx);
     root.layout(ctx);
 
     update_pointer();
@@ -378,16 +412,12 @@ bool asw::ui::Root::update()
 
 void asw::ui::Root::focus(Widget& w, bool show)
 {
-    validate();
     ctx.focus.set_focus(ctx, &w);
     ctx.show_focus = show;
 }
 
 void asw::ui::Root::clear_focus()
 {
-    // The focused widget may have been removed since the last update, drop
-    // it first so set_focus does not notify a destroyed widget
-    validate();
     ctx.focus.set_focus(ctx, nullptr);
     ctx.show_focus = false;
 }
@@ -396,13 +426,10 @@ void asw::ui::Root::draw()
 {
     root.draw(ctx);
 
-    // Focus ring on top of everything. Validate first in case the focused
-    // widget was removed since the last update.
-    if (ctx.show_focus && ctx.focus.focused() != nullptr) {
-        validate();
-    }
+    // Focus ring on top of everything, unless the focused widget was removed
+    // since the last update
     Widget* f = ctx.focus.focused();
-    if (ctx.show_focus && f != nullptr && f->visible && f->focus_ring) {
+    if (ctx.show_focus && f != nullptr && f->visible && f->focus_ring && attached(f)) {
         draw_focus_ring(ctx.theme.focus_ring, f->transform);
     }
 }

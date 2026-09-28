@@ -3,6 +3,33 @@
 #include <algorithm>
 #include <vector>
 
+float asw::ui::detail::ForcedSizes::natural(const Widget& w, float current) const
+{
+    const auto it = _last.find(w.id());
+    if (it != _last.end() && it->second.forced == current) {
+        return it->second.natural;
+    }
+    return current;
+}
+
+void asw::ui::detail::ForcedSizes::record(const Widget& w, float natural, float forced)
+{
+    _next[w.id()] = { .natural = natural, .forced = forced };
+}
+
+void asw::ui::detail::ForcedSizes::keep(const Widget& w)
+{
+    if (const auto it = _last.find(w.id()); it != _last.end()) {
+        _next.insert(*it);
+    }
+}
+
+void asw::ui::detail::ForcedSizes::finish()
+{
+    _last.swap(_next);
+    _next.clear();
+}
+
 void asw::ui::Stack::layout(Context& ctx)
 {
     const bool vertical = direction == Direction::Vertical;
@@ -13,16 +40,18 @@ void asw::ui::Stack::layout(Context& ctx)
     const float across_start = (vertical ? area.position.x : area.position.y) + padding;
     const float across_size = (vertical ? area.size.x : area.size.y) - (padding * 2.0F);
 
-    for (auto const& c : children) {
+    for (auto const& c : children()) {
         if (!c->visible) {
+            _across.keep(*c);
             continue;
         }
 
+        c->measure(ctx);
         auto& t = c->transform;
         float& child_across_size = vertical ? t.size.x : t.size.y;
-        if (align == Align::Stretch) {
-            child_across_size = across_size;
-        }
+        const float natural = _across.natural(*c, child_across_size);
+        child_across_size = align == Align::Stretch ? across_size : natural;
+        _across.record(*c, natural, child_across_size);
 
         float across = across_start;
         if (align == Align::Center) {
@@ -40,6 +69,8 @@ void asw::ui::Stack::layout(Context& ctx)
         c->layout(ctx);
         along += (vertical ? t.size.y : t.size.x) + gap;
     }
+
+    _across.finish();
 }
 
 void asw::ui::Grid::layout(Context& ctx)
@@ -50,9 +81,14 @@ void asw::ui::Grid::layout(Context& ctx)
         = std::max(0.0F, (inner_w - (gap * static_cast<float>(cols - 1))) / static_cast<float>(cols));
 
     std::vector<Widget*> shown;
-    for (auto const& c : children) {
+    std::vector<float> natural_h;
+    for (auto const& c : children()) {
         if (c->visible) {
+            c->measure(ctx);
             shown.push_back(c.get());
+            natural_h.push_back(_heights.natural(*c, c->transform.size.y));
+        } else {
+            _heights.keep(*c);
         }
     }
 
@@ -64,7 +100,7 @@ void asw::ui::Grid::layout(Context& ctx)
         float h = row_height;
         if (h <= 0.0F) {
             for (std::size_t i = first; i < last; ++i) {
-                h = std::max(h, shown[i]->transform.size.y);
+                h = std::max(h, natural_h[i]);
             }
         }
 
@@ -73,11 +109,14 @@ void asw::ui::Grid::layout(Context& ctx)
             auto& t = shown[i]->transform;
             t.position = { transform.position.x + padding + (col * (cell_w + gap)), y };
             t.size = { cell_w, h };
+            _heights.record(*shown[i], natural_h[i], h);
             shown[i]->layout(ctx);
         }
 
         y += h + gap;
     }
+
+    _heights.finish();
 }
 
 bool asw::ui::in_row_with_focusables(const Widget& w)
@@ -95,7 +134,7 @@ bool asw::ui::in_row_with_focusables(const Widget& w)
         return false;
     }
 
-    return std::ranges::any_of(parent->children, [&w](const std::unique_ptr<Widget>& c) {
+    return std::ranges::any_of(parent->children(), [&w](const std::unique_ptr<Widget>& c) {
         return c.get() != &w && c->visible && c->enabled && c->focusable;
     });
 }

@@ -561,26 +561,29 @@ public:
         return Vec2<T>(position.x + (size.x / 2.0F), position.y + (size.y / 2.0F));
     }
 
-    /// @brief Check if a point is inside the rectangle.
+    /// @brief Check if a point is inside the rectangle. The left and top edges
+    /// are inside, the right and bottom edges are not, as for collides, so
+    /// rectangles that share an edge never both contain a point.
     ///
     /// @param point The point to check.
     /// @return bool True if the point is inside the rectangle.
     ///
     bool contains(const Vec2<T>& point) const
     {
-        return point.x >= position.x && point.x <= position.x + size.x && point.y >= position.y
-            && point.y <= position.y + size.y;
+        return contains(point.x, point.y);
     }
 
-    /// @brief Check if coordinates are inside the rectangle.
+    /// @brief Check if coordinates are inside the rectangle. The left and top
+    /// edges are inside, the right and bottom edges are not, as for collides.
     ///
-    /// @param point The point to check.
+    /// @param x The x coordinate to check.
+    /// @param y The y coordinate to check.
     /// @return bool True if the point is inside the rectangle.
     ///
     bool contains(T x, T y) const
     {
-        return x >= position.x && x <= position.x + size.x && y >= position.y
-            && y <= position.y + size.y;
+        return x >= position.x && x < position.x + size.x && y >= position.y
+            && y < position.y + size.y;
     }
 
     /// @brief Check if a rectangle is inside the rectangle.
@@ -606,8 +609,11 @@ public:
     ///
     Vec2<T> closest_point(const Vec2<T>& point) const
     {
-        return Vec2<T>(std::clamp(point.x, position.x, position.x + size.x),
-            std::clamp(point.y, position.y, position.y + size.y));
+        // The size can be negative, clamp between the edges in either order
+        const T x1 = position.x + size.x;
+        const T y1 = position.y + size.y;
+        return Vec2<T>(std::clamp(point.x, std::min(position.x, x1), std::max(position.x, x1)),
+            std::clamp(point.y, std::min(position.y, y1), std::max(position.y, y1)));
     }
 
     /// @brief Get the distance from a point to the edge of the rectangle.
