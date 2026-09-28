@@ -571,9 +571,17 @@ asw::sound::SoundHandle asw::sound::play_positional(
 
 asw::sound::SoundHandle asw::sound::play_at(const asw::Sample& sample, float x, float volume)
 {
+    PlayOptions options;
+    options.volume = volume;
+    return play_at(sample, x, options);
+}
+
+asw::sound::SoundHandle asw::sound::play_at(
+    const asw::Sample& sample, float x, const PlayOptions& options)
+{
     const auto width = static_cast<float>(asw::display::get_logical_size().x);
     if (width <= 0.0F) {
-        return play(sample, volume);
+        return play(sample, options);
     }
 
     // -1 at the left edge, 1 at the right edge
@@ -587,8 +595,10 @@ asw::sound::SoundHandle asw::sound::play_at(const asw::Sample& sample, float x, 
         return {};
     }
 
-    return play(
-        sample, std::clamp(volume * falloff, 0.0F, 1.0F), std::clamp(offset * 0.7F, -1.0F, 1.0F));
+    PlayOptions panned = options;
+    panned.volume = std::clamp(options.volume * falloff, 0.0F, 1.0F);
+    panned.pan = std::clamp(offset * 0.7F, -1.0F, 1.0F);
+    return play(sample, panned);
 }
 
 void asw::sound::set_listener(const Vec2<float>& position, const Vec2<float>& velocity)
