@@ -23,13 +23,18 @@ struct TextCacheKey {
     // Changes when the font's size, style or hinting change
     uint32_t font_generation;
 
+    // Output pixels per logical pixel the text was rendered for, in hundredths
+    uint32_t render_scale;
+
     bool operator==(const TextCacheKey&) const = default;
 };
 
 struct TextCacheEntry {
     asw::Texture texture;
-    int width { 0 };
-    int height { 0 };
+
+    // Size in logical pixels
+    float width { 0.0F };
+    float height { 0.0F };
 };
 
 struct TextCacheKeyHash {
@@ -41,9 +46,38 @@ struct TextCacheKeyHash {
         seed ^= std::hash<uint32_t> { }(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
             + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9
+            + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
+
+// A font resized to render text for a larger output
+struct ScaledFontKey {
+    asw::Font font;
+    uint32_t font_generation;
+    uint32_t render_scale;
+
+    bool operator==(const ScaledFontKey&) const = default;
+};
+
+struct ScaledFontKeyHash {
+    std::size_t operator()(const ScaledFontKey& key) const
+    {
+        std::size_t seed = std::hash<asw::Font> { }(key.font);
+        seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
+            + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9
+            + ((seed << 6) + (seed >> 2));
+        return seed;
+    }
+};
+
+// Scale is stored in hundredths, so 100 is the logical size
+constexpr uint32_t RENDER_SCALE_ONE = 100;
+
+constexpr std::size_t SCALED_FONT_LIMIT = 32;
+std::unordered_map<ScaledFontKey, asw::Font, ScaledFontKeyHash> scaled_fonts;
 
 constexpr std::size_t TEXT_CACHE_LIMIT = 256;
 std::unordered_map<TextCacheKey, TextCacheEntry, TextCacheKeyHash> text_cache;
@@ -52,6 +86,57 @@ uint32_t pack_color(const asw::Color color)
 {
     return (static_cast<uint32_t>(color.r) << 24U) | (static_cast<uint32_t>(color.g) << 16U)
         | (static_cast<uint32_t>(color.b) << 8U) | static_cast<uint32_t>(color.a);
+}
+
+// Output pixels per logical pixel to render text at, in hundredths. Smooth
+// text is rendered at the output resolution so it stays sharp when the window
+// is scaled or on high density displays. Pixel fonts keep their hard pixels
+// at the logical size, and text drawn into a texture is not scaled.
+uint32_t text_render_scale(asw::Renderer* renderer, bool pixel_font)
+{
+    if (pixel_font || SDL_GetRenderTarget(renderer) != nullptr) {
+        return RENDER_SCALE_ONE;
+    }
+
+    const float scale = asw::display::get_scale().x;
+    if (scale <= 1.0F) {
+        return RENDER_SCALE_ONE;
+    }
+
+    return static_cast<uint32_t>(std::lround(scale * static_cast<float>(RENDER_SCALE_ONE)));
+}
+
+// Copy of a font at render_scale times its size. The copy keeps the style and
+// hinting, and leaves the caller's font untouched.
+TTF_Font* get_scaled_font(const asw::Font& font, uint32_t font_generation, uint32_t render_scale)
+{
+    ScaledFontKey key { font, font_generation, render_scale };
+    if (auto it = scaled_fonts.find(key); it != scaled_fonts.end()) {
+        return it->second.get();
+    }
+
+    TTF_Font* copy = TTF_CopyFont(font.get());
+    if (copy == nullptr) {
+        return nullptr;
+    }
+
+    const float scale = static_cast<float>(render_scale) / static_cast<float>(RENDER_SCALE_ONE);
+    if (!TTF_SetFontSize(copy, TTF_GetFontSize(font.get()) * scale)) {
+        TTF_CloseFont(copy);
+        return nullptr;
+    }
+
+    if (scaled_fonts.size() >= SCALED_FONT_LIMIT) {
+        scaled_fonts.clear();
+    }
+
+    asw::Font scaled { copy, [](TTF_Font* f) {
+                          if (TTF_WasInit() > 0) {
+                              TTF_CloseFont(f);
+                          }
+                      } };
+
+    return scaled_fonts.try_emplace(std::move(key), std::move(scaled)).first->second.get();
 }
 
 asw::Texture make_cached_texture(SDL_Texture* texture)
@@ -257,20 +342,35 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         return;
     }
 
+    // Pixel fonts (mono hinting) render without anti-aliasing. Blended
+    // output can still hold partial alpha, solid output never does.
+    const bool pixel_font = TTF_GetFontHinting(font.get()) == TTF_HINTING_MONO;
+    const uint32_t font_generation = TTF_GetFontGeneration(font.get());
+    const uint32_t render_scale = text_render_scale(r, pixel_font);
+
     // Alpha is applied when drawing, so fading text reuses one cached texture
     const auto opaque = asw::Color(color.r, color.g, color.b, 255);
-    TextCacheKey cache_key { r, font, text, pack_color(opaque),
-        TTF_GetFontGeneration(font.get()) };
+    TextCacheKey cache_key { r, font, text, pack_color(opaque), font_generation, render_scale };
     auto cached_text = text_cache.find(cache_key);
     if (cached_text == text_cache.end()) {
-        // Pixel fonts (mono hinting) render without anti-aliasing. Blended
-        // output can still hold partial alpha, solid output never does.
-        const bool pixel_font = TTF_GetFontHinting(font.get()) == TTF_HINTING_MONO;
+        TTF_Font* render_font = font.get();
+        if (render_scale != RENDER_SCALE_ONE) {
+            if (auto* scaled = get_scaled_font(font, font_generation, render_scale);
+                scaled != nullptr) {
+                render_font = scaled;
+            } else {
+                // Could not resize, fall back to scaling the logical size text
+                cache_key.render_scale = RENDER_SCALE_ONE;
+            }
+        }
+
+        const float scale
+            = static_cast<float>(cache_key.render_scale) / static_cast<float>(RENDER_SCALE_ONE);
 
         const auto sdlColor = SDL_Color { color.r, color.g, color.b, 255 };
         SDL_Surface* textSurface = pixel_font
-            ? TTF_RenderText_Solid(font.get(), text.c_str(), 0, sdlColor)
-            : TTF_RenderText_Blended(font.get(), text.c_str(), 0, sdlColor);
+            ? TTF_RenderText_Solid(render_font, text.c_str(), 0, sdlColor)
+            : TTF_RenderText_Blended(render_font, text.c_str(), 0, sdlColor);
 
         if (textSurface == nullptr) {
             return;
@@ -290,10 +390,25 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
             SDL_SetTextureScaleMode(textTexture, SDL_SCALEMODE_LINEAR);
         }
 
+        // Drawn at its logical size, so the extra pixels fill the output.
+        // Glyphs advance slightly differently at the larger size, so use the
+        // logical font's measurements to keep layout the same as
+        // util::get_text_size.
+        float width = static_cast<float>(textSurface->w) / scale;
+        float height = static_cast<float>(textSurface->h) / scale;
+        if (render_font != font.get()) {
+            int logical_w = 0;
+            int logical_h = 0;
+            if (TTF_GetStringSize(font.get(), text.c_str(), 0, &logical_w, &logical_h)) {
+                width = static_cast<float>(logical_w);
+                height = static_cast<float>(logical_h);
+            }
+        }
+
         TextCacheEntry entry {
             make_cached_texture(textTexture),
-            textSurface->w,
-            textSurface->h,
+            width,
+            height,
         };
         SDL_DestroySurface(textSurface);
 
@@ -309,8 +424,8 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     SDL_FRect dest;
     dest.x = position.x;
     dest.y = position.y;
-    dest.w = static_cast<float>(cached_text->second.width);
-    dest.h = static_cast<float>(cached_text->second.height);
+    dest.w = cached_text->second.width;
+    dest.h = cached_text->second.height;
 
     // Justification settings
     if (justify == asw::TextJustify::Center) {
@@ -342,6 +457,7 @@ void asw::draw::text_shadow(const asw::Font& font, const std::string& text,
 void asw::draw::clear_text_cache()
 {
     text_cache.clear();
+    scaled_fonts.clear();
 }
 
 void asw::draw::point(const asw::Vec2<float>& position, asw::Color color)

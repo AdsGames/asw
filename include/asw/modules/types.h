@@ -51,10 +51,12 @@ enum class TextJustify {
 
 /// @brief How a font's glyphs are rendered
 enum class FontStyle {
-    /// Anti-aliased glyphs with linear filtering, for regular fonts.
+    /// Anti-aliased glyphs rendered at the output resolution, for regular
+    /// fonts.
     Smooth,
 
-    /// Hard edged glyphs with nearest filtering, for pixel art fonts.
+    /// Hard edged glyphs rendered at the logical size and scaled with nearest
+    /// filtering, for pixel art fonts.
     Pixel,
 };
 

@@ -92,7 +92,9 @@ void stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Quad<float>&
     const asw::Quad<float>& dest, float angle, bool flip_x = false, bool flip_y = false);
 
 /// @brief Draw text. The position is rounded to whole pixels after
-/// justification so glyphs stay sharp.
+/// justification so glyphs stay sharp. Smooth fonts are rendered at the
+/// output resolution, so text stays sharp when the window is scaled up or on
+/// high density displays.
 ///
 /// @param font The font to use.
 /// @param text The text to draw.
