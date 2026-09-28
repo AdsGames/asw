@@ -4,6 +4,7 @@
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <numbers>
 #include <unordered_map>
@@ -161,6 +162,36 @@ void asw::draw::rotate_sprite(
     SDL_RenderTextureRotated(r, tex.get(), nullptr, &dest, angleDeg, nullptr, SDL_FLIP_NONE);
 }
 
+void asw::draw::stretch_sprite_rotate(
+    const asw::Texture& tex, const asw::Quad<float>& dest, float angle, bool flip_x, bool flip_y)
+{
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr) {
+        return;
+    }
+
+    SDL_FRect r_dest;
+    r_dest.x = dest.position.x;
+    r_dest.y = dest.position.y;
+    r_dest.w = dest.size.x;
+    r_dest.h = dest.size.y;
+
+    // Rad to deg
+    const double angleDeg = angle * (180.0 / std::numbers::pi);
+
+    SDL_FlipMode flip = SDL_FLIP_NONE;
+
+    if (flip_x) {
+        flip = static_cast<SDL_FlipMode>(flip | SDL_FLIP_HORIZONTAL);
+    }
+
+    if (flip_y) {
+        flip = static_cast<SDL_FlipMode>(flip | SDL_FLIP_VERTICAL);
+    }
+
+    SDL_RenderTextureRotated(r, tex.get(), nullptr, &r_dest, angleDeg, nullptr, flip);
+}
+
 void asw::draw::stretch_sprite_blit(
     const asw::Texture& tex, const asw::Quad<float>& source, const asw::Quad<float>& dest)
 {
@@ -185,7 +216,7 @@ void asw::draw::stretch_sprite_blit(
 }
 
 void asw::draw::stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Quad<float>& source,
-    const asw::Quad<float>& dest, float angle)
+    const asw::Quad<float>& dest, float angle, bool flip_x, bool flip_y)
 {
     auto* r = asw::display::get_renderer();
     if (r == nullptr) {
@@ -206,7 +237,16 @@ void asw::draw::stretch_sprite_rotate_blit(const asw::Texture& tex, const asw::Q
 
     const double angleDeg = angle * (180.0 / std::numbers::pi);
 
-    SDL_RenderTextureRotated(r, tex.get(), &r_src, &r_dest, angleDeg, nullptr, SDL_FLIP_NONE);
+    int flip = SDL_FLIP_NONE;
+    if (flip_x) {
+        flip |= SDL_FLIP_HORIZONTAL;
+    }
+    if (flip_y) {
+        flip |= SDL_FLIP_VERTICAL;
+    }
+
+    SDL_RenderTextureRotated(
+        r, tex.get(), &r_src, &r_dest, angleDeg, nullptr, static_cast<SDL_FlipMode>(flip));
 }
 
 void asw::draw::text(const asw::Font& font, const std::string& text,
@@ -288,6 +328,17 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     SDL_RenderTexture(r, cached_text->second.texture.get(), nullptr, &dest);
 }
 
+void asw::draw::text_shadow(const asw::Font& font, const std::string& text,
+    const asw::Vec2<float>& position, asw::Color color, asw::Color shadow,
+    const asw::Vec2<float>& offset, asw::TextJustify justify)
+{
+    shadow.a = static_cast<uint8_t>(
+        (static_cast<float>(shadow.a) * static_cast<float>(color.a)) / 255.0F);
+
+    asw::draw::text(font, text, position + offset, shadow, justify);
+    asw::draw::text(font, text, position, color, justify);
+}
+
 void asw::draw::clear_text_cache()
 {
     text_cache.clear();
@@ -316,7 +367,7 @@ void asw::draw::line(
     SDL_RenderLine(r, position1.x, position1.y, position2.x, position2.y);
 }
 
-void asw::draw::rect(const asw::Quad<float>& position, asw::Color color)
+void asw::draw::rect(const asw::Quad<float>& position, asw::Color color, float thickness)
 {
     auto* r = asw::display::get_renderer();
     if (r == nullptr) {
@@ -324,13 +375,28 @@ void asw::draw::rect(const asw::Quad<float>& position, asw::Color color)
     }
 
     SDL_SetRenderDrawColor(r, color.r, color.g, color.b, color.a);
-    SDL_FRect rect;
-    rect.x = position.position.x;
-    rect.y = position.position.y;
-    rect.w = position.size.x;
-    rect.h = position.size.y;
 
-    SDL_RenderRect(r, &rect);
+    const float x = position.position.x;
+    const float y = position.position.y;
+    const float w = position.size.x;
+    const float h = position.size.y;
+
+    if (thickness <= 1.0F) {
+        const SDL_FRect rect { x, y, w, h };
+        SDL_RenderRect(r, &rect);
+        return;
+    }
+
+    // Four bands inside the quad, the sides fit between the top and bottom
+    const float t = std::min({ thickness, w / 2.0F, h / 2.0F });
+    const std::array<SDL_FRect, 4> bands { {
+        { x, y, w, t },
+        { x, y + h - t, w, t },
+        { x, y + t, t, h - (t * 2.0F) },
+        { x + w - t, y + t, t, h - (t * 2.0F) },
+    } };
+
+    SDL_RenderFillRects(r, bands.data(), static_cast<int>(bands.size()));
 }
 
 void asw::draw::rect_fill(const asw::Quad<float>& position, asw::Color color)
@@ -348,6 +414,44 @@ void asw::draw::rect_fill(const asw::Quad<float>& position, asw::Color color)
     rect.h = position.size.y;
 
     SDL_RenderFillRect(r, &rect);
+}
+
+void asw::draw::rect_fill_rotate(const asw::Quad<float>& position, float angle, asw::Color color)
+{
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr) {
+        return;
+    }
+
+    const auto center = position.get_center();
+    const float half_w = position.size.x / 2.0F;
+    const float half_h = position.size.y / 2.0F;
+    const float cos_a = std::cos(angle);
+    const float sin_a = std::sin(angle);
+
+    // Screen y points down, so this turns clockwise on screen
+    const std::array<SDL_FPoint, 4> corners { {
+        { -half_w, -half_h },
+        { half_w, -half_h },
+        { half_w, half_h },
+        { -half_w, half_h },
+    } };
+
+    const SDL_FColor fcolor { static_cast<float>(color.r) / 255.0F,
+        static_cast<float>(color.g) / 255.0F, static_cast<float>(color.b) / 255.0F,
+        static_cast<float>(color.a) / 255.0F };
+
+    std::array<SDL_Vertex, 4> vertices { };
+    for (std::size_t i = 0; i < corners.size(); i++) {
+        vertices[i].position = { center.x + (corners[i].x * cos_a) - (corners[i].y * sin_a),
+            center.y + (corners[i].x * sin_a) + (corners[i].y * cos_a) };
+        vertices[i].color = fcolor;
+    }
+
+    constexpr std::array<int, 6> indices { 0, 1, 2, 0, 2, 3 };
+
+    SDL_RenderGeometry(r, nullptr, vertices.data(), static_cast<int>(vertices.size()),
+        indices.data(), static_cast<int>(indices.size()));
 }
 
 void asw::draw::circle(const asw::Vec2<float>& position, float radius, asw::Color color)
