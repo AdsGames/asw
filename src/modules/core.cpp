@@ -148,6 +148,8 @@ void asw::core::update()
 
     // After the events, so actions match raw input on the same frame
     asw::input::update_actions();
+
+    asw::sound::_update();
 }
 
 float asw::core::get_delta_time()
