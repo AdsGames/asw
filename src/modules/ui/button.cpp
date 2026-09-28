@@ -11,24 +11,30 @@ void asw::ui::Button::on_focus_changed(Context& ctx, bool focused)
 
 bool asw::ui::Button::on_event(Context& ctx, const UIEvent& e)
 {
-    if (!enabled) {
-        return false;
-    }
-
-    switch (e.type) {
-    case UIEvent::Type::PointerEnter: {
+    // Track hover even while disabled, so the state is right when re-enabled
+    if (e.type == UIEvent::Type::PointerEnter) {
         _hovered = true;
         return false;
     }
-    case UIEvent::Type::PointerLeave: {
+    if (e.type == UIEvent::Type::PointerLeave) {
         _hovered = false;
         _pressed = false;
         return false;
     }
+
+    if (!enabled) {
+        _pressed = false;
+        return false;
+    }
+
+    switch (e.type) {
     case UIEvent::Type::PointerMove: {
         return false;
     }
     case UIEvent::Type::PointerDown: {
+        if (e.mouse_button != asw::input::MouseButton::Left) {
+            return false;
+        }
         if (transform.contains(e.pointer_pos)) {
             _pressed = true;
             ctx.pointer_capture = this;
@@ -38,6 +44,9 @@ bool asw::ui::Button::on_event(Context& ctx, const UIEvent& e)
         return false;
     }
     case UIEvent::Type::PointerUp: {
+        if (e.mouse_button != asw::input::MouseButton::Left) {
+            return false;
+        }
         const bool in = transform.contains(e.pointer_pos);
         const bool wasPressed = _pressed;
         _pressed = false;

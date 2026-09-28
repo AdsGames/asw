@@ -1,6 +1,23 @@
 #include "./asw/modules/ui/root.h"
 
+#include <algorithm>
+
 #include "./asw/modules/input.h"
+
+namespace {
+void collect(asw::ui::Widget& w, std::vector<asw::ui::Widget*>& out)
+{
+    out.push_back(&w);
+    for (auto const& c : w.children) {
+        collect(*c, out);
+    }
+}
+
+bool in_tree(const std::vector<asw::ui::Widget*>& live, const asw::ui::Widget* w)
+{
+    return w == nullptr || std::ranges::find(live, w) != live.end();
+}
+} // namespace
 
 asw::ui::Root::Root()
 {
@@ -22,9 +39,27 @@ void asw::ui::Root::rebuild_focus_if_needed()
     if (!ctx.need_focus_rebuild) {
         return;
     }
+    validate();
+}
+
+void asw::ui::Root::validate()
+{
+    // Widgets can be removed at any time, often from inside a callback, so
+    // drop any pointer that no longer points into the tree before using it
+    _live.clear();
+    collect(root, _live);
+
+    if (!in_tree(_live, ctx.hover)) {
+        ctx.hover = nullptr;
+    }
+    if (!in_tree(_live, ctx.pointer_capture)) {
+        ctx.pointer_capture = nullptr;
+    }
+    if (!in_tree(_live, ctx.focus.focused())) {
+        ctx.focus.forget_focus();
+    }
+
     ctx.focus.rebuild(ctx, root);
-    ctx.hover = nullptr;
-    ctx.pointer_capture = nullptr;
     ctx.need_focus_rebuild = false;
 }
 
@@ -62,12 +97,17 @@ bool asw::ui::Root::dispatch_pointer(const UIEvent& e)
     }
 
     // Let target handle; if not handled, bubble up to parents
+    bool handled = false;
     for (Widget* w = target; w != nullptr; w = w->parent) {
         if (w->on_event(ctx, e)) {
-            return true;
+            handled = true;
+            break;
         }
     }
-    return false;
+
+    // Handlers may have changed the tree
+    validate();
+    return handled;
 }
 
 bool asw::ui::Root::dispatch_to_focused(const UIEvent& e)
@@ -76,20 +116,25 @@ bool asw::ui::Root::dispatch_to_focused(const UIEvent& e)
     if (f == nullptr) {
         return false;
     }
+    bool handled = false;
     for (Widget* w = f; w != nullptr; w = w->parent) {
         if (w->on_event(ctx, e)) {
-            return true;
+            handled = true;
+            break;
         }
     }
-    return false;
+
+    // Handlers may have changed the tree
+    validate();
+    return handled;
 }
 
 void asw::ui::Root::update()
 {
     using namespace asw::input;
 
-    // Rebuild focus list if needed
-    rebuild_focus_if_needed();
+    // Catch tree changes made since the last update
+    validate();
 
     // Arrange
     root.layout(ctx);
@@ -122,24 +167,23 @@ void asw::ui::Root::update()
 
     // --- Button events ---
 
-    // Button Down
-    if (get_mouse_button_down(MouseButton::Left) || get_mouse_button_down(MouseButton::Right)
-        || get_mouse_button_down(MouseButton::Middle)) {
-        const UIEvent e { .type = UIEvent::Type::PointerDown,
-            .pointer_pos = mouse.position,
-            .mouse_button = MouseButton::Left };
-        dispatch_pointer(e);
-        ctx.theme.show_focus = false;
-    }
-
-    // Button Up
-    if (get_mouse_button_up(MouseButton::Left) || get_mouse_button_up(MouseButton::Right)
-        || get_mouse_button_up(MouseButton::Middle)) {
-        const UIEvent e { .type = UIEvent::Type::PointerUp,
-            .pointer_pos = mouse.position,
-            .mouse_button = MouseButton::Left };
-        dispatch_pointer(e);
-        ctx.theme.show_focus = false;
+    // One event per button, carrying the real button so widgets can ignore
+    // the ones they do not use
+    for (const auto button : { MouseButton::Left, MouseButton::Right, MouseButton::Middle }) {
+        if (get_mouse_button_down(button)) {
+            const UIEvent e { .type = UIEvent::Type::PointerDown,
+                .pointer_pos = mouse.position,
+                .mouse_button = button };
+            dispatch_pointer(e);
+            ctx.theme.show_focus = false;
+        }
+        if (get_mouse_button_up(button)) {
+            const UIEvent e { .type = UIEvent::Type::PointerUp,
+                .pointer_pos = mouse.position,
+                .mouse_button = button };
+            dispatch_pointer(e);
+            ctx.theme.show_focus = false;
+        }
     }
 
     // --- Text Input ---

@@ -43,6 +43,14 @@ public:
     ///
     void set_focus(Context& ctx, Widget* w);
 
+    /// @brief Drop the focused widget without notifying it, for when it has
+    /// been removed from the tree and may already be destroyed.
+    ///
+    void forget_focus()
+    {
+        _focused = nullptr;
+    }
+
     /// @brief Move focus to the next focusable widget.
     ///
     /// @param ctx The UI context.

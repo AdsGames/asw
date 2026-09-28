@@ -35,9 +35,16 @@ public:
     ///
     void set_size(float w, float h);
 
-    /// @brief Rebuild the focus list if the tree has changed.
+    /// @brief Rebuild the focus list if need_focus_rebuild is set. The tree
+    /// is also checked automatically every update and after each dispatched
+    /// event, so this is rarely needed.
     ///
     void rebuild_focus_if_needed();
+
+    /// @brief Drop hover, capture and focus pointers to widgets that are no
+    /// longer in the tree, and refresh the focus list.
+    ///
+    void validate();
 
     /// @brief Find the deepest widget at a given pointer position.
     ///
@@ -68,6 +75,9 @@ public:
     /// @brief Draw the UI tree.
     ///
     void draw();
+
+private:
+    std::vector<Widget*> _live;
 };
 
 } // namespace asw::ui

@@ -7,6 +7,47 @@
 #include "./asw/modules/draw.h"
 #include "./asw/modules/util.h"
 
+namespace {
+// UTF-8 continuation bytes look like 10xxxxxx
+bool is_continuation(char c)
+{
+    return (static_cast<unsigned char>(c) & 0xC0) == 0x80;
+}
+
+// Start of the character before pos
+std::size_t prev_char(const std::string& s, std::size_t pos)
+{
+    if (pos == 0) {
+        return 0;
+    }
+    --pos;
+    while (pos > 0 && is_continuation(s[pos])) {
+        --pos;
+    }
+    return pos;
+}
+
+// Start of the character after the one at pos
+std::size_t next_char(const std::string& s, std::size_t pos)
+{
+    if (pos >= s.size()) {
+        return s.size();
+    }
+    ++pos;
+    while (pos < s.size() && is_continuation(s[pos])) {
+        ++pos;
+    }
+    return pos;
+}
+} // namespace
+
+asw::ui::InputBox::~InputBox()
+{
+    if (_focused) {
+        SDL_StopTextInput(asw::display::get_window());
+    }
+}
+
 void asw::ui::InputBox::on_focus_changed(Context& ctx, bool focused)
 {
     _focused = focused;
@@ -22,20 +63,28 @@ void asw::ui::InputBox::on_focus_changed(Context& ctx, bool focused)
 
 bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
 {
+    // value is public and may have been shortened since the last event
+    _cursor_pos = std::min(_cursor_pos, value.size());
+
+    // Track hover even while disabled, so the state is right when re-enabled
+    if (e.type == UIEvent::Type::PointerEnter) {
+        _hovered = true;
+        return false;
+    }
+    if (e.type == UIEvent::Type::PointerLeave) {
+        _hovered = false;
+        return false;
+    }
+
     if (!enabled) {
         return false;
     }
 
     switch (e.type) {
-    case UIEvent::Type::PointerEnter: {
-        _hovered = true;
-        return false;
-    }
-    case UIEvent::Type::PointerLeave: {
-        _hovered = false;
-        return false;
-    }
     case UIEvent::Type::PointerDown: {
+        if (e.mouse_button != asw::input::MouseButton::Left) {
+            return false;
+        }
         if (transform.contains(e.pointer_pos)) {
             ctx.pointer_capture = this;
             ctx.focus.set_focus(ctx, this);
@@ -61,8 +110,10 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
     case UIEvent::Type::KeyDown: {
         if (e.key == asw::input::Key::Backspace) {
             if (_cursor_pos > 0) {
-                value.erase(_cursor_pos - 1, 1);
-                _cursor_pos--;
+                // Whole characters, not single bytes of a UTF-8 sequence
+                const auto start = prev_char(value, _cursor_pos);
+                value.erase(start, _cursor_pos - start);
+                _cursor_pos = start;
                 if (on_change) {
                     on_change(value);
                 }
@@ -71,7 +122,7 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
         }
         if (e.key == asw::input::Key::Delete) {
             if (_cursor_pos < value.size()) {
-                value.erase(_cursor_pos, 1);
+                value.erase(_cursor_pos, next_char(value, _cursor_pos) - _cursor_pos);
                 if (on_change) {
                     on_change(value);
                 }
@@ -79,15 +130,11 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
             return true;
         }
         if (e.key == asw::input::Key::Left) {
-            if (_cursor_pos > 0) {
-                _cursor_pos--;
-            }
+            _cursor_pos = prev_char(value, _cursor_pos);
             return true;
         }
         if (e.key == asw::input::Key::Right) {
-            if (_cursor_pos < value.size()) {
-                _cursor_pos++;
-            }
+            _cursor_pos = next_char(value, _cursor_pos);
             return true;
         }
         if (e.key == asw::input::Key::Home) {
@@ -150,6 +197,7 @@ void asw::ui::InputBox::draw(Context& ctx)
     }
 
     // Cursor
+    _cursor_pos = std::min(_cursor_pos, value.size());
     if (_focused && font != nullptr) {
         const auto before_cursor = value.substr(0, _cursor_pos);
         float cursor_x = transform.position.x + text_padding;

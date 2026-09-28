@@ -29,6 +29,13 @@ public:
         focusable = true;
     }
 
+    /// @brief Stops text input if the box is destroyed while focused.
+    ///
+    ~InputBox() override;
+
+    InputBox(const InputBox&) = delete;
+    InputBox& operator=(const InputBox&) = delete;
+
     /// @brief Callback invoked when the value changes.
     std::function<void(const std::string&)> on_change;
 
