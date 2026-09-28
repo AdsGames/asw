@@ -1,13 +1,15 @@
 #include "./asw/modules/log.h"
 
+#include <array>
 #include <chrono>
+#include <ctime>
 
 #ifdef __EMSCRIPTEN__
 #include <emscripten.h>
 #endif
 
 namespace {
-asw::log::Level current_level = asw::log::Level::INFO;
+asw::log::Level current_level = asw::log::Level::Info;
 std::ostream* output = &std::cerr;
 
 const char* level_to_string(asw::log::Level level)
@@ -15,13 +17,13 @@ const char* level_to_string(asw::log::Level level)
     using enum asw::log::Level;
 
     switch (level) {
-    case DEBUG:
+    case Debug:
         return "DEBUG";
-    case INFO:
+    case Info:
         return "INFO ";
-    case WARN:
+    case Warn:
         return "WARN ";
-    case ERROR:
+    case Error:
         return "ERROR";
     }
     return "?????";
@@ -90,22 +92,38 @@ AnsiCode level_to_ansi(asw::log::Level level)
     using enum asw::log::Level;
 
     switch (level) {
-    case DEBUG:
+    case Debug:
         return AnsiCode::TextBrightCyan;
-    case INFO:
+    case Info:
         return AnsiCode::TextBrightWhite;
-    case WARN:
+    case Warn:
         return AnsiCode::TextBrightYellow;
-    case ERROR:
+    case Error:
         return AnsiCode::TextBrightRed;
     }
     return AnsiCode::Reset;
 }
 
+// Local wall clock time with milliseconds. Formatting a system_clock time
+// point directly prints UTC.
 std::string get_timestamp()
 {
-    auto now = std::chrono::system_clock::now();
-    return std::format("{:%H:%M:%S}", now);
+    const auto now = std::chrono::system_clock::now();
+    const std::time_t seconds = std::chrono::system_clock::to_time_t(now);
+    const auto millis
+        = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count()
+        % 1000;
+
+    std::tm local {};
+#ifdef _WIN32
+    localtime_s(&local, &seconds);
+#else
+    localtime_r(&seconds, &local);
+#endif
+
+    std::array<char, 16> clock {};
+    std::strftime(clock.data(), clock.size(), "%H:%M:%S", &local);
+    return std::format("{}.{:03}", clock.data(), millis);
 }
 } // namespace
 
@@ -118,16 +136,16 @@ void asw::log::log_message(asw::log::Level level, const std::string& message)
 #ifdef __EMSCRIPTEN__
     int emLevel = EM_LOG_CONSOLE;
     switch (level) {
-    case asw::log::Level::DEBUG:
+    case asw::log::Level::Debug:
         emLevel = EM_LOG_CONSOLE;
         break;
-    case asw::log::Level::INFO:
+    case asw::log::Level::Info:
         emLevel = EM_LOG_CONSOLE;
         break;
-    case asw::log::Level::WARN:
+    case asw::log::Level::Warn:
         emLevel = EM_LOG_WARN;
         break;
-    case asw::log::Level::ERROR:
+    case asw::log::Level::Error:
         emLevel = EM_LOG_ERROR;
         break;
     }
@@ -162,22 +180,22 @@ void asw::log::set_output(std::ostream& stream)
 
 void asw::log::debug(const std::string& message)
 {
-    log_message(Level::DEBUG, message);
+    log_message(Level::Debug, message);
 }
 
 void asw::log::info(const std::string& message)
 {
-    log_message(Level::INFO, message);
+    log_message(Level::Info, message);
 }
 
 void asw::log::warn(const std::string& message)
 {
-    log_message(Level::WARN, message);
+    log_message(Level::Warn, message);
 }
 
 void asw::log::error(const std::string& message)
 {
-    log_message(Level::ERROR, message);
+    log_message(Level::Error, message);
 }
 
 void asw::log::progress(float progress, std::string message)
@@ -194,5 +212,5 @@ void asw::log::progress(float progress, std::string message)
 
     const std::string progress_message
         = std::format("[{}] {:>3}% {}", bar, static_cast<int>(progress * 100.0f), message);
-    log_message(Level::INFO, progress_message);
+    log_message(Level::Info, progress_message);
 }
