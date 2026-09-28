@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ASW_WEB_TITLE@</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: @ASW_WEB_BACKGROUND@;
+      }
+
+      /* The canvas fills the page. SDL resizes the game window to match, and
+         ASW letterboxes the game inside it, so the aspect ratio and mouse
+         position stay correct at any size. */
+      #canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        outline: none;
+      }
+
+      #status {
+        position: absolute;
+        padding: 8px 14px;
+        border-radius: 6px;
+        background: rgba(0, 0, 0, 0.6);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #9aa0a6;
+        font: 14px system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="status">Loading…</div>
+    {{{ SCRIPT }}}
+  </body>
+</html>

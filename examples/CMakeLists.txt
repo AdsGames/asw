@@ -43,16 +43,18 @@ if(EMSCRIPTEN)
   foreach(target IN LISTS ASW_EXAMPLE_TARGETS)
     get_target_property(example_dir ${target} SOURCE_DIR)
 
-    set_target_properties(${target} PROPERTIES SUFFIX ".html")
-    target_link_options(${target} PRIVATE
-      "--shell-file=${ASW_EXAMPLES_DIR}/web/shell.html"
-      "--preload-file=${ASW_EXAMPLES_DIR}/assets@/assets"
-      "-sALLOW_MEMORY_GROWTH=1"
-      "-sEXPORTED_RUNTIME_METHODS=ENV"
-    )
+    set(assets ${ASW_EXAMPLES_DIR}/assets)
     if(EXISTS ${example_dir}/assets)
-      target_link_options(${target} PRIVATE "--preload-file=${example_dir}/assets@/assets")
+      list(APPEND assets ${example_dir}/assets)
     endif()
-    set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS ${ASW_EXAMPLES_DIR}/web/shell.html)
+
+    asw_add_web_target(${target}
+      TITLE "ASW example"
+      BACKGROUND "#111318"
+      OUTPUT_NAME ${target}
+      ASSETS ${assets}
+      PRE_JS ${ASW_EXAMPLES_DIR}/web/autorun.js
+    )
+    target_link_options(${target} PRIVATE "-sEXPORTED_RUNTIME_METHODS=ENV")
   endforeach()
 endif()

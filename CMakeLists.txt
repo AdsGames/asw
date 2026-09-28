@@ -21,6 +21,9 @@ if(PROJECT_IS_TOP_LEVEL AND NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYP
   set(CMAKE_BUILD_TYPE ${DEFAULT_BUILD_TYPE} CACHE STRING "Build type" FORCE)
 endif()
 
+# asw_add_web_target() for web builds of games
+include(web/AswWeb.cmake)
+
 # Install rules for a find_package(asw) package, off by default
 option(ASW_INSTALL "Install asw and the SDL libraries it links" OFF)
 
@@ -119,6 +122,9 @@ if(ASW_INSTALL)
   )
 
   install(DIRECTORY include/ DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+  install(FILES web/AswWeb.cmake web/asw-web.js web/shell.html
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+  )
 
   # freetype's installed config does not find the libraries it links, so the
   # asw config finds the ones freetype was built with
