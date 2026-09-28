@@ -151,6 +151,10 @@ public:
     /// @brief Whether this widget currently holds focus.
     bool is_focused() const { return _focused; }
 
+    /// @brief Whether this widget was pressed and the pointer is still held,
+    /// even if it has moved off the widget.
+    bool is_captured() const { return _captured; }
+
     /// @brief Whether to draw the hover look: hovered, pressed, or focused
     /// while focus is shown.
     ///
@@ -167,6 +171,7 @@ protected:
     bool _hovered = false;
     bool _pressed = false;
     bool _focused = false;
+    bool _captured = false;
 
 private:
     static inline int _id_counter { 1 };

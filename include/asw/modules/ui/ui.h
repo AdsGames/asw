@@ -11,15 +11,18 @@
 
 #include "button.h"
 #include "checkbox.h"
+#include "choice.h"
 #include "context.h"
 #include "event.h"
+#include "image.h"
 #include "input_box.h"
 #include "label.h"
+#include "layout.h"
 #include "navigation.h"
 #include "panel.h"
 #include "root.h"
+#include "slider.h"
 #include "theme.h"
-#include "vbox.h"
 #include "widget.h"
 
 #endif // ASW_MODULES_UI_UI_H

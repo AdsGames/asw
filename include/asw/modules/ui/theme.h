@@ -136,6 +136,32 @@ struct InputStyle {
     asw::Color caret { 255, 255, 255, 255 };
 };
 
+/// @brief How a slider looks. Set on Theme::slider for every slider, or on
+/// Slider::style for one slider.
+///
+struct SliderStyle {
+    /// @brief Track color.
+    asw::Color track { 55, 55, 55, 255 };
+
+    /// @brief Color of the track up to the value.
+    asw::Color fill { 255, 200, 80, 255 };
+
+    /// @brief Knob color.
+    asw::Color knob { 200, 200, 200, 255 };
+
+    /// @brief Knob color while hovered, pressed, or focused with focus shown.
+    asw::Color knob_hover { 255, 255, 255, 255 };
+
+    /// @brief Knob and fill color while disabled.
+    asw::Color disabled { 90, 90, 90, 255 };
+
+    /// @brief Track height in pixels, centred in the widget.
+    float track_height = 4.0F;
+
+    /// @brief Knob width in pixels. The knob is as tall as the widget.
+    float knob_width = 10.0F;
+};
+
 /// @brief The ring drawn around the focused widget during keyboard or
 /// controller navigation.
 ///
@@ -159,8 +185,11 @@ struct Theme {
     /// @brief Dimmed text color.
     asw::Color text_dim { 200, 200, 200, 255 };
 
-    /// @brief Panel background color, also used for the root panel.
+    /// @brief Panel background color.
     asw::Color panel_bg { 30, 30, 30, 255 };
+
+    /// @brief Font for widgets that do not set their own.
+    asw::Font font;
 
     /// @brief Default button style.
     ButtonStyle button {};
@@ -171,6 +200,9 @@ struct Theme {
     /// @brief Default input box style.
     InputStyle input {};
 
+    /// @brief Default slider style.
+    SliderStyle slider {};
+
     /// @brief Focus ring style.
     FocusRingStyle focus_ring {};
 
@@ -179,7 +211,25 @@ struct Theme {
 
     /// @brief Default gap between elements.
     float gap = 8.0f;
+
+    /// @brief Played on the UI bus when navigation moves focus. Optional.
+    asw::Sample sound_move;
+
+    /// @brief Played on the UI bus when a widget is clicked or activated.
+    /// Optional.
+    asw::Sample sound_activate;
 };
+
+/// @brief The font a widget draws with: its own, or the theme font.
+///
+/// @param own The widget's font, may be empty.
+/// @param theme The theme.
+/// @return The font to use, may be empty if neither is set.
+///
+inline const asw::Font& pick_font(const asw::Font& own, const Theme& theme)
+{
+    return own != nullptr ? own : theme.font;
+}
 
 /// @brief Draw a focus ring around a widget.
 ///

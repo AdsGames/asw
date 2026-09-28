@@ -5,6 +5,7 @@
 #include "./asw/modules/action.h"
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
+#include "./asw/modules/sound.h"
 
 namespace {
 void collect(asw::ui::Widget& w, std::vector<asw::ui::Widget*>& out)
@@ -22,6 +23,15 @@ bool in_tree(const std::vector<asw::ui::Widget*>& live, const asw::ui::Widget* w
 
 // The widget a pointer acts on: the nearest focusable widget at or above
 // the hit, so a label inside a button still presses the button
+void play_ui_sound(const asw::Sample& sample)
+{
+    if (sample != nullptr) {
+        asw::sound::PlayOptions options;
+        options.bus = asw::sound::Bus::Ui;
+        asw::sound::play(sample, options);
+    }
+}
+
 asw::ui::Widget* interactive(asw::ui::Widget* hit)
 {
     for (auto* w = hit; w != nullptr; w = w->parent) {
@@ -155,6 +165,7 @@ bool asw::ui::Root::dispatch_to_focused(const UIEvent& e)
 void asw::ui::Root::activate(Widget& w)
 {
     if (w.enabled) {
+        play_ui_sound(ctx.theme.sound_activate);
         w.activate(ctx);
         _used = true;
     }
@@ -212,6 +223,7 @@ void asw::ui::Root::update_pointer()
             if (left && ctx.hover != nullptr && ctx.hover->enabled) {
                 ctx.pointer_capture = ctx.hover;
                 ctx.hover->_pressed = true;
+                ctx.hover->_captured = true;
                 ctx.focus.set_focus(ctx, ctx.hover);
             }
 
@@ -234,6 +246,7 @@ void asw::ui::Root::update_pointer()
             if (pressed != nullptr) {
                 const bool over = pressed == ctx.hover;
                 pressed->_pressed = false;
+                pressed->_captured = false;
                 ctx.pointer_capture = nullptr;
                 if (over) {
                     activate(*pressed);
@@ -262,6 +275,7 @@ void asw::ui::Root::update_keys()
 
     // --- Focus Events ---
     const auto& nav = ctx.navigation;
+    Widget* const focused_before = ctx.focus.focused();
 
     // An action when one is named, else the built in key
     const auto pressed = [](const std::string& action, Key key) {
@@ -300,6 +314,10 @@ void asw::ui::Root::update_keys()
     direction(nav.down, Key::Down, 0, +1);
     direction(nav.left, Key::Left, -1, 0);
     direction(nav.right, Key::Right, +1, 0);
+
+    if (ctx.focus.focused() != focused_before) {
+        play_ui_sound(ctx.theme.sound_move);
+    }
 
     // Editing keys dispatched to focused widget
     for (const auto key : { Key::Backspace, Key::Delete, Key::Home, Key::End }) {

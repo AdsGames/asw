@@ -139,6 +139,7 @@ void asw::ui::InputBox::draw(Context& ctx)
     constexpr float text_padding = 4.0F;
 
     const auto& s = get_style(ctx);
+    const auto& f = pick_font(font, ctx.theme);
 
     // Background
     asw::draw::rect_fill(transform, enabled ? s.bg : s.bg_disabled);
@@ -162,26 +163,26 @@ void asw::ui::InputBox::draw(Context& ctx)
     const auto display_text = value.empty() ? placeholder : value;
     const auto display_color = value.empty() ? s.placeholder : s.text;
 
-    if (!display_text.empty() && font != nullptr) {
-        const auto text_size = asw::util::get_text_size(font, display_text);
+    if (!display_text.empty() && f != nullptr) {
+        const auto text_size = asw::util::get_text_size(f, display_text);
         const float text_y = transform.position.y + ((transform.size.y - text_size.y) / 2.0F);
         const asw::Vec2 text_pos { transform.position.x + text_padding, text_y };
 
-        asw::draw::text(font, display_text, text_pos, display_color);
+        asw::draw::text(f, display_text, text_pos, display_color);
     }
 
     // Cursor
     _cursor_pos = std::min(_cursor_pos, value.size());
-    if (_focused && font != nullptr) {
+    if (_focused && f != nullptr) {
         const auto before_cursor = value.substr(0, _cursor_pos);
         float cursor_x = transform.position.x + text_padding;
 
         if (!before_cursor.empty()) {
-            const auto size = asw::util::get_text_size(font, before_cursor);
+            const auto size = asw::util::get_text_size(f, before_cursor);
             cursor_x += static_cast<float>(size.x);
         }
 
-        const auto text_height = asw::util::get_text_size(font, "|");
+        const auto text_height = asw::util::get_text_size(f, "|");
         const float cursor_y = transform.position.y
             + ((transform.size.y - static_cast<float>(text_height.y)) / 2.0F);
 
