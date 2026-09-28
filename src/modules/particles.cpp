@@ -75,6 +75,16 @@ void ParticleEmitter::update(float dt)
 
 void ParticleEmitter::draw()
 {
+    draw_offset(Vec2<float>(0.0F, 0.0F));
+}
+
+void ParticleEmitter::draw(const Camera& camera)
+{
+    draw_offset(camera.get_view().position);
+}
+
+void ParticleEmitter::draw_offset(const Vec2<float>& offset)
+{
     // Sentinel: the first textured particle always pushes its alpha, so the
     // emitter never assumes what the shared texture was left at.
     float last_alpha = -1.0F;
@@ -89,8 +99,8 @@ void ParticleEmitter::draw()
         const float alpha = util::lerp(config.alpha_start, config.alpha_end, t);
 
         if (config.texture != nullptr) {
-            const auto dest = Quad<float>(
-                p.position.x - (size / 2.0F), p.position.y - (size / 2.0F), size, size);
+            const auto dest = Quad<float>(p.position.x - offset.x - (size / 2.0F),
+                p.position.y - offset.y - (size / 2.0F), size, size);
 
             if (alpha != last_alpha) {
                 draw::set_alpha(config.texture, alpha);
@@ -111,7 +121,7 @@ void ParticleEmitter::draw()
 
             const Color color { r, g, b, a };
 
-            draw::circle_fill(p.position, size / 2.0F, color);
+            draw::circle_fill(p.position - offset, size / 2.0F, color);
         }
     }
 

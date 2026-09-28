@@ -5,6 +5,7 @@
 
 #include "./modules/action.h"
 #include "./modules/assets.h"
+#include "./modules/camera.h"
 #include "./modules/color.h"
 #include "./modules/core.h"
 #include "./modules/dialog.h"
@@ -19,6 +20,7 @@
 #include "./modules/random.h"
 #include "./modules/scene.h"
 #include "./modules/sound.h"
+#include "./modules/sprite_sheet.h"
 #include "./modules/types.h"
 #include "./modules/ui/ui.h"
 #include "./modules/util.h"
