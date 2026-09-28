@@ -189,10 +189,10 @@ asw::Font asw::assets::load_font(const std::string& filename, float size, asw::F
         TTF_SetFontHinting(temp, TTF_HINTING_MONO);
     }
 
-    // Use renderer as proxy for "SDL still alive" - renderer is nulled in
-    // display::_shutdown() before TTF_Quit() is called.
+    // Only close while SDL_ttf is running. Checking the renderer instead
+    // leaked every font in OpenGL mode, which has no renderer.
     return { temp, [](TTF_Font* f) {
-                if (asw::display::get_renderer() != nullptr) {
+                if (TTF_WasInit() > 0) {
                     TTF_CloseFont(f);
                 }
             } };

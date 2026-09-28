@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <SDL3_ttf/SDL_ttf.h>
 #include <unordered_map>
 
 #include "./asw/modules/log.h"
@@ -11,6 +12,9 @@ struct TextSizeCacheKey {
     asw::Font font;
     std::string text;
 
+    // Changes when the font's size, style or hinting change
+    uint32_t font_generation;
+
     bool operator==(const TextSizeCacheKey&) const = default;
 };
 
@@ -19,6 +23,8 @@ struct TextSizeCacheKeyHash {
     {
         std::size_t seed = std::hash<asw::Font> {}(key.font);
         seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> {}(key.font_generation) + 0x9e3779b9
+            + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
@@ -47,7 +53,7 @@ asw::Vec2<int> asw::util::get_text_size(const asw::Font& font, const std::string
         return {};
     }
 
-    const TextSizeCacheKey cache_key { font, text };
+    const TextSizeCacheKey cache_key { font, text, TTF_GetFontGeneration(font.get()) };
     if (auto it = text_size_cache.find(cache_key); it != text_size_cache.end()) {
         return it->second;
     }

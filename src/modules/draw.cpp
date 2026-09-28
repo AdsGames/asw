@@ -3,9 +3,11 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
+#include <algorithm>
 #include <cmath>
 #include <numbers>
 #include <unordered_map>
+#include <vector>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
@@ -16,6 +18,9 @@ struct TextCacheKey {
     asw::Font font;
     std::string text;
     uint32_t color;
+
+    // Changes when the font's size, style or hinting change
+    uint32_t font_generation;
 
     bool operator==(const TextCacheKey&) const = default;
 };
@@ -33,6 +38,8 @@ struct TextCacheKeyHash {
         seed ^= std::hash<asw::Font> { }(key.font) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         seed ^= std::hash<std::string> { }(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         seed ^= std::hash<uint32_t> { }(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
+            + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
@@ -212,7 +219,8 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
 
     // Alpha is applied when drawing, so fading text reuses one cached texture
     const auto opaque = asw::Color(color.r, color.g, color.b, 255);
-    TextCacheKey cache_key { r, font, text, pack_color(opaque) };
+    TextCacheKey cache_key { r, font, text, pack_color(opaque),
+        TTF_GetFontGeneration(font.get()) };
     auto cached_text = text_cache.find(cache_key);
     if (cached_text == text_cache.end()) {
         // Pixel fonts (mono hinting) render without anti-aliasing. Blended
@@ -386,26 +394,24 @@ void asw::draw::circle_fill(const asw::Vec2<float>& position, float radius, asw:
 
     SDL_SetRenderDrawColor(r, color.r, color.g, color.b, color.a);
 
-    // Midpoint circle with horizontal scanlines — no gaps, no trig
-    float x = radius;
-    float y = 0.0F;
-    float err = 1.0F - x;
-    const float cx = position.x;
-    const float cy = position.y;
+    // One span per pixel row, all sent in a single call. Snapping the centre
+    // to a whole pixel keeps every row on the pixel grid, so a centre between
+    // pixels leaves no gaps, and no row is drawn twice, so translucent circles
+    // blend evenly.
+    const float cx = std::round(position.x);
+    const float cy = std::round(position.y);
+    const int rows = static_cast<int>(radius);
 
-    while (x >= y) {
-        SDL_RenderLine(r, cx - x, cy + y, cx + x, cy + y);
-        SDL_RenderLine(r, cx - x, cy - y, cx + x, cy - y);
-        SDL_RenderLine(r, cx - y, cy + x, cx + y, cy + x);
-        SDL_RenderLine(r, cx - y, cy - x, cx + y, cy - x);
-        y++;
-        if (err < 0) {
-            err += (2.0F * y) + 1.0F;
-        } else {
-            x--;
-            err += (2.0F * (y - x)) + 1.0F;
-        }
+    static std::vector<SDL_FRect> spans;
+    spans.clear();
+
+    for (int dy = -rows; dy <= rows; ++dy) {
+        const auto fy = static_cast<float>(dy);
+        const float half = std::floor(std::sqrt(std::max((radius * radius) - (fy * fy), 0.0F)));
+        spans.push_back({ cx - half, cy + fy, (half * 2.0F) + 1.0F, 1.0F });
     }
+
+    SDL_RenderFillRects(r, spans.data(), static_cast<int>(spans.size()));
 }
 
 void asw::draw::set_blend_mode(const asw::Texture& texture, asw::BlendMode mode)
