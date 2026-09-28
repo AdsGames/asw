@@ -216,7 +216,9 @@ void asw::ui::InputBox::draw(Context& ctx)
     SDL_SetRenderClipRect(asw::display::get_renderer(), nullptr);
 
     // Focus ring
-    draw_focus_ring(ctx.theme, transform, _focused);
+    if (_focused && ctx.show_focus) {
+        draw_focus_ring(ctx.theme.focus_ring, transform);
+    }
 
     Widget::draw(ctx);
 }

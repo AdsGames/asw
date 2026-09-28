@@ -179,19 +179,14 @@ struct Theme {
 
     /// @brief Default gap between elements.
     float gap = 8.0f;
-
-    /// @brief Show focus rings around focused widgets. Enabled by default when using keyboard
-    /// navigation.
-    bool show_focus = false;
 };
 
-/// @brief Draw the focus ring around a widget if focus is shown.
+/// @brief Draw a focus ring around a widget.
 ///
-/// @param theme The theme.
+/// @param style The ring style.
 /// @param bounds The widget bounds.
-/// @param focused Whether the widget is focused.
 ///
-void draw_focus_ring(const Theme& theme, const asw::Quad<float>& bounds, bool focused);
+void draw_focus_ring(const FocusRingStyle& style, const asw::Quad<float>& bounds);
 
 } // namespace asw::ui
 

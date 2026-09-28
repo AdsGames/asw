@@ -34,7 +34,11 @@ public:
     /// handle it, e.g. to leave a menu.
     std::function<void()> on_back;
 
-    /// @brief Set the size of the root panel.
+    /// @brief Keep the root panel the size of the logical screen. Turned off
+    /// by set_size.
+    bool auto_size = true;
+
+    /// @brief Set a fixed size for the root panel.
     ///
     /// @param w The width.
     /// @param h The height.
@@ -83,6 +87,8 @@ public:
     void draw();
 
 private:
+    void fit_to_screen();
+
     std::vector<Widget*> _live;
 };
 
