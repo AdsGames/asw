@@ -9,7 +9,9 @@
 #ifndef ASW_GEOMETRY_H
 #define ASW_GEOMETRY_H
 
+#include <algorithm>
 #include <cmath>
+#include <type_traits>
 
 namespace asw {
 
@@ -20,6 +22,10 @@ namespace asw {
 ///
 template <typename T> class Vec2 {
 public:
+    /// @brief Type used for lengths and angles. Integer vectors use float so
+    /// results are not truncated.
+    using Real = std::conditional_t<std::is_floating_point_v<T>, T, float>;
+
     /// @brief Default constructor for the Vec2 class.
     ///
     Vec2() = default;
@@ -39,30 +45,30 @@ public:
     ///
     /// @return The angle of the vector in radians.
     ///
-    T angle(const Vec2& other) const
+    Real angle(const Vec2& other) const
     {
-        return std::atan2(y - other.y, x - other.x);
+        return std::atan2(static_cast<Real>(y - other.y), static_cast<Real>(x - other.x));
     }
 
     /// @brief Calculate the angle of the vector.
     ///
     /// @return T The angle of the vector in radians.
     ///
-    T angle() const
+    Real angle() const
     {
         if (x == 0 && y == 0) {
             return 0;
         }
-        return std::atan2(y, x);
+        return std::atan2(static_cast<Real>(y), static_cast<Real>(x));
     }
 
     /// @brief Get distance between two vectors
     ///
     /// @return The distance between the vectors.
     ///
-    T distance(const Vec2& other) const
+    Real distance(const Vec2& other) const
     {
-        return std::hypot(x - other.x, y - other.y);
+        return std::hypot(static_cast<Real>(x - other.x), static_cast<Real>(y - other.y));
     }
 
     /// @brief Calculate the dot product of two vectors.
@@ -89,9 +95,9 @@ public:
     ///
     /// @return T The magnitude of the vector.
     ///
-    T magnitude() const
+    Real magnitude() const
     {
-        return std::sqrt((x * x) + (y * y));
+        return std::sqrt(static_cast<Real>((x * x) + (y * y)));
     }
 
     /// @brief Addition operator for the Vec2 class.
@@ -225,6 +231,10 @@ public:
 ///
 template <typename T> class Vec3 {
 public:
+    /// @brief Type used for lengths and angles. Integer vectors use float so
+    /// results are not truncated.
+    using Real = std::conditional_t<std::is_floating_point_v<T>, T, float>;
+
     /// @brief Default constructor for the Vec3 class.
     ///
     Vec3() = default;
@@ -246,21 +256,26 @@ public:
     ///
     /// @return The angle of the vector in radians.
     ///
-    T angle(const Vec3& other) const
+    Real angle(const Vec3& other) const
     {
-        T dot_product = dot(other);
-        T magnitudes = magnitude() * other.magnitude();
-        return std::acos(dot_product / magnitudes);
+        const auto magnitudes = magnitude() * other.magnitude();
+        if (magnitudes == Real(0)) {
+            return 0;
+        }
+
+        // Rounding can push the ratio just past 1, which acos turns into NaN
+        const auto ratio = static_cast<Real>(dot(other)) / magnitudes;
+        return std::acos(std::clamp(ratio, Real(-1), Real(1)));
     }
 
     /// @brief Get distance between two vectors.
     ///
     /// @return The distance between the vectors.
     ///
-    T distance(const Vec3& other) const
+    Real distance(const Vec3& other) const
     {
-        return std::sqrt((x - other.x) * (x - other.x) + (y - other.y) * (y - other.y)
-            + (z - other.z) * (z - other.z));
+        return std::sqrt(static_cast<Real>((x - other.x) * (x - other.x)
+            + (y - other.y) * (y - other.y) + (z - other.z) * (z - other.z)));
     }
 
     /// @brief Calculate the dot product of two vectors.
@@ -286,11 +301,11 @@ public:
 
     /// @brief Calculate the magnitude of the vector.
     ///
-    /// @return T The magnitude of the vector.
+    /// @return The magnitude of the vector.
     ///
-    T magnitude() const
+    Real magnitude() const
     {
-        return std::sqrt((x * x) + (y * y) + (z * z));
+        return std::sqrt(static_cast<Real>((x * x) + (y * y) + (z * z)));
     }
 
     /// @brief Addition operator for the Vec3 class.
@@ -553,20 +568,20 @@ public:
             && position.x + size.x > other.position.x + other.size.x;
     }
 
-    /// @brief Add a vector to the rectangle.
+    /// @brief Add another rectangle's position and size to this one.
     ///
-    /// @param vec The vector to add.
-    /// @return Quad The rectangle with the vector added.
+    /// @param quad The rectangle to add.
+    /// @return Quad The rectangle with both position and size added.
     ///
     Quad operator+(const Quad<T>& quad) const
     {
         return Quad(position + quad.position, size + quad.size);
     }
 
-    /// @brief Subtract a vector from the rectangle.
+    /// @brief Subtract another rectangle's position and size from this one.
     ///
-    /// @param vec The vector to subtract.
-    /// @return Quad The rectangle with the vector subtracted.
+    /// @param quad The rectangle to subtract.
+    /// @return Quad The rectangle with both position and size subtracted.
     ///
     Quad operator-(const Quad<T>& quad) const
     {

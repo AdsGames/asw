@@ -3,12 +3,26 @@
 
 #include <SDL3/SDL.h>
 
+#include <algorithm>
+#include <cctype>
+#include <cmath>
 #include <string>
 
 namespace asw {
 /// @brief RGBA color struct with 8-bit channels.
 ///
 struct Color {
+    /// @brief Round a 0-255 channel value and clamp it into range. Casting an
+    /// out of range float straight to uint8_t is undefined.
+    ///
+    /// @param value The channel value.
+    /// @return The channel as a byte.
+    ///
+    static uint8_t to_channel(float value)
+    {
+        return static_cast<uint8_t>(std::lround(std::clamp(value, 0.0F, 255.0F)));
+    }
+
     uint8_t r;
     uint8_t g;
     uint8_t b;
@@ -48,8 +62,8 @@ struct Color {
     ///
     static Color from_float(float r, float g, float b, float a = 1.0F)
     {
-        return { static_cast<uint8_t>(r * 255), static_cast<uint8_t>(g * 255),
-            static_cast<uint8_t>(b * 255), static_cast<uint8_t>(a * 255) };
+        return { to_channel(r * 255.0F), to_channel(g * 255.0F), to_channel(b * 255.0F),
+            to_channel(a * 255.0F) };
     }
 
     /// @brief From a hex string (e.g. "#RRGGBBAA") to a Color.
@@ -63,13 +77,20 @@ struct Color {
             return Color(); // Invalid format, return default color
         }
 
-        uint8_t r = std::stoi(hex.substr(1, 2), nullptr, 16);
-        uint8_t g = std::stoi(hex.substr(3, 2), nullptr, 16);
-        uint8_t b = std::stoi(hex.substr(5, 2), nullptr, 16);
+        // std::stoi throws on bad digits, so check them first
+        const bool digits_ok = std::all_of(hex.begin() + 1, hex.end(),
+            [](char c) { return std::isxdigit(static_cast<unsigned char>(c)) != 0; });
+        if (!digits_ok) {
+            return Color();
+        }
+
+        const auto r = static_cast<uint8_t>(std::stoi(hex.substr(1, 2), nullptr, 16));
+        const auto g = static_cast<uint8_t>(std::stoi(hex.substr(3, 2), nullptr, 16));
+        const auto b = static_cast<uint8_t>(std::stoi(hex.substr(5, 2), nullptr, 16));
         uint8_t a = 255; // Default alpha
 
         if (hex.length() == 9) {
-            a = std::stoi(hex.substr(7, 2), nullptr, 16);
+            a = static_cast<uint8_t>(std::stoi(hex.substr(7, 2), nullptr, 16));
         }
 
         return { r, g, b, a };
@@ -81,9 +102,9 @@ struct Color {
     /// @return The lightened color.
     Color lighten(float percentage) const
     {
-        return { static_cast<uint8_t>(r + (255 - r) * percentage),
-            static_cast<uint8_t>(g + (255 - g) * percentage),
-            static_cast<uint8_t>(b + (255 - b) * percentage), a };
+        const float p = std::clamp(percentage, 0.0F, 1.0F);
+        return { to_channel(r + ((255 - r) * p)), to_channel(g + ((255 - g) * p)),
+            to_channel(b + ((255 - b) * p)), a };
     }
 
     /// @brief Darken a color by a given percentage.
@@ -92,9 +113,8 @@ struct Color {
     /// @return The darkened color.
     Color darken(float percentage) const
     {
-        return { static_cast<uint8_t>(r * (1 - percentage)),
-            static_cast<uint8_t>(g * (1 - percentage)), static_cast<uint8_t>(b * (1 - percentage)),
-            a };
+        const float keep = 1.0F - std::clamp(percentage, 0.0F, 1.0F);
+        return { to_channel(r * keep), to_channel(g * keep), to_channel(b * keep), a };
     }
 
     /// @brief Blend two colors together using alpha blending.
