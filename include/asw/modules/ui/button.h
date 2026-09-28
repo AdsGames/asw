@@ -65,6 +65,19 @@ public:
     /// @brief The texture to display on the button.
     asw::Texture texture;
 
+    /// @brief Texture shown while hovered or focused. Falls back to texture.
+    asw::Texture texture_hover;
+
+    /// @brief Texture shown while pressed. Falls back to texture_hover, then texture.
+    asw::Texture texture_pressed;
+
+    /// @brief Texture shown while disabled. Falls back to texture.
+    asw::Texture texture_disabled;
+
+    /// @brief Fill the button with the theme background. Turn off for buttons
+    /// that are only an image.
+    bool draw_background = true;
+
     /// @brief Set the texture, optionally resizing the button to match.
     ///
     /// @param tex The texture to set.
@@ -79,6 +92,16 @@ public:
     ///
     void set_text(const std::string& t, bool auto_size = false);
 
+protected:
+    /// @brief Called when the button is clicked or activated. Calls on_click.
+    ///
+    virtual void activate();
+
+    /// @brief Get the texture for the current state.
+    ///
+    /// @return The texture to draw, may be nullptr.
+    ///
+    const asw::Texture& current_texture() const;
 };
 
 } // namespace asw::ui

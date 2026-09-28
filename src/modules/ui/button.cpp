@@ -54,23 +54,40 @@ bool asw::ui::Button::on_event(Context& ctx, const UIEvent& e)
             ctx.pointer_capture = nullptr;
         }
         if (wasPressed && in) {
-            if (on_click) {
-                on_click();
-            }
+            activate();
             return true;
         }
         return false;
     }
     case UIEvent::Type::Activate: {
-        if (on_click) {
-            on_click();
-        }
+        activate();
         return true;
     }
     default:
         break;
     }
     return false;
+}
+
+void asw::ui::Button::activate()
+{
+    if (on_click) {
+        on_click();
+    }
+}
+
+const asw::Texture& asw::ui::Button::current_texture() const
+{
+    if (!enabled) {
+        return texture_disabled != nullptr ? texture_disabled : texture;
+    }
+    if (_pressed && texture_pressed != nullptr) {
+        return texture_pressed;
+    }
+    if ((_pressed || _hovered || _focused) && texture_hover != nullptr) {
+        return texture_hover;
+    }
+    return texture;
 }
 
 void asw::ui::Button::set_texture(const asw::Texture& tex, bool auto_size)
@@ -104,15 +121,17 @@ void asw::ui::Button::draw(Context& ctx)
         bg = ctx.theme.btn_hover;
     }
 
-    asw::draw::rect_fill(transform, bg);
+    if (draw_background) {
+        asw::draw::rect_fill(transform, bg);
+    }
 
     const asw::Quad<float> inner {
         { transform.position.x + padding, transform.position.y + padding },
         { transform.size.x - padding * 2.0f, transform.size.y - padding * 2.0f }
     };
 
-    if (texture != nullptr) {
-        asw::draw::stretch_sprite(texture, inner);
+    if (const auto& tex = current_texture(); tex != nullptr) {
+        asw::draw::stretch_sprite(tex, inner);
     }
 
     if (!text.empty() && font != nullptr) {

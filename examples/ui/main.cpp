@@ -3,8 +3,8 @@
 ///
 /// Demonstrates:
 ///   - asw::ui::Root driving input, layout and drawing
-///   - asw::ui::Panel, VBox, Label, Button and InputBox
-///   - Button on_click and InputBox on_change callbacks
+///   - asw::ui::Panel, VBox, Label, Button, Checkbox and InputBox
+///   - Button on_click, Checkbox and InputBox on_change callbacks
 ///   - Keyboard navigation: Tab / arrows move focus, Enter activates
 ///   - Editing asw::ui::Theme at runtime
 ///   - asw::assets::get_save_path() to keep the name between runs
@@ -20,7 +20,7 @@
 ///
 /// Scripted run:
 ///   ASW_EXAMPLE_AUTORUN=1 SDL_VIDEO_DRIVER=dummy ./example_ui
-///   Fills in a name, clicks Greet and Theme, saves autorun.png and quits.
+///   Fills in a name, clicks Greet, Theme and the checkbox, saves autorun.png and quits.
 
 #include <array>
 #include <asw/asw.h>
@@ -101,7 +101,7 @@ int main()
 
     // Centred card holding a vertical stack of widgets
     auto& card = ui.root.add_child<asw::ui::Panel>();
-    card.transform = asw::Quad<float>((SCREEN_W - 400.0F) / 2.0F, 60.0F, 400.0F, 460.0F);
+    card.transform = asw::Quad<float>((SCREEN_W - 400.0F) / 2.0F, 40.0F, 400.0F, 500.0F);
 
     auto& stack = card.add_child<asw::ui::VBox>();
     stack.transform = card.transform;
@@ -138,6 +138,12 @@ int main()
     auto& load = add_button(stack, font, "Load name from file...");
 #endif
     auto& theme = add_button(stack, font, "Theme");
+
+    auto& remember = stack.add_child<asw::ui::Checkbox>();
+    remember.font = font;
+    remember.text = "Remember my name";
+    remember.checked = true;
+    remember.transform.size.y = 24.0F;
 #ifndef __EMSCRIPTEN__
     auto& quit = add_button(stack, font, "Quit");
 #endif
@@ -151,9 +157,13 @@ int main()
         greeting.text = value.empty() ? "" : "Typing: " + value;
     };
 
-    greet.on_click = [&name, &greeting]() {
+    greet.on_click = [&name, &greeting, &remember]() {
         if (name.value.empty()) {
             greeting.text = "Please enter a name";
+            return;
+        }
+        if (!remember.checked) {
+            greeting.text = "Hello, " + name.value + "!";
             return;
         }
         save_name(name.value);
@@ -172,6 +182,10 @@ int main()
         palette = (palette + 1) % PALETTES.size();
         apply_palette(ui, PALETTES[palette]);
         card.bg = ui.ctx.theme.panel_bg;
+    };
+
+    remember.on_change = [&greeting](bool checked) {
+        greeting.text = checked ? "Greet will save your name" : "Greet will not save your name";
     };
 
 #ifndef __EMSCRIPTEN__
@@ -207,7 +221,10 @@ int main()
             if (frame == 20) {
                 click(theme);
             }
-            if (frame == 11 || frame == 21) {
+            if (frame == 30) {
+                click(remember);
+            }
+            if (frame == 11 || frame == 21 || frame == 31) {
                 asw::input::simulate_mouse_button_up(asw::input::MouseButton::Left);
             }
         }
@@ -244,6 +261,7 @@ int main()
             const bool saved = asw::display::screenshot("autorun.png");
             asw::log::info(saved ? "Saved autorun.png" : "Screenshot failed");
             asw::log::info("Greeting: " + greeting.text);
+            asw::log::info(std::string("Remember name: ") + (remember.checked ? "yes" : "no"));
             asw::core::exit();
         }
 

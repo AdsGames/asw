@@ -248,6 +248,18 @@ SoundHandle play_positional(
 ///
 SoundHandle play_at(const asw::Sample& sample, float x, float volume = 1.0F);
 
+/// @brief Play a sample panned by where it happens on screen, with options.
+/// Works like play_at above, so pitch, variation, bus and priority can be set
+/// too. The pan is worked out once when the sound starts.
+///
+/// @param sample Sample to play
+/// @param x Horizontal position in logical screen coordinates.
+/// @param options How to play it. volume is before distance fading, pan is
+/// replaced by the screen position.
+/// @return A handle to the sound, stale if it could not be played.
+///
+SoundHandle play_at(const asw::Sample& sample, float x, const PlayOptions& options);
+
 /// @brief Set where the listener is, usually the player or camera centre.
 ///
 /// @param position The world position.
