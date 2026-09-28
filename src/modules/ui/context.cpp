@@ -35,10 +35,12 @@ void asw::ui::FocusManager::set_focus(Context& ctx, Widget* w)
         return;
     }
     if (_focused != nullptr) {
+        _focused->_focused = false;
         _focused->on_focus_changed(ctx, false);
     }
     _focused = w;
     if (_focused != nullptr) {
+        _focused->_focused = true;
         _focused->on_focus_changed(ctx, true);
     }
 }

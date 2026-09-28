@@ -88,8 +88,12 @@ public:
 
 private:
     void fit_to_screen();
+    void update_pointer();
+    void update_keys();
+    void activate(Widget& w);
 
     std::vector<Widget*> _live;
+    bool _used = false;
 };
 
 } // namespace asw::ui

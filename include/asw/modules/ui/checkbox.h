@@ -57,10 +57,11 @@ public:
     ///
     void draw(Context& ctx) override;
 
-protected:
-    /// @brief Toggle checked and notify listeners.
+    /// @brief Toggle checked, then call on_change and on_click.
     ///
-    void activate() override;
+    /// @param ctx The UI context.
+    ///
+    void activate(Context& ctx) override;
 };
 
 } // namespace asw::ui

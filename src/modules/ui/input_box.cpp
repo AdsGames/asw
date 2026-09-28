@@ -50,7 +50,6 @@ asw::ui::InputBox::~InputBox()
 
 void asw::ui::InputBox::on_focus_changed(Context& ctx, bool focused)
 {
-    _focused = focused;
     (void)ctx;
 
     if (focused) {
@@ -63,18 +62,10 @@ void asw::ui::InputBox::on_focus_changed(Context& ctx, bool focused)
 
 bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
 {
+    (void)ctx;
+
     // value is public and may have been shortened since the last event
     _cursor_pos = std::min(_cursor_pos, value.size());
-
-    // Track hover even while disabled, so the state is right when re-enabled
-    if (e.type == UIEvent::Type::PointerEnter) {
-        _hovered = true;
-        return false;
-    }
-    if (e.type == UIEvent::Type::PointerLeave) {
-        _hovered = false;
-        return false;
-    }
 
     if (!enabled) {
         return false;
@@ -82,22 +73,12 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
 
     switch (e.type) {
     case UIEvent::Type::PointerDown: {
+        // Root has already focused the box
         if (e.mouse_button != asw::input::MouseButton::Left) {
             return false;
         }
-        if (transform.contains(e.pointer_pos)) {
-            ctx.pointer_capture = this;
-            ctx.focus.set_focus(ctx, this);
-            _cursor_pos = value.size();
-            return true;
-        }
-        return false;
-    }
-    case UIEvent::Type::PointerUp: {
-        if (ctx.pointer_capture == this) {
-            ctx.pointer_capture = nullptr;
-        }
-        return false;
+        _cursor_pos = value.size();
+        return true;
     }
     case UIEvent::Type::TextInput: {
         value.insert(_cursor_pos, e.text);
@@ -146,10 +127,6 @@ bool asw::ui::InputBox::on_event(Context& ctx, const UIEvent& e)
             return true;
         }
         return false;
-    }
-    case UIEvent::Type::Activate: {
-        // Consume activate to prevent Space from triggering other actions
-        return true;
     }
     default:
         break;
@@ -214,11 +191,6 @@ void asw::ui::InputBox::draw(Context& ctx)
 
     // Reset clip
     SDL_SetRenderClipRect(asw::display::get_renderer(), nullptr);
-
-    // Focus ring
-    if (_focused && ctx.show_focus) {
-        draw_focus_ring(ctx.theme.focus_ring, transform);
-    }
 
     Widget::draw(ctx);
 }

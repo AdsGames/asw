@@ -33,20 +33,11 @@ public:
     /// @brief Callback invoked when the button is clicked.
     std::function<void()> on_click;
 
-    /// @brief Called when focus state changes.
+    /// @brief Calls on_click.
     ///
     /// @param ctx The UI context.
-    /// @param focused Whether the widget is now focused.
     ///
-    void on_focus_changed(Context& ctx, bool focused) override;
-
-    /// @brief Handle a UI event.
-    ///
-    /// @param ctx The UI context.
-    /// @param e The event to handle.
-    /// @return True if the event was handled.
-    ///
-    bool on_event(Context& ctx, const UIEvent& e) override;
+    void activate(Context& ctx) override;
 
     /// @brief Draw the button.
     ///
@@ -107,18 +98,6 @@ public:
     void set_text(const std::string& t, bool auto_size = false);
 
 protected:
-    /// @brief Called when the button is clicked or activated. Calls on_click.
-    ///
-    virtual void activate();
-
-    /// @brief Whether to draw the hover look: hovered, pressed, or focused
-    /// while focus is shown (keyboard or controller navigation).
-    ///
-    /// @param ctx The UI context.
-    /// @return True if the hover look should be drawn.
-    ///
-    bool is_highlighted(const Context& ctx) const;
-
     /// @brief Get the texture for the current state.
     ///
     /// @param ctx The UI context.

@@ -62,8 +62,13 @@ public:
     /// @brief Whether the widget is enabled.
     bool enabled = true;
 
-    /// @brief Whether the widget can receive focus.
+    /// @brief Whether the widget can receive focus. Focusable widgets are
+    /// also the ones the pointer can press.
     bool focusable = false;
+
+    /// @brief Draw the theme focus ring around this widget while it has
+    /// visible focus. Turn off for widgets that show focus themselves.
+    bool focus_ring = true;
 
     /// @brief Pointer to the parent widget.
     Widget* parent = nullptr;
@@ -91,6 +96,13 @@ public:
     /// @param focused Whether the widget is now focused.
     ///
     virtual void on_focus_changed(Context& ctx, bool focused);
+
+    /// @brief Called when the widget is clicked, or activated with the
+    /// keyboard or a controller while focused. Does nothing by default.
+    ///
+    /// @param ctx The UI context.
+    ///
+    virtual void activate(Context& ctx);
 
     /// @brief Draw this widget and its children.
     ///
@@ -127,7 +139,19 @@ public:
     /// @brief Whether this widget currently holds focus.
     bool is_focused() const { return _focused; }
 
+    /// @brief Whether to draw the hover look: hovered, pressed, or focused
+    /// while focus is shown.
+    ///
+    /// @param ctx The UI context.
+    /// @return True if the hover look should be drawn.
+    ///
+    bool is_highlighted(const Context& ctx) const;
+
 protected:
+    // Set by Root and FocusManager
+    friend class Root;
+    friend class FocusManager;
+
     bool _hovered = false;
     bool _pressed = false;
     bool _focused = false;

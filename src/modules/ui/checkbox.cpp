@@ -5,13 +5,13 @@
 #include "./asw/modules/draw.h"
 #include "./asw/modules/util.h"
 
-void asw::ui::Checkbox::activate()
+void asw::ui::Checkbox::activate(Context& ctx)
 {
     checked = !checked;
     if (on_change) {
         on_change(checked);
     }
-    Button::activate();
+    Button::activate(ctx);
 }
 
 void asw::ui::Checkbox::draw(Context& ctx)
@@ -84,10 +84,6 @@ void asw::ui::Checkbox::draw(Context& ctx)
             asw::draw::text(font, text, { text_x, text_y }, enabled ? s.text : s.text_disabled,
                 asw::TextJustify::Left);
         }
-    }
-
-    if (_focused && ctx.show_focus) {
-        draw_focus_ring(ctx.theme.focus_ring, transform);
     }
 
     // Children, skipping Button::draw which would draw the button again

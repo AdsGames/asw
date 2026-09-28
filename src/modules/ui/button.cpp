@@ -3,83 +3,12 @@
 #include "./asw/modules/draw.h"
 #include "./asw/modules/util.h"
 
-void asw::ui::Button::on_focus_changed(Context& ctx, bool focused)
+void asw::ui::Button::activate(Context& ctx)
 {
-    _focused = focused;
     (void)ctx;
-}
-
-bool asw::ui::Button::on_event(Context& ctx, const UIEvent& e)
-{
-    // Track hover even while disabled, so the state is right when re-enabled
-    if (e.type == UIEvent::Type::PointerEnter) {
-        _hovered = true;
-        return false;
-    }
-    if (e.type == UIEvent::Type::PointerLeave) {
-        _hovered = false;
-        _pressed = false;
-        return false;
-    }
-
-    if (!enabled) {
-        _pressed = false;
-        return false;
-    }
-
-    switch (e.type) {
-    case UIEvent::Type::PointerMove: {
-        return false;
-    }
-    case UIEvent::Type::PointerDown: {
-        if (e.mouse_button != asw::input::MouseButton::Left) {
-            return false;
-        }
-        if (transform.contains(e.pointer_pos)) {
-            _pressed = true;
-            ctx.pointer_capture = this;
-            ctx.focus.set_focus(ctx, this);
-            return true;
-        }
-        return false;
-    }
-    case UIEvent::Type::PointerUp: {
-        if (e.mouse_button != asw::input::MouseButton::Left) {
-            return false;
-        }
-        const bool in = transform.contains(e.pointer_pos);
-        const bool wasPressed = _pressed;
-        _pressed = false;
-        if (ctx.pointer_capture == this) {
-            ctx.pointer_capture = nullptr;
-        }
-        if (wasPressed && in) {
-            activate();
-            return true;
-        }
-        return false;
-    }
-    case UIEvent::Type::Activate: {
-        activate();
-        return true;
-    }
-    default:
-        break;
-    }
-    return false;
-}
-
-void asw::ui::Button::activate()
-{
     if (on_click) {
         on_click();
     }
-}
-
-bool asw::ui::Button::is_highlighted(const Context& ctx) const
-{
-    // Root always focuses a widget, so focus alone only counts while it is shown
-    return _pressed || _hovered || (_focused && ctx.show_focus);
 }
 
 const asw::Texture& asw::ui::Button::current_texture(const Context& ctx) const
@@ -165,10 +94,6 @@ void asw::ui::Button::draw(Context& ctx)
         }
 
         asw::draw::text(font, text, { text_x, text_y }, color, asw::TextJustify::Left);
-    }
-
-    if (_focused && ctx.show_focus) {
-        draw_focus_ring(ctx.theme.focus_ring, transform);
     }
 
     Widget::draw(ctx);
