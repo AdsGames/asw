@@ -129,6 +129,19 @@ struct Color {
             static_cast<uint8_t>(b * alpha + color.b * (1 - alpha)), 255 };
     }
 
+    /// @brief Mix towards another color, including alpha.
+    ///
+    /// @param color The color to mix towards.
+    /// @param t How far to mix (0.0-1.0). 0 gives this color, 1 gives
+    /// @p color.
+    /// @return The mixed color.
+    Color lerp(const Color& color, float t) const
+    {
+        const float p = std::clamp(t, 0.0F, 1.0F);
+        return { to_channel(r + ((color.r - r) * p)), to_channel(g + ((color.g - g) * p)),
+            to_channel(b + ((color.b - b) * p)), to_channel(a + ((color.a - a) * p)) };
+    }
+
     /// @brief Invert a color.
     ///
     /// @return The inverted color.

@@ -63,6 +63,19 @@ public:
         return std::atan2(static_cast<Real>(y), static_cast<Real>(x));
     }
 
+    /// @brief Create a vector pointing at an angle.
+    ///
+    /// @param angle The angle in radians, clockwise from the positive x axis
+    /// like the rest of asw.
+    /// @param length The length of the vector.
+    /// @return Vec2 The vector.
+    ///
+    static Vec2 from_angle(T angle, T length = T(1))
+        requires std::floating_point<T>
+    {
+        return Vec2(std::cos(angle) * length, std::sin(angle) * length);
+    }
+
     /// @brief Get distance between two vectors
     ///
     /// @return The distance between the vectors.
@@ -70,6 +83,29 @@ public:
     Real distance(const Vec2& other) const
     {
         return std::hypot(static_cast<Real>(x - other.x), static_cast<Real>(y - other.y));
+    }
+
+    /// @brief Get the distance from this point to the nearest point on a line
+    /// segment. Useful for beams, lasers and swept hit checks.
+    ///
+    /// @param start One end of the segment.
+    /// @param end The other end of the segment.
+    /// @return The distance, or the distance to @p start if both ends are the
+    /// same point.
+    ///
+    Real distance_to_segment(const Vec2& start, const Vec2& end) const
+    {
+        const auto seg_x = static_cast<Real>(end.x - start.x);
+        const auto seg_y = static_cast<Real>(end.y - start.y);
+        const auto rel_x = static_cast<Real>(x - start.x);
+        const auto rel_y = static_cast<Real>(y - start.y);
+
+        const Real length_sq = (seg_x * seg_x) + (seg_y * seg_y);
+        const Real t = length_sq > Real(0)
+            ? std::clamp(((rel_x * seg_x) + (rel_y * seg_y)) / length_sq, Real(0), Real(1))
+            : Real(0);
+
+        return std::hypot(rel_x - (seg_x * t), rel_y - (seg_y * t));
     }
 
     /// @brief Calculate the dot product of two vectors.
