@@ -2,155 +2,220 @@
 /// @brief Action binding example
 ///
 /// Demonstrates:
-///   - Registering named actions with bind_action()
-///   - Binding the same action to multiple input sources (keyboard + controller)
-///   - get_action_down(), get_action_up(), get_action()
-///   - get_action_strength() for analogue movement via a controller axis
+///   - bind_action() with every binding type: key, mouse button, controller
+///     button and controller axis
+///   - Several bindings on one action (any of them triggers it)
+///   - get_action_down() (pressed this frame), get_action() (held) and
+///     get_action_up() (released this frame)
+///   - get_action_strength() for analogue movement from a stick
+///   - ANY_CONTROLLER so every connected pad drives the same actions
+///   - get_last_device() to show keyboard or controller prompts
 ///
 /// Bindings:
-///   "move_left"   → A key, Left arrow, controller left axis (negative X)
-///   "move_right"  → D key, Right arrow, controller left axis (positive X)
-///   "move_up"     → W key, Up arrow, controller left axis (negative Y)
-///   "move_down"   → S key, Down arrow, controller left axis (positive Y)
-///   "fire"        → Space, controller A button
+///   move_*  - WASD, arrows, D-pad, left stick
+///   fire    - Space, left mouse button, controller A
+///   quit    - Escape, controller Start
 ///
 /// Controls:
-///   WASD / arrows / left stick - move the box
-///   Space / A button           - fire (flash indicator)
-///   Escape                     - quit
+///   Move            - move the ship
+///   Tap fire        - small shot (get_action_down)
+///   Hold fire       - charge (get_action)
+///   Release fire    - big shot if charged (get_action_up)
+///
+/// Scripted run:
+///   ASW_EXAMPLE_AUTORUN=1 SDL_VIDEO_DRIVER=dummy ./example_actions
 
+#include <algorithm>
 #include <asw/asw.h>
+#include <cstdlib>
+#include <format>
+#include <string>
+#include <vector>
+
+namespace {
+using asw::input::ControllerAxis;
+using asw::input::ControllerAxisBinding;
+using asw::input::ControllerButton;
+using asw::input::ControllerButtonBinding;
+using asw::input::Key;
+using asw::input::KeyBinding;
+
+constexpr float SHIP_SIZE = 40.0F;
+constexpr float SPEED = 260.0F; // pixels per second at full strength
+constexpr float SHOT_SPEED = 600.0F;
+constexpr float FULL_CHARGE = 0.6F; // seconds of holding for a big shot
+
+struct Shot {
+    asw::Vec2<float> position;
+    float radius;
+};
+
+void bind_move(const std::string& name, Key key, Key arrow, ControllerButton dpad,
+    ControllerAxis axis, bool positive)
+{
+    asw::input::bind_action(name, KeyBinding { key });
+    asw::input::bind_action(name, KeyBinding { arrow });
+    asw::input::bind_action(name, ControllerButtonBinding { dpad, asw::input::ANY_CONTROLLER });
+    asw::input::bind_action(
+        name, ControllerAxisBinding { axis, asw::input::ANY_CONTROLLER, 0.2F, positive });
+}
+
+// Vertical bar showing an action's strength
+void draw_strength(const asw::Font& font, const asw::Vec2<float>& pos, const std::string& name)
+{
+    const float strength = asw::input::get_action_strength(name);
+    const asw::Quad<float> area(pos, asw::Vec2<float>(80.0F, 12.0F));
+    asw::draw::rect_fill(area, asw::Color(40, 46, 58));
+    asw::draw::rect_fill({ area.position, { area.size.x * strength, area.size.y } },
+        asw::input::get_action(name) ? asw::color::cyan : asw::color::cyan.darken(0.5F));
+    asw::draw::rect(area, asw::color::gray);
+    asw::draw::text(font, name, pos + asw::Vec2<float>(90.0F, 2.0F), asw::color::white);
+}
+} // namespace
 
 int main()
 {
     asw::core::init(800, 600);
     asw::display::set_title("ASW Example - Action Bindings");
-    asw::core::print_info();
+
+    const bool autorun = std::getenv("ASW_EXAMPLE_AUTORUN") != nullptr;
+    const auto font = asw::assets::load_font("assets/font.ttf", 8.0F, asw::FontStyle::Pixel);
 
     // --- Register actions ---
-    asw::input::bind_action("move_left", asw::input::KeyBinding { asw::input::Key::A });
-    asw::input::bind_action("move_left", asw::input::KeyBinding { asw::input::Key::Left });
-    asw::input::bind_action("move_left",
-        asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadLeft, 0 });
-    asw::input::bind_action("move_left",
-        asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftX, 0, 0.2F, false });
+    bind_move("move_left", Key::A, Key::Left, ControllerButton::DPadLeft, ControllerAxis::LeftX,
+        false);
+    bind_move("move_right", Key::D, Key::Right, ControllerButton::DPadRight, ControllerAxis::LeftX,
+        true);
+    bind_move("move_up", Key::W, Key::Up, ControllerButton::DPadUp, ControllerAxis::LeftY, false);
+    bind_move("move_down", Key::S, Key::Down, ControllerButton::DPadDown, ControllerAxis::LeftY,
+        true);
 
-    asw::input::bind_action("move_right", asw::input::KeyBinding { asw::input::Key::D });
-    asw::input::bind_action("move_right", asw::input::KeyBinding { asw::input::Key::Right });
-    asw::input::bind_action("move_right",
-        asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadRight, 0 });
-    asw::input::bind_action("move_right",
-        asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftX, 0, 0.2F, true });
-
-    asw::input::bind_action("move_up", asw::input::KeyBinding { asw::input::Key::W });
-    asw::input::bind_action("move_up", asw::input::KeyBinding { asw::input::Key::Up });
+    asw::input::bind_action("fire", KeyBinding { Key::Space });
+    asw::input::bind_action("fire", asw::input::MouseButtonBinding { asw::input::MouseButton::Left });
     asw::input::bind_action(
-        "move_up", asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadUp, 0 });
-    asw::input::bind_action("move_up",
-        asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftY, 0, 0.2F, false });
+        "fire", ControllerButtonBinding { ControllerButton::A, asw::input::ANY_CONTROLLER });
 
-    asw::input::bind_action("move_down", asw::input::KeyBinding { asw::input::Key::S });
-    asw::input::bind_action("move_down", asw::input::KeyBinding { asw::input::Key::Down });
-    asw::input::bind_action("move_down",
-        asw::input::ControllerButtonBinding { asw::input::ControllerButton::DPadDown, 0 });
-    asw::input::bind_action("move_down",
-        asw::input::ControllerAxisBinding { asw::input::ControllerAxis::LeftY, 0, 0.2F, true });
-
-    asw::input::bind_action("fire", asw::input::KeyBinding { asw::input::Key::Space });
+    asw::input::bind_action("quit", KeyBinding { Key::Escape });
     asw::input::bind_action(
-        "fire", asw::input::ControllerButtonBinding { asw::input::ControllerButton::A });
+        "quit", ControllerButtonBinding { ControllerButton::Start, asw::input::ANY_CONTROLLER });
 
-    asw::input::bind_action("quit", asw::input::KeyBinding { asw::input::Key::Escape });
-    asw::input::bind_action(
-        "quit", asw::input::ControllerButtonBinding { asw::input::ControllerButton::Start });
-
-    asw::Vec2<float> pos { 375.0F, 275.0F };
-    constexpr float box_size = 50.0F;
-    constexpr float base_speed = 4.0F;
-
-    int fire_frames = 0;
+    asw::Vec2<float> pos { 380.0F, 420.0F };
+    std::vector<Shot> shots;
+    float charge = 0.0F;
+    int shots_fired = 0;
+    int frame = 0;
 
     while (!asw::core::is_exiting()) {
-        asw::core::update();
+        // Scripted input: move left, tap fire, then hold and release for a big shot
+        if (autorun) {
+            if (frame == 2) {
+                asw::input::simulate_key_down(Key::A);
+            }
+            if (frame == 20) {
+                asw::input::simulate_key_up(Key::A);
+                asw::input::simulate_key_down(Key::Space);
+            }
+            if (frame == 22) {
+                asw::input::simulate_key_up(Key::Space);
+            }
+            if (frame == 26) {
+                asw::input::simulate_key_down(Key::Space);
+            }
+            if (frame == 70) {
+                asw::input::simulate_key_up(Key::Space);
+            }
+        }
 
-        if (asw::input::get_action("quit")) {
+        asw::core::update();
+        const float dt = autorun ? 1.0F / 60.0F : asw::core::get_delta_time();
+
+        if (asw::input::get_action_down("quit")) {
             asw::core::exit();
         }
 
-        // Move using analogue strength so a controller stick gives smooth speed
-        pos.x -= asw::input::get_action_strength("move_left") * base_speed;
-        pos.x += asw::input::get_action_strength("move_right") * base_speed;
-        pos.y -= asw::input::get_action_strength("move_up") * base_speed;
-        pos.y += asw::input::get_action_strength("move_down") * base_speed;
+        // Analogue strength, so a stick gives smooth speed
+        const asw::Vec2<float> move(asw::input::get_action_strength("move_right")
+                - asw::input::get_action_strength("move_left"),
+            asw::input::get_action_strength("move_down")
+                - asw::input::get_action_strength("move_up"));
+        pos += move * (SPEED * dt);
 
-        // Clamp to window
         const auto win = asw::display::get_logical_size();
-        if (pos.x < 0) {
-            pos.x = 0;
+        pos.x = std::clamp(pos.x, 0.0F, static_cast<float>(win.x) - SHIP_SIZE);
+        pos.y = std::clamp(pos.y, 0.0F, static_cast<float>(win.y) - SHIP_SIZE);
+
+        const asw::Vec2<float> nose(pos.x + (SHIP_SIZE / 2.0F), pos.y);
+
+        // Down: small shot. Held: charge. Up: big shot if fully charged.
+        if (asw::input::get_action_down("fire")) {
+            shots.push_back({ nose, 4.0F });
+            shots_fired++;
+            charge = 0.0F;
         }
-        if (pos.y < 0) {
-            pos.y = 0;
+        if (asw::input::get_action("fire")) {
+            charge = std::min(FULL_CHARGE, charge + dt);
         }
-        if (pos.x + box_size > static_cast<float>(win.x)) {
-            pos.x = static_cast<float>(win.x) - box_size;
-        }
-        if (pos.y + box_size > static_cast<float>(win.y)) {
-            pos.y = static_cast<float>(win.y) - box_size;
+        if (asw::input::get_action_up("fire")) {
+            if (charge >= FULL_CHARGE) {
+                shots.push_back({ nose, 16.0F });
+                shots_fired++;
+            }
+            charge = 0.0F;
         }
 
-        // Fire
-        if (asw::input::get_action("fire")) {
-            fire_frames = 12;
-            asw::log::info("Fire!");
+        for (auto& s : shots) {
+            s.position.y -= SHOT_SPEED * dt;
         }
-        if (fire_frames > 0) {
-            --fire_frames;
-        }
+        std::erase_if(shots, [](const Shot& s) { return s.position.y < -s.radius; });
 
         // --- Draw ---
-        asw::display::clear(asw::color::darkslategray);
+        asw::display::clear(asw::Color(24, 28, 36));
 
-        // Fire flash
-        if (fire_frames > 0) {
-            const float alpha = static_cast<float>(fire_frames) / 12.0F;
-            asw::draw::circle_fill({ pos.x + box_size / 2.0F, pos.y + box_size / 2.0F },
-                box_size * 1.5F, asw::Color(255, 200, 0, static_cast<uint8_t>(alpha * 200)));
+        for (const auto& s : shots) {
+            asw::draw::circle_fill(s.position, s.radius, asw::color::yellow);
         }
 
-        // Player box
-        const bool moving = asw::input::get_action("move_left")
-            || asw::input::get_action("move_right") || asw::input::get_action("move_up")
-            || asw::input::get_action("move_down");
-        asw::draw::rect_fill({ pos, { box_size, box_size } },
-            moving ? asw::color::cornflowerblue : asw::color::steelblue);
-        asw::draw::rect({ pos, { box_size, box_size } }, asw::color::white);
+        // Charge ring grows while held, turns orange when full
+        if (charge > 0.0F) {
+            const float t = charge / FULL_CHARGE;
+            asw::draw::circle(nose, 6.0F + (t * 14.0F),
+                t >= 1.0F ? asw::color::orange : asw::color::white.with_alpha(160));
+        }
 
-        // Strength bars for left/right
-        const float sl = asw::input::get_action_strength("move_left");
-        const float sr = asw::input::get_action_strength("move_right");
-        const float su = asw::input::get_action_strength("move_up");
-        const float sd = asw::input::get_action_strength("move_down");
+        const asw::Quad<float> ship(pos, asw::Vec2<float>(SHIP_SIZE, SHIP_SIZE));
+        const bool moving = move.x != 0.0F || move.y != 0.0F;
+        asw::draw::rect_fill(ship, moving ? asw::color::cornflowerblue : asw::color::steelblue);
+        asw::draw::rect(ship, asw::color::white);
 
-        constexpr float bar_w = 100.0F;
-        constexpr float bar_h = 14.0F;
-        const float by = static_cast<float>(win.y) - 60.0F;
+        // Strength bars
+        draw_strength(font, { 10.0F, 10.0F }, "move_left");
+        draw_strength(font, { 10.0F, 26.0F }, "move_right");
+        draw_strength(font, { 10.0F, 42.0F }, "move_up");
+        draw_strength(font, { 10.0F, 58.0F }, "move_down");
+        draw_strength(font, { 10.0F, 74.0F }, "fire");
 
-        asw::draw::rect({ 50.0F, by, bar_w, bar_h }, asw::color::gray);
-        asw::draw::rect_fill({ 50.0F, by, bar_w * sl, bar_h }, asw::color::cyan);
+        asw::draw::text_shadow(font, std::format("Shots fired: {}", shots_fired),
+            asw::Vec2<float>(790.0F, 10.0F), asw::color::white, asw::color::black,
+            asw::Vec2<float>(2.0F, 2.0F), asw::TextJustify::Right);
+        // Prompts follow whichever device was used last
+        const bool on_pad
+            = asw::input::get_last_device() == asw::input::InputDevice::Controller;
+        const std::string fire = on_pad ? "A" : "Space";
+        asw::draw::text_shadow(font, "Tap " + fire + ": small  Hold + release " + fire + ": big",
+            asw::Vec2<float>(400.0F, 580.0F), asw::color::lightgray, asw::color::black,
+            asw::Vec2<float>(2.0F, 2.0F), asw::TextJustify::Center);
 
-        asw::draw::rect({ 650.0F, by, bar_w, bar_h }, asw::color::gray);
-        asw::draw::rect_fill({ 650.0F, by, bar_w * sr, bar_h }, asw::color::cyan);
-
-        asw::draw::rect({ 350.0F, by - 20.0F, bar_h, bar_w }, asw::color::gray);
-        asw::draw::rect_fill({ 350.0F, by - 20.0F, bar_h, bar_w * su }, asw::color::cyan);
-
-        asw::draw::rect({ 380.0F, by - 20.0F, bar_h, bar_w }, asw::color::gray);
-        asw::draw::rect_fill({ 380.0F, by - 20.0F, bar_h, bar_w * sd }, asw::color::cyan);
+        if (autorun && frame == 74) {
+            const bool saved = asw::display::screenshot("autorun.png");
+            asw::log::info(saved ? "Saved autorun.png" : "Screenshot failed");
+            asw::log::info("Shots fired: {} (expected 3)", shots_fired);
+            asw::core::exit();
+        }
 
         asw::display::present();
+        frame++;
     }
 
     asw::core::shutdown();
-
     return 0;
 }
