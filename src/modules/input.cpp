@@ -1,5 +1,7 @@
 #include "./asw/modules/input.h"
 
+#include <algorithm>
+#include <cmath>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
@@ -38,6 +40,70 @@ std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map {};
 asw::input::KeyState keyboard {};
 asw::input::MouseState mouse {};
 std::string text_input;
+asw::input::InputDevice last_device { asw::input::InputDevice::KeyboardMouse };
+
+/// @brief Rescale a value past the dead zone so it starts from zero.
+float rescale_dead_zone(float magnitude, float dead_zone)
+{
+    if (magnitude <= dead_zone) {
+        return 0.0F;
+    }
+
+    return std::min((magnitude - dead_zone) / (1.0F - dead_zone), 1.0F);
+}
+
+/// @brief Read a stick with a radial dead zone.
+asw::Vec2<float> read_stick(const ControllerState& cont, asw::input::ControllerStick stick)
+{
+    const bool left = stick == asw::input::ControllerStick::Left;
+    const auto x_axis
+        = left ? asw::input::ControllerAxis::LeftX : asw::input::ControllerAxis::RightX;
+    const auto y_axis
+        = left ? asw::input::ControllerAxis::LeftY : asw::input::ControllerAxis::RightY;
+
+    const asw::Vec2<float> raw(
+        cont.axis[static_cast<int>(x_axis)], cont.axis[static_cast<int>(y_axis)]);
+    const float magnitude = std::hypot(raw.x, raw.y);
+    const float scaled = rescale_dead_zone(magnitude, cont.dead_zone);
+
+    if (scaled == 0.0F) {
+        return { 0.0F, 0.0F };
+    }
+
+    return raw * (scaled / magnitude);
+}
+
+/// @brief Read one axis with the dead zone applied.
+float read_axis(const ControllerState& cont, asw::input::ControllerAxis axis)
+{
+    using asw::input::ControllerAxis;
+    using asw::input::ControllerStick;
+
+    switch (axis) {
+    case ControllerAxis::LeftX:
+        return read_stick(cont, ControllerStick::Left).x;
+    case ControllerAxis::LeftY:
+        return read_stick(cont, ControllerStick::Left).y;
+    case ControllerAxis::RightX:
+        return read_stick(cont, ControllerStick::Right).x;
+    case ControllerAxis::RightY:
+        return read_stick(cont, ControllerStick::Right).y;
+    default: {
+        const float value = cont.axis[static_cast<int>(axis)];
+        return std::copysign(rescale_dead_zone(std::abs(value), cont.dead_zone), value);
+    }
+    }
+}
+
+/// @brief Check a button on one controller, or on any when index is ANY_CONTROLLER.
+template <typename Pred> bool any_controller(uint32_t index, Pred pred)
+{
+    if (index == asw::input::ANY_CONTROLLER) {
+        return std::any_of(controller.begin(), controller.end(), pred);
+    }
+
+    return index < controller.size() && pred(controller[index]);
+}
 } // namespace
 
 const asw::input::KeyState& asw::input::get_keyboard()
@@ -282,47 +348,79 @@ bool asw::input::get_key_up(asw::input::Key key)
 
 bool asw::input::get_controller_button(uint32_t index, asw::input::ControllerButton button)
 {
-    if (index >= controller.size()) {
-        return false;
-    }
-
-    return controller[index].down[static_cast<int>(button)];
+    const auto b = static_cast<int>(button);
+    return any_controller(index, [b](const ControllerState& cont) { return cont.down[b]; });
 }
 
 bool asw::input::get_controller_button_down(uint32_t index, asw::input::ControllerButton button)
 {
-    if (index >= controller.size()) {
-        return false;
-    }
-
-    return controller[index].pressed[static_cast<int>(button)];
+    const auto b = static_cast<int>(button);
+    return any_controller(index, [b](const ControllerState& cont) { return cont.pressed[b]; });
 }
 
 bool asw::input::get_controller_button_up(uint32_t index, asw::input::ControllerButton button)
 {
-    if (index >= controller.size()) {
-        return false;
-    }
-
-    return controller[index].released[static_cast<int>(button)];
+    const auto b = static_cast<int>(button);
+    return any_controller(index, [b](const ControllerState& cont) { return cont.released[b]; });
 }
 
 float asw::input::get_controller_axis(uint32_t index, asw::input::ControllerAxis axis)
 {
-    if (index >= controller.size()) {
-        return 0.0F;
+    if (index != ANY_CONTROLLER) {
+        return index < controller.size() ? read_axis(controller[index], axis) : 0.0F;
     }
 
-    return controller[index].axis[static_cast<int>(axis)];
+    float furthest = 0.0F;
+    for (const auto& cont : controller) {
+        const float value = read_axis(cont, axis);
+        if (std::abs(value) > std::abs(furthest)) {
+            furthest = value;
+        }
+    }
+
+    return furthest;
+}
+
+asw::Vec2<float> asw::input::get_controller_stick(uint32_t index, asw::input::ControllerStick stick)
+{
+    if (index != ANY_CONTROLLER) {
+        return index < controller.size() ? read_stick(controller[index], stick)
+                                         : Vec2<float>(0.0F, 0.0F);
+    }
+
+    Vec2<float> furthest(0.0F, 0.0F);
+    for (const auto& cont : controller) {
+        const auto value = read_stick(cont, stick);
+        if (std::hypot(value.x, value.y) > std::hypot(furthest.x, furthest.y)) {
+            furthest = value;
+        }
+    }
+
+    return furthest;
 }
 
 void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone)
 {
+    // Below 1 so rescaling never divides by zero
+    dead_zone = std::clamp(dead_zone, 0.0F, 0.99F);
+
+    if (index == ANY_CONTROLLER) {
+        for (auto& cont : controller) {
+            cont.dead_zone = dead_zone;
+        }
+        return;
+    }
+
     if (index >= controller.size()) {
         return;
     }
 
     controller[index].dead_zone = dead_zone;
+}
+
+asw::input::InputDevice asw::input::get_last_device()
+{
+    return last_device;
 }
 
 int asw::input::get_controller_count()
@@ -347,6 +445,7 @@ void asw::input::_key_down(SDL_Scancode scancode)
     keyboard.down[scancode] = true;
     keyboard.any_pressed = true;
     keyboard.last_pressed = scancode;
+    last_device = asw::input::InputDevice::KeyboardMouse;
 }
 
 void asw::input::_key_up(SDL_Scancode scancode)
@@ -367,6 +466,7 @@ void asw::input::_mouse_button_down(uint8_t button)
     mouse.down[button_int] = true;
     mouse.any_pressed = true;
     mouse.last_pressed = button_int;
+    last_device = asw::input::InputDevice::KeyboardMouse;
 }
 
 void asw::input::_mouse_button_up(uint8_t button)
@@ -387,6 +487,7 @@ void asw::input::_mouse_motion(float x, float y, float delta_x, float delta_y)
     // Several motion events can arrive in one frame, so add them up
     mouse.change.x += delta_x;
     mouse.change.y += delta_y;
+    last_device = asw::input::InputDevice::KeyboardMouse;
 }
 
 void asw::input::_mouse_wheel(float delta_z)
@@ -455,6 +556,10 @@ void asw::input::_controller_axis_motion(SDL_JoystickID id, uint32_t axis, float
     }
 
     controller[index].axis[axis] = value / 32768.0F; // Normalize to [-1, 1]
+
+    if (read_axis(controller[index], static_cast<asw::input::ControllerAxis>(axis)) != 0.0F) {
+        last_device = asw::input::InputDevice::Controller;
+    }
 }
 
 void asw::input::_controller_button_down(SDL_JoystickID id, uint32_t button)
@@ -473,6 +578,7 @@ void asw::input::_controller_button_down(SDL_JoystickID id, uint32_t button)
     controller[index].down[button] = true;
     controller[index].any_pressed = true;
     controller[index].last_pressed = button;
+    last_device = asw::input::InputDevice::Controller;
 }
 
 void asw::input::_controller_button_up(SDL_JoystickID id, uint32_t button)

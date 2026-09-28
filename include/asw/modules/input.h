@@ -11,6 +11,7 @@
 
 #include <SDL3/SDL.h>
 #include <array>
+#include <cstdint>
 #include <string>
 
 #include "./geometry.h"
@@ -482,8 +483,27 @@ enum class ControllerAxis {
     NumControllerAxes = NUM_CONTROLLER_AXES
 };
 
+/// @brief Pass as a controller index to read every connected controller.
+///
+/// @details Buttons are active if they are active on any controller. Axes and
+/// sticks return the value furthest from centre.
+///
+constexpr uint32_t ANY_CONTROLLER = UINT32_MAX;
+
+/// @brief Analog sticks on a game controller
+enum class ControllerStick {
+    Left,
+    Right,
+};
+
+/// @brief Device the player used most recently.
+enum class InputDevice {
+    KeyboardMouse,
+    Controller,
+};
+
 /// @brief Check if a controller button is down.
-/// @param index The index of the controller to check.
+/// @param index The index of the controller to check, or ANY_CONTROLLER.
 /// @param button The button to check.
 /// @return true - If the button is down.
 /// @return false - If the button is not down.
@@ -491,7 +511,7 @@ enum class ControllerAxis {
 bool get_controller_button(uint32_t index, asw::input::ControllerButton button);
 
 /// @brief Check if a controller button was pressed since the last update.
-/// @param index The index of the controller to check.
+/// @param index The index of the controller to check, or ANY_CONTROLLER.
 /// @param button The button to check.
 /// @return true - If the button was pressed.
 /// @return false - If the button was not pressed.
@@ -499,22 +519,50 @@ bool get_controller_button(uint32_t index, asw::input::ControllerButton button);
 bool get_controller_button_down(uint32_t index, asw::input::ControllerButton button);
 
 /// @brief Check if a controller button was released since the last update.
-/// @param index The index of the controller to check.
+/// @param index The index of the controller to check, or ANY_CONTROLLER.
 /// @param button The button to check.
 /// @return true - If the button was released.
 /// @return false - If the button was not released.
 ///
 bool get_controller_button_up(uint32_t index, asw::input::ControllerButton button);
 
-/// @brief Get the value of a controller axis.
-/// @param index The index of the controller to check.
+/// @brief Get the value of a controller axis with the dead zone applied.
+///
+/// @details Stick axes use a radial dead zone, so a stick pushed straight
+/// along one axis reads zero on the other. Values past the dead zone are
+/// rescaled to start from zero.
+///
+/// @param index The index of the controller to check, or ANY_CONTROLLER.
 /// @param axis The axis to check.
 /// @return float - The value of the axis between -1.0f and 1.0f.
 ///
 float get_controller_axis(uint32_t index, asw::input::ControllerAxis axis);
 
+/// @brief Get the position of a controller stick with the dead zone applied.
+///
+/// @param index The index of the controller to check, or ANY_CONTROLLER.
+/// @param stick The stick to check.
+/// @return Vec2<float> - The stick position, with a length of at most 1.
+///
+Vec2<float> get_controller_stick(uint32_t index, asw::input::ControllerStick stick);
+
 /// @brief Set the joystick deadzone for a controller.
+///
+/// @param index The index of the controller, or ANY_CONTROLLER for all
+/// connected controllers.
+/// @param dead_zone The dead zone, between 0.0f and 1.0f. Defaults to 0.25f.
+///
 void set_controller_dead_zone(uint32_t index, float dead_zone);
+
+/// @brief Get the device the player used most recently.
+///
+/// @details Useful for showing keyboard or controller prompts. Key presses,
+/// mouse clicks and mouse motion count as the keyboard and mouse. Button
+/// presses and axes past the dead zone count as a controller.
+///
+/// @return InputDevice - The last used device.
+///
+InputDevice get_last_device();
 
 /// @brief Get the number of controllers connected.
 int get_controller_count();
