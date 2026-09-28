@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
+#include <algorithm>
 #include <string>
 
 #include "./asw/modules/draw.h"
@@ -11,6 +12,11 @@
 namespace {
 asw::Renderer* renderer = nullptr;
 asw::Window* window = nullptr;
+SDL_GLContext gl_context = nullptr;
+
+// Logical size of the screen. Kept here because SDL reports the logical
+// presentation of the current render target, which is 0 for textures.
+asw::Vec2<int> logical_size;
 } // namespace
 
 void asw::display::_init(int width, int height, int scale)
@@ -24,7 +30,11 @@ void asw::display::_init(int width, int height, int scale)
 
     renderer = SDL_CreateRenderer(window, nullptr);
 
+    // SDL defaults to no blending, which makes see through primitives opaque
+    SDL_SetRenderDrawBlendMode(renderer, SDL_BLENDMODE_BLEND);
+
     SDL_SetRenderLogicalPresentation(renderer, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    logical_size = asw::Vec2<int>(width, height);
 }
 
 void asw::display::_init_opengl(int width, int height, int scale)
@@ -35,12 +45,12 @@ void asw::display::_init_opengl(int width, int height, int scale)
         asw::util::abort_on_error("WINDOW");
     }
 
-    SDL_GLContext glcontext = SDL_GL_CreateContext(window);
-    if (glcontext == nullptr) {
+    gl_context = SDL_GL_CreateContext(window);
+    if (gl_context == nullptr) {
         asw::util::abort_on_error("SDL_GL_CreateContext");
     }
 
-    if (!SDL_GL_MakeCurrent(window, glcontext)) {
+    if (!SDL_GL_MakeCurrent(window, gl_context)) {
         asw::util::abort_on_error("SDL_GL_MakeCurrent");
     }
 }
@@ -54,6 +64,11 @@ void asw::display::_shutdown()
     renderer = nullptr;
     if (r != nullptr) {
         SDL_DestroyRenderer(r);
+    }
+
+    if (gl_context != nullptr) {
+        SDL_GL_DestroyContext(gl_context);
+        gl_context = nullptr;
     }
 
     auto* w = window;
@@ -115,26 +130,28 @@ asw::Vec2<int> asw::display::get_size()
 
 asw::Vec2<int> asw::display::get_logical_size()
 {
-    asw::Vec2<int> size;
-
     if (renderer == nullptr) {
-        return size;
+        return {};
     }
 
-    SDL_GetRenderLogicalPresentation(renderer, &size.x, &size.y, nullptr);
-    return size;
+    return logical_size;
 }
 
 asw::Vec2<float> asw::display::get_scale()
 {
-    asw::Vec2<float> scale;
+    asw::Vec2<float> scale(1.0F, 1.0F);
 
-    if (renderer == nullptr) {
+    if (renderer == nullptr || logical_size.x <= 0 || logical_size.y <= 0) {
         return scale;
     }
 
-    SDL_GetRenderScale(renderer, &scale.x, &scale.y);
-    return scale;
+    // Letterboxing keeps the aspect ratio, so both axes use the same scale
+    int out_w = 0;
+    int out_h = 0;
+    SDL_GetRenderOutputSize(renderer, &out_w, &out_h);
+    const float s = std::min(static_cast<float>(out_w) / static_cast<float>(logical_size.x),
+        static_cast<float>(out_h) / static_cast<float>(logical_size.y));
+    return { s, s };
 }
 
 void asw::display::set_render_target(const asw::Texture& texture)
@@ -161,11 +178,18 @@ void asw::display::clear()
         return;
     }
 
+    // Draw calls leave their colour set, so pick one rather than clearing to
+    // whatever was drawn last
+    SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255);
     SDL_RenderClear(renderer);
 }
 
 void asw::display::clear(const asw::Color& color)
 {
+    if (renderer == nullptr) {
+        return;
+    }
+
     SDL_SetRenderDrawColor(renderer, color.r, color.g, color.b, color.a);
     SDL_RenderClear(renderer);
 }

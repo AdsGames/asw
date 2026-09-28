@@ -96,8 +96,8 @@ asw::Vec2<int> get_size();
 ///
 asw::Vec2<int> get_logical_size();
 
-/// @brief Get the scale of the window. This is equivalent to the logical
-/// size divided by the actual size.
+/// @brief Get how many output pixels one logical pixel covers, after
+/// letterboxing. 2.0 means the game is drawn at twice its logical size.
 ///
 /// @return The scale of the window.
 ///
@@ -111,7 +111,7 @@ void set_render_target(const asw::Texture& texture);
 ///
 void reset_render_target();
 
-/// @brief Clear the window.
+/// @brief Clear the window to black.
 ///
 void clear();
 
@@ -125,9 +125,10 @@ void clear(const asw::Color& color);
 ///
 void present();
 
-/// @brief Set the blend mode of a texture.
+/// @brief Set the blend mode used to draw primitives such as rectangles,
+/// lines and circles. Defaults to Blend, so colours with alpha are see
+/// through.
 ///
-/// @param texture The texture to set the blend mode of.
 /// @param mode The blend mode to set.
 ///
 void set_blend_mode(asw::BlendMode mode);
