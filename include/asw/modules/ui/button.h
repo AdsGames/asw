@@ -97,11 +97,20 @@ protected:
     ///
     virtual void activate();
 
+    /// @brief Whether to draw the hover look: hovered, pressed, or focused
+    /// while focus is shown (keyboard or controller navigation).
+    ///
+    /// @param ctx The UI context.
+    /// @return True if the hover look should be drawn.
+    ///
+    bool is_highlighted(const Context& ctx) const;
+
     /// @brief Get the texture for the current state.
     ///
+    /// @param ctx The UI context.
     /// @return The texture to draw, may be nullptr.
     ///
-    const asw::Texture& current_texture() const;
+    const asw::Texture& current_texture(const Context& ctx) const;
 };
 
 } // namespace asw::ui

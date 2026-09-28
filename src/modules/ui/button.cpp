@@ -76,7 +76,13 @@ void asw::ui::Button::activate()
     }
 }
 
-const asw::Texture& asw::ui::Button::current_texture() const
+bool asw::ui::Button::is_highlighted(const Context& ctx) const
+{
+    // Root always focuses a widget, so focus alone only counts while it is shown
+    return _pressed || _hovered || (_focused && ctx.theme.show_focus);
+}
+
+const asw::Texture& asw::ui::Button::current_texture(const Context& ctx) const
 {
     if (!enabled) {
         return texture_disabled != nullptr ? texture_disabled : texture;
@@ -84,7 +90,7 @@ const asw::Texture& asw::ui::Button::current_texture() const
     if (_pressed && texture_pressed != nullptr) {
         return texture_pressed;
     }
-    if ((_pressed || _hovered || _focused) && texture_hover != nullptr) {
+    if (is_highlighted(ctx) && texture_hover != nullptr) {
         return texture_hover;
     }
     return texture;
@@ -130,7 +136,7 @@ void asw::ui::Button::draw(Context& ctx)
         { transform.size.x - padding * 2.0f, transform.size.y - padding * 2.0f }
     };
 
-    if (const auto& tex = current_texture(); tex != nullptr) {
+    if (const auto& tex = current_texture(ctx); tex != nullptr) {
         asw::draw::stretch_sprite(tex, inner);
     }
 
