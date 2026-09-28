@@ -53,14 +53,28 @@ bool binding_is_down(const asw::input::ActionBinding& binding, float& out_streng
                 return false;
 
             } else if constexpr (std::is_same_v<T, asw::input::ControllerAxisBinding>) {
-                const float val = asw::input::get_controller_axis(b.controller_index, b.axis);
-                const float effective = b.positive_direction ? val : -val;
-                if (effective >= b.threshold) {
-                    out_strength = std::max(out_strength, effective);
-                    return true;
+                // Check each pad on its own, so one pad pushing the other way
+                // does not hide this direction on another pad
+                const auto check = [&](uint32_t index) {
+                    const float val = asw::input::get_controller_axis(index, b.axis);
+                    const float effective = b.positive_direction ? val : -val;
+                    if (effective >= b.threshold) {
+                        out_strength = std::max(out_strength, effective);
+                        return true;
+                    }
+                    return false;
+                };
+
+                if (b.controller_index != asw::input::ANY_CONTROLLER) {
+                    return check(b.controller_index);
                 }
 
-                return false;
+                bool any = false;
+                const auto count = static_cast<uint32_t>(asw::input::get_controller_count());
+                for (uint32_t i = 0; i < count; ++i) {
+                    any |= check(i);
+                }
+                return any;
             }
 
             return false;

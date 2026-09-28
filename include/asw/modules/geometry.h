@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <concepts>
 #include <type_traits>
 
 namespace asw {
@@ -98,6 +99,22 @@ public:
     Real magnitude() const
     {
         return std::sqrt(static_cast<Real>((x * x) + (y * y)));
+    }
+
+    /// @brief Get a vector with the same direction and a length of one.
+    ///
+    /// @return Vec2 The unit vector, or a zero vector if this vector has no
+    /// length.
+    ///
+    Vec2 normalized() const
+        requires std::floating_point<T>
+    {
+        const T length = magnitude();
+        if (length == T(0)) {
+            return Vec2(T(0), T(0));
+        }
+
+        return Vec2(x / length, y / length);
     }
 
     /// @brief Addition operator for the Vec2 class.
@@ -543,6 +560,57 @@ public:
             other.position.y + other.size.y <= position.y; // b is above a
 
         return !is_outside;
+    }
+
+    /// @brief Get the point in or on the rectangle closest to another point.
+    ///
+    /// @param point The point to check.
+    /// @return Vec2 The closest point. This is the point itself when it is
+    /// inside the rectangle.
+    ///
+    Vec2<T> closest_point(const Vec2<T>& point) const
+    {
+        return Vec2<T>(std::clamp(point.x, position.x, position.x + size.x),
+            std::clamp(point.y, position.y, position.y + size.y));
+    }
+
+    /// @brief Get the distance from a point to the edge of the rectangle.
+    ///
+    /// @param point The point to check.
+    /// @return The distance, 0 when the point is inside the rectangle.
+    ///
+    typename Vec2<T>::Real distance_to(const Vec2<T>& point) const
+    {
+        return closest_point(point).distance(point);
+    }
+
+    /// @brief Get the smallest move that pushes this rectangle out of another.
+    /// Useful to stop a moving box from entering solid scenery.
+    ///
+    /// @param other The rectangle to push out of.
+    /// @return Vec2 The move to add to this rectangle's position, along
+    /// whichever axis has the smallest overlap. A zero vector when the
+    /// rectangles do not overlap.
+    ///
+    Vec2<T> get_push_out(const Quad& other) const
+    {
+        if (!collides(other)) {
+            return Vec2<T>(T(0), T(0));
+        }
+
+        const T left = (position.x + size.x) - other.position.x;
+        const T right = (other.position.x + other.size.x) - position.x;
+        const T up = (position.y + size.y) - other.position.y;
+        const T down = (other.position.y + other.size.y) - position.y;
+
+        const T push_x = left < right ? -left : right;
+        const T push_y = up < down ? -up : down;
+
+        if (std::min(left, right) < std::min(up, down)) {
+            return Vec2<T>(push_x, T(0));
+        }
+
+        return Vec2<T>(T(0), push_y);
     }
 
     // Collision

@@ -39,6 +39,13 @@ asw::Vec2<float> get_texture_size(const asw::Texture& tex);
 ///
 asw::Vec2<int> get_text_size(const asw::Font& font, const std::string& text);
 
+/// @brief Get the height of a line of text in a font.
+///
+/// @param font Font to use
+/// @return Line height in pixels, 0 if the font is not loaded
+///
+int get_font_height(const asw::Font& font);
+
 /// @brief Clear cached text metrics.
 ///
 /// Text size caching is shared across widgets and text drawing helpers, so it

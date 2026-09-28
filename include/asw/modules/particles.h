@@ -11,6 +11,7 @@
 
 #include <vector>
 
+#include "./camera.h"
 #include "./color.h"
 #include "./game.h"
 #include "./geometry.h"
@@ -89,9 +90,15 @@ public:
     ///
     void update(float dt) override;
 
-    /// @brief Draw alive particles.
+    /// @brief Draw alive particles. Positions are in screen space.
     ///
     void draw() override;
+
+    /// @brief Draw alive particles with positions in world space.
+    ///
+    /// @param camera The camera to view the particles through.
+    ///
+    void draw(const Camera& camera);
 
     /// @brief Get the number of alive particles.
     ///
@@ -100,6 +107,8 @@ public:
     uint32_t get_alive_count() const;
 
 private:
+    void draw_offset(const Vec2<float>& offset);
+
     struct Particle {
         Vec2<float> position;
         Vec2<float> velocity;

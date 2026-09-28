@@ -138,7 +138,7 @@ public:
         }
 
         if (rotation != 0.0F) {
-            asw::draw::rotate_sprite(texture_, transform.position, rotation);
+            asw::draw::stretch_sprite_rotate(texture_, transform, rotation);
         } else {
             asw::draw::stretch_sprite(texture_, transform);
         }

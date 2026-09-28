@@ -73,6 +73,15 @@ asw::Vec2<int> asw::util::get_text_size(const asw::Font& font, const std::string
     return size;
 }
 
+int asw::util::get_font_height(const asw::Font& font)
+{
+    if (font == nullptr) {
+        return 0;
+    }
+
+    return TTF_GetFontHeight(font.get());
+}
+
 void asw::util::clear_text_size_cache()
 {
     text_size_cache.clear();
