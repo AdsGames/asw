@@ -114,7 +114,6 @@ int main()
     const auto title_font = asw::assets::load_font("assets/font.ttf", 32.0F, asw::FontStyle::Pixel);
 
     asw::ui::Root ui;
-    ui.set_size(SCREEN_W, SCREEN_H);
 
     // Centred card holding a vertical stack of widgets
     auto& card = ui.root.add_child<asw::ui::Panel>();

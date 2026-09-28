@@ -79,7 +79,7 @@ void asw::ui::Button::activate()
 bool asw::ui::Button::is_highlighted(const Context& ctx) const
 {
     // Root always focuses a widget, so focus alone only counts while it is shown
-    return _pressed || _hovered || (_focused && ctx.theme.show_focus);
+    return _pressed || _hovered || (_focused && ctx.show_focus);
 }
 
 const asw::Texture& asw::ui::Button::current_texture(const Context& ctx) const
@@ -167,7 +167,9 @@ void asw::ui::Button::draw(Context& ctx)
         asw::draw::text(font, text, { text_x, text_y }, color, asw::TextJustify::Left);
     }
 
-    draw_focus_ring(ctx.theme, transform, _focused);
+    if (_focused && ctx.show_focus) {
+        draw_focus_ring(ctx.theme.focus_ring, transform);
+    }
 
     Widget::draw(ctx);
 }

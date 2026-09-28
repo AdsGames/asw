@@ -86,7 +86,9 @@ void asw::ui::Checkbox::draw(Context& ctx)
         }
     }
 
-    draw_focus_ring(ctx.theme, transform, _focused);
+    if (_focused && ctx.show_focus) {
+        draw_focus_ring(ctx.theme.focus_ring, transform);
+    }
 
     // Children, skipping Button::draw which would draw the button again
     Widget::draw(ctx);

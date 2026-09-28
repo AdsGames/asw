@@ -52,6 +52,10 @@ public:
         _focused = nullptr;
     }
 
+    /// @brief Widget focused by the first navigation press when nothing has
+    /// focus. The first focusable widget when null.
+    Widget* default_focus = nullptr;
+
     /// @brief Move focus to the next focusable widget.
     ///
     /// @param ctx The UI context.
@@ -63,6 +67,12 @@ public:
     /// @param ctx The UI context.
     ///
     void focus_prev(Context& ctx);
+
+    /// @brief Focus default_focus, or the first focusable widget, when
+    /// nothing has focus.
+    /// @param ctx The UI context.
+    /// @return True if focus was set.
+    bool focus_start(Context& ctx);
 
     /// @brief Move focus in a direction based on widget positions.
     ///
@@ -96,6 +106,10 @@ public:
     /// @brief Actions to read for focus navigation. Empty names use the built
     /// in keys.
     Navigation navigation;
+
+    /// @brief Whether focus is shown. Root turns it on for keyboard and
+    /// controller navigation and off when the mouse is used.
+    bool show_focus = false;
 
     /// @brief The widget that has captured pointer input.
     Widget* pointer_capture = nullptr;
