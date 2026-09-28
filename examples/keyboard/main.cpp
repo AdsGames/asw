@@ -61,7 +61,7 @@ int main()
     float released_flash = 0.0F;
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         // Scripted input: move right, tap space
         if (autorun) {
             if (frame == 2) {
@@ -182,7 +182,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     SDL_StopTextInput(asw::display::get_window());
     asw::core::shutdown();

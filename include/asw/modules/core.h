@@ -9,6 +9,8 @@
 #ifndef ASW_CORE_H
 #define ASW_CORE_H
 
+#include <functional>
+
 namespace asw::core {
 
 /// @brief Updates core module functionality.
@@ -22,6 +24,19 @@ void update();
 /// @return The frame time in seconds, 0 before the second update.
 ///
 float get_delta_time();
+
+/// @brief Run a main loop until exit() is called.
+///
+/// @details Calls @p frame once per frame. Call update() and
+/// asw::display::present() inside it as usual. On desktop this is a plain
+/// loop that returns once exit() is called. In the browser (Emscripten) the
+/// browser drives the loop, so run() does not return and code after it never
+/// runs; the loop stops when exit() is called, and Module.onStop is called if
+/// the page defines it.
+///
+/// @param frame The function to call each frame.
+///
+void run(const std::function<void()>& frame);
 
 /// @brief Initializes the core module.
 ///

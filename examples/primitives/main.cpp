@@ -42,7 +42,7 @@ int main()
     bool paused = false;
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         asw::core::update();
         const float dt = autorun ? 1.0F / 60.0F : asw::core::get_delta_time();
 
@@ -158,7 +158,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

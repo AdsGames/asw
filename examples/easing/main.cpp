@@ -132,7 +132,7 @@ int main()
     bool paused = false;
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         asw::core::update();
 
         // Real frame time, but a fixed step for scripted runs so they repeat
@@ -191,7 +191,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

@@ -1,21 +1,19 @@
-name: Test Build
+name: Release Examples
+
+# Builds every example for the browser, takes a screenshot of each one from its
+# scripted run, and attaches the bundle to the release as asw-examples.zip, so
+# the docs site can embed playable examples.
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
-    branches:
-      - main
-
-concurrency:
-  group: "${{ github.workflow }}-${{ github.ref }}"
-  cancel-in-progress: true
+  release:
+    types: [published]
 
 jobs:
-  build:
-    name: Test Build
+  examples:
+    name: Package Examples
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     env:
       EM_VERSION: 6.0.10
       EM_CACHE_FOLDER: "emsdk-cache"
@@ -35,8 +33,7 @@ jobs:
           actions-cache-folder: ${{ env.EM_CACHE_FOLDER }}
 
       - name: Download ports
-        run: |
-          embuilder build harfbuzz
+        run: embuilder build harfbuzz
 
       - name: Run CMake (Release & Examples)
         run: emcmake cmake --preset release -DASW_BUILD_EXAMPLES=ON
@@ -44,15 +41,13 @@ jobs:
       - name: Make
         run: cmake --build --preset release
 
-      # PRs only: play each example's scripted run in Chrome, so a web
-      # regression (a hang, crash or blank page) fails the build
-      - name: Test examples in the browser
-        if: github.event_name == 'pull_request'
+      - name: Package examples
         run: examples/web/package.sh build/release/bin asw-examples
 
-      - name: Upload examples
-        if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v7
-        with:
-          name: asw-examples
-          path: asw-examples
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip -r asw-examples.zip asw-examples
+          gh release upload "${{ github.event.release.tag_name }}" asw-examples.zip \
+            --repo "${{ github.repository }}" --clobber

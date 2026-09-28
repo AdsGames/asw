@@ -47,3 +47,6 @@ build/
 bin/
 
 .DS_Store
+
+# Log files
+*.log
