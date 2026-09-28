@@ -18,17 +18,24 @@ namespace asw::ui {
 /// @brief A button that toggles between checked and unchecked.
 ///
 /// @details Clicking or activating it flips checked, then calls on_change and
-/// on_click. Without textures it draws a box on the left with the text beside
-/// it. With textures, texture is the unchecked image and texture_checked the
-/// checked one, the hover textures work like Button's.
+/// on_click. Without textures it draws a box with the text beside it, styled
+/// by CheckboxStyle. With textures, texture is the unchecked image and
+/// texture_checked the checked one, the hover textures work like Button's.
 ///
 class Checkbox : public Button {
 public:
-    /// @brief Default constructor.
+    /// @brief Style for this checkbox only. Uses the theme checkbox style when
+    /// empty. The inherited Button::style is not used.
+    std::optional<CheckboxStyle> checkbox_style;
+
+    /// @brief Get the style this checkbox draws with.
     ///
-    Checkbox()
+    /// @param ctx The UI context.
+    /// @return The checkbox's own style, or the theme checkbox style.
+    ///
+    const CheckboxStyle& get_checkbox_style(const Context& ctx) const
     {
-        draw_background = false;
+        return checkbox_style ? *checkbox_style : ctx.theme.checkbox;
     }
 
     /// @brief Whether the box is checked.

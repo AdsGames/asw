@@ -11,6 +11,7 @@
 
 #include <vector>
 
+#include "navigation.h"
 #include "theme.h"
 #include "widget.h"
 
@@ -91,6 +92,10 @@ public:
 
     /// @brief The focus manager.
     FocusManager focus;
+
+    /// @brief Actions to read for focus navigation. Empty names use the built
+    /// in keys.
+    Navigation navigation;
 
     /// @brief The widget that has captured pointer input.
     Widget* pointer_capture = nullptr;

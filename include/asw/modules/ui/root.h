@@ -9,6 +9,8 @@
 #ifndef ASW_UI_ROOT_H
 #define ASW_UI_ROOT_H
 
+#include <functional>
+
 #include "context.h"
 #include "panel.h"
 
@@ -27,6 +29,10 @@ public:
 
     /// @brief The root panel widget.
     Panel root;
+
+    /// @brief Called when back is pressed and the focused widget does not
+    /// handle it, e.g. to leave a menu.
+    std::function<void()> on_back;
 
     /// @brief Set the size of the root panel.
     ///
