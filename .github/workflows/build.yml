@@ -1,5 +1,8 @@
 name: Test Build
 
+# On a release, the examples are also built for the browser and attached to
+# the release as asw-examples.zip, so the docs site can embed them.
+
 on:
   push:
     branches:
@@ -7,6 +10,8 @@ on:
   pull_request:
     branches:
       - main
+  release:
+    types: [published]
 
 concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
@@ -19,6 +24,7 @@ jobs:
     env:
       EM_VERSION: 6.0.10
       EM_CACHE_FOLDER: "emsdk-cache"
+      BUILD_EXAMPLES: ${{ github.event_name == 'pull_request' || github.event_name == 'release' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
@@ -27,7 +33,9 @@ jobs:
         uses: actions/cache@v6
         with:
           path: ${{ env.EM_CACHE_FOLDER }}
-          key: ${{ env.EM_VERSION }}-${{ runner.os }}
+          # Bump the suffix to save a fresh cache, so that ports built by
+          # the job (such as harfbuzz) are kept for later runs
+          key: ${{ env.EM_VERSION }}-${{ runner.os }}-v2
 
       - uses: mymindstorm/setup-emsdk@v16
         with:
@@ -38,21 +46,65 @@ jobs:
         run: |
           embuilder build harfbuzz
 
-      - name: Run CMake (Release & Examples)
-        run: emcmake cmake --preset release -DASW_BUILD_EXAMPLES=ON
+      # Keep the CPM clones of SDL and its libraries between runs
+      - name: Setup CPM cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/CPM
+          key: cpm-${{ runner.os }}-${{ hashFiles('CMakeLists.txt', 'cmake/**') }}
+          restore-keys: cpm-${{ runner.os }}-
+
+      # Emscripten runs clang through ccache (EM_COMPILER_WRAPPER)
+      - name: Setup ccache
+        uses: hendrikmuhs/ccache-action@v1.2.24
+        with:
+          key: ${{ env.EM_VERSION }}-${{ runner.os }}
+          evict-old-files: job
+
+      # Examples are only used by the PR and release steps below
+      - name: Run CMake
+        run: >
+          emcmake cmake --preset release
+          -DCPM_SOURCE_CACHE="$HOME/.cache/CPM"
+          -DASW_BUILD_EXAMPLES=${{ env.BUILD_EXAMPLES == 'true' && 'ON' || 'OFF' }}
 
       - name: Make
         run: cmake --build --preset release
+        env:
+          EM_COMPILER_WRAPPER: ccache
 
-      # PRs only: play each example's scripted run in Chrome, so a web
-      # regression (a hang, crash or blank page) fails the build
+      # Play each example's scripted run in Chrome, so a web regression (a
+      # hang, crash or blank page) fails the build
       - name: Test examples in the browser
-        if: github.event_name == 'pull_request'
+        if: env.BUILD_EXAMPLES == 'true'
         run: examples/web/package.sh build/release/bin asw-examples
 
       - name: Upload examples
-        if: github.event_name == 'pull_request'
+        if: env.BUILD_EXAMPLES == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: asw-examples
           path: asw-examples
+
+  # A separate job, so only this step gets a token that can write to the repo
+  release:
+    name: Attach Examples to Release
+    if: github.event_name == 'release'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download examples
+        uses: actions/download-artifact@v8
+        with:
+          name: asw-examples
+          path: asw-examples
+
+      - name: Attach to release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          zip -r asw-examples.zip asw-examples
+          gh release upload "${{ github.event.release.tag_name }}" asw-examples.zip \
+            --repo "${{ github.repository }}" --clobber
