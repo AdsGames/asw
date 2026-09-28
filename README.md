@@ -30,7 +30,7 @@ cmake --preset debug
 cmake --build --preset debug
 ```
 
-Output is in the `lib/` directory.
+Output is in the `build/debug/lib/` directory.
 
 ### Building Examples
 
@@ -39,4 +39,4 @@ cmake --preset debug -DASW_BUILD_EXAMPLES=ON
 cmake --build --preset debug
 ```
 
-Output is in the `bin/` directory.
+Output is in the `build/debug/bin/` directory.
