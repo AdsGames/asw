@@ -21,7 +21,18 @@ asw::Vec2<int> logical_size;
 
 void asw::display::_init(int width, int height, int scale)
 {
-    window = SDL_CreateWindow("", width * scale, height * scale, SDL_WINDOW_RESIZABLE);
+    // High pixel density gives the canvas one pixel per device pixel in the
+    // browser. Without it the scene is drawn at CSS size and the browser
+    // stretches it, which blurs it on high density screens
+    SDL_WindowFlags flags = SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY;
+
+#ifdef __EMSCRIPTEN__
+    // The WebGL renderer recreates a window that is not OpenGL. That resets
+    // the canvas CSS size, so the page's CSS no longer sizes the canvas
+    flags |= SDL_WINDOW_OPENGL;
+#endif
+
+    window = SDL_CreateWindow("", width * scale, height * scale, flags);
     if (window == nullptr) {
         asw::util::abort_on_error("WINDOW");
     }
@@ -40,7 +51,8 @@ void asw::display::_init(int width, int height, int scale)
 void asw::display::_init_opengl(int width, int height, int scale)
 {
     window = SDL_CreateWindow(
-        "", width * scale, height * scale, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE);
+        "", width * scale, height * scale,
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
     if (window == nullptr) {
         asw::util::abort_on_error("WINDOW");
     }
