@@ -10,6 +10,7 @@
 #define ASW_MODULES_UI_UI_H
 
 #include "button.h"
+#include "checkbox.h"
 #include "context.h"
 #include "event.h"
 #include "input_box.h"
