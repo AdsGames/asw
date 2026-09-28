@@ -16,10 +16,10 @@ void asw::ui::Checkbox::activate()
 
 void asw::ui::Checkbox::draw(Context& ctx)
 {
-    const bool active = enabled && (_pressed || _hovered || _focused);
+    const bool active = enabled && is_highlighted(ctx);
 
     // Image checkbox
-    const auto& unchecked_tex = current_texture();
+    const auto& unchecked_tex = current_texture(ctx);
     if (unchecked_tex != nullptr) {
         const asw::Texture* tex = &unchecked_tex;
         if (checked && enabled) {
