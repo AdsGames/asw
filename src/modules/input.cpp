@@ -58,11 +58,18 @@ void asw::input::_append_text(const char* text)
     text_input += text;
 }
 
+void asw::input::_shutdown()
+{
+    for (auto& cursor : cursors) {
+        if (cursor != nullptr) {
+            SDL_DestroyCursor(cursor);
+            cursor = nullptr;
+        }
+    }
+}
+
 void asw::input::reset()
 {
-    // Snapshot action states before raw input arrays are cleared.
-    asw::input::update_actions();
-
     auto& k_state = keyboard;
     auto& m_state = mouse;
 
@@ -114,17 +121,20 @@ void asw::input::reset()
 
 bool asw::input::get_mouse_button(asw::input::MouseButton button)
 {
-    return mouse.down[static_cast<int>(button)];
+    const auto index = static_cast<size_t>(button);
+    return index < mouse.down.size() && mouse.down[index];
 }
 
 bool asw::input::get_mouse_button_down(asw::input::MouseButton button)
 {
-    return mouse.pressed[static_cast<int>(button)];
+    const auto index = static_cast<size_t>(button);
+    return index < mouse.pressed.size() && mouse.pressed[index];
 }
 
 bool asw::input::get_mouse_button_up(asw::input::MouseButton button)
 {
-    return mouse.released[static_cast<int>(button)];
+    const auto index = static_cast<size_t>(button);
+    return index < mouse.released.size() && mouse.released[index];
 }
 
 void asw::input::set_cursor(asw::input::CursorId cursor)
@@ -240,6 +250,11 @@ void asw::input::_key_up(SDL_Scancode scancode)
 
 void asw::input::_mouse_button_down(uint8_t button)
 {
+    // Mice with many side buttons can report numbers past the ones we track
+    if (button >= mouse.pressed.size()) {
+        return;
+    }
+
     const auto button_int = static_cast<int>(button);
     mouse.pressed[button_int] = true;
     mouse.down[button_int] = true;
@@ -249,6 +264,10 @@ void asw::input::_mouse_button_down(uint8_t button)
 
 void asw::input::_mouse_button_up(uint8_t button)
 {
+    if (button >= mouse.released.size()) {
+        return;
+    }
+
     const auto button_int = static_cast<int>(button);
     mouse.released[button_int] = true;
     mouse.down[button_int] = false;
@@ -258,13 +277,14 @@ void asw::input::_mouse_motion(float x, float y, float delta_x, float delta_y)
 {
     mouse.position.x = x;
     mouse.position.y = y;
-    mouse.change.x = delta_x;
-    mouse.change.y = delta_y;
+    // Several motion events can arrive in one frame, so add them up
+    mouse.change.x += delta_x;
+    mouse.change.y += delta_y;
 }
 
 void asw::input::_mouse_wheel(float delta_z)
 {
-    mouse.z = delta_z;
+    mouse.z += delta_z;
 }
 
 void asw::input::_controller_added(SDL_JoystickID id)
@@ -277,12 +297,14 @@ void asw::input::_controller_added(SDL_JoystickID id)
     auto* opened = SDL_OpenGamepad(id);
     if (opened == nullptr) {
         asw::log::warn("Failed to open gamepad: {}", id);
+        return;
     }
 
     // Add controller
     auto& new_controller = controller.emplace_back();
     new_controller.gamepad = opened;
-    new_controller.name = SDL_GetGamepadName(opened);
+    const char* name = SDL_GetGamepadName(opened);
+    new_controller.name = name != nullptr ? name : "";
     controller_id_map[id] = controller.size() - 1;
 
     asw::log::info("Gamepad added: {} (ID: {})", new_controller.name, id);
@@ -299,6 +321,13 @@ void asw::input::_controller_removed(SDL_JoystickID id)
     const auto index = it->second;
     controller_id_map.erase(it);
     controller.erase(controller.begin() + index);
+
+    // Controllers after the removed one shift down a slot
+    for (auto& [other_id, other_index] : controller_id_map) {
+        if (other_index > index) {
+            other_index--;
+        }
+    }
 
     // Close gamepad if it exists
     if (auto* existing = SDL_GetGamepadFromID(id); existing != nullptr) {

@@ -32,9 +32,10 @@ void asw::core::update()
                 break;
             }
 
-            // Maintain aspect ratio
+            // Maintain aspect ratio. Window coordinates, not pixels, to match
+            // SDL_SetWindowSize on high density displays
             SDL_Point window_size;
-            SDL_GetRenderOutputSize(r, &window_size.x, &window_size.y);
+            SDL_GetWindowSize(asw::display::get_window(), &window_size.x, &window_size.y);
 
             SDL_Point render_size;
             SDL_GetRenderLogicalPresentation(r, &render_size.x, &render_size.y, nullptr);
@@ -131,6 +132,9 @@ void asw::core::update()
             break;
         }
     }
+
+    // After the events, so actions match raw input on the same frame
+    asw::input::update_actions();
 }
 
 void asw::core::init(int width, int height, int scale)
@@ -196,6 +200,7 @@ void asw::core::exit()
 void asw::core::shutdown()
 {
     asw::input::clear_actions();
+    asw::input::_shutdown();
 
     // Clear asset caches while SDL resources are still valid — SDL_Destroy*
     // calls in the shared_ptr deleters are safe at this point.
