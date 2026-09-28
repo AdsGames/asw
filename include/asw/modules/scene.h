@@ -30,6 +30,11 @@ namespace asw::scene {
 /// @brief Default time step for the game loop.
 constexpr auto DEFAULT_TIMESTEP = std::chrono::milliseconds(8);
 
+/// @brief Longest frame time simulated at once. Longer frames (a breakpoint, a
+/// hidden browser tab) are cut short so the loop does not try to catch up on
+/// hundreds of updates.
+constexpr auto MAX_FRAME_TIME = std::chrono::milliseconds(250);
+
 /// @brief Forward declaration of the SceneManager class.
 template <typename T> class SceneManager;
 
@@ -54,8 +59,8 @@ public:
 
     /// @brief Initialize the game scene.
     ///
-    /// @details This function is called when the scene is registered and
-    /// initialized.
+    /// @details Called each time the scene becomes the active scene, so it
+    /// runs again when the game returns to this scene.
     ///
     virtual void init() {
         // Default implementation does nothing
@@ -74,8 +79,10 @@ public:
             std::erase_if(_objects, [](const auto& obj) { return !obj->alive; });
         }
 
-        // Update all objects in the scene
-        for (auto const& obj : _objects) {
+        // Update all objects in the scene. By index, and holding a copy,
+        // because an update may call register_object and grow the vector.
+        for (std::size_t i = 0; i < _objects.size(); ++i) {
+            const auto obj = _objects[i];
             if (obj->active && obj->alive) {
                 obj->update(dt);
             }
@@ -103,17 +110,18 @@ public:
             std::ranges::sort(_objects, std::less {}, &game::GameObject::z_index);
         }
 
-        for (auto const& obj : _objects) {
+        for (std::size_t i = 0; i < _objects.size(); ++i) {
+            const auto obj = _objects[i];
             if (obj->active) {
                 obj->draw();
             }
         }
     };
 
-    /// @brief Handle input for the game scene.
+    /// @brief Clean up the game scene.
     ///
-    /// @details This function is called every frame to handle input for the
-    /// scene.
+    /// @details Called when the game switches away from this scene. Removes
+    /// all objects by default.
     ///
     virtual void cleanup()
     {
@@ -254,7 +262,8 @@ public:
             const auto now = std::chrono::high_resolution_clock::now();
             auto delta_time = now - time_start;
             time_start = now;
-            lag += std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time);
+            lag += std::min(std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time),
+                std::chrono::nanoseconds(MAX_FRAME_TIME));
 
             while (lag >= this->_timestep) {
                 update(std::chrono::duration<float>(this->_timestep).count());
@@ -330,7 +339,8 @@ public:
     ///
     void set_timestep(std::chrono::nanoseconds ts)
     {
-        _timestep = ts;
+        // A zero step would make the update loop spin forever
+        _timestep = std::max(ts, std::chrono::nanoseconds(1));
     }
 
     /// @brief Get the current timestep.
@@ -359,17 +369,22 @@ private:
         if (!_has_next_scene) {
             return;
         }
+        _has_next_scene = false;
+
+        // Look up first, so an unknown id leaves the current scene running
+        // instead of cleaned up
+        const auto it = _scenes.find(_next_scene);
+        if (it == _scenes.end()) {
+            std::cerr << "asw: set_next_scene() with an unregistered scene id\n";
+            return;
+        }
 
         if (_active_scene != nullptr) {
             _active_scene->cleanup();
         }
 
-        if (auto it = _scenes.find(_next_scene); it != _scenes.end()) {
-            _active_scene = it->second;
-            _active_scene->init();
-        }
-
-        _has_next_scene = false;
+        _active_scene = it->second;
+        _active_scene->init();
     }
 
     /// @brief The current scene of the scene engine.
@@ -397,7 +412,11 @@ private:
     /// @brief The time of the last frame.
     static std::chrono::high_resolution_clock::time_point em_time_;
 
-    /// @brief Emscripten loop function.
+    /// @brief Time not simulated yet, carried over to the next frame.
+    std::chrono::nanoseconds _em_lag { 0 };
+
+    /// @brief Emscripten loop function. Runs the same fixed timestep as the
+    /// desktop loop, so games behave the same in the browser.
     static void loop_emscripten()
     {
         if (instance_ != nullptr) {
@@ -405,7 +424,15 @@ private:
             auto delta_time = now - SceneManager::em_time_;
             SceneManager::em_time_ = now;
 
-            instance_->update(std::chrono::duration<float>(delta_time).count());
+            instance_->_em_lag
+                += std::min(std::chrono::duration_cast<std::chrono::nanoseconds>(delta_time),
+                    std::chrono::nanoseconds(MAX_FRAME_TIME));
+
+            while (instance_->_em_lag >= instance_->_timestep) {
+                instance_->update(std::chrono::duration<float>(instance_->_timestep).count());
+                instance_->_em_lag -= instance_->_timestep;
+            }
+
             instance_->draw();
         }
     }
