@@ -10,6 +10,7 @@
 #define ASW_MODULES_UI_INPUT_BOX_H
 
 #include <functional>
+#include <optional>
 #include <string>
 
 #include "../types.h"
@@ -68,6 +69,19 @@ public:
 
     /// @brief Placeholder text shown when value is empty.
     std::string placeholder;
+
+    /// @brief Style for this input box only. Uses the theme input style when empty.
+    std::optional<InputStyle> style;
+
+    /// @brief Get the style this input box draws with.
+    ///
+    /// @param ctx The UI context.
+    /// @return The input box's own style, or the theme input style.
+    ///
+    const InputStyle& get_style(const Context& ctx) const
+    {
+        return style ? *style : ctx.theme.input;
+    }
 
 private:
     std::size_t _cursor_pos = 0;

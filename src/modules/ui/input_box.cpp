@@ -161,19 +161,16 @@ void asw::ui::InputBox::draw(Context& ctx)
 {
     constexpr float text_padding = 4.0F;
 
+    const auto& s = get_style(ctx);
+
     // Background
-    asw::Color bg = ctx.theme.input_bg;
-    if (!enabled) {
-        bg = ctx.theme.panel_bg;
-    }
-    asw::draw::rect_fill(transform, bg);
+    asw::draw::rect_fill(transform, enabled ? s.bg : s.bg_disabled);
 
     // Border
-    asw::Color border = ctx.theme.btn_bg;
-    if (_hovered && enabled) {
-        border = ctx.theme.btn_hover;
+    if (s.border_width > 0.0F) {
+        asw::draw::rect(
+            transform, (_hovered && enabled) ? s.border_hover : s.border, s.border_width);
     }
-    asw::draw::rect(transform, border);
 
     // Clip text to input bounds
     const SDL_Rect clip {
@@ -186,7 +183,7 @@ void asw::ui::InputBox::draw(Context& ctx)
 
     // Text position (vertically centered)
     const auto display_text = value.empty() ? placeholder : value;
-    const auto display_color = value.empty() ? ctx.theme.text_dim : ctx.theme.text;
+    const auto display_color = value.empty() ? s.placeholder : s.text;
 
     if (!display_text.empty() && font != nullptr) {
         const auto text_size = asw::util::get_text_size(font, display_text);
@@ -212,21 +209,14 @@ void asw::ui::InputBox::draw(Context& ctx)
             + ((transform.size.y - static_cast<float>(text_height.y)) / 2.0F);
 
         asw::draw::line({ cursor_x, cursor_y },
-            { cursor_x, cursor_y + static_cast<float>(text_height.y) }, ctx.theme.text);
+            { cursor_x, cursor_y + static_cast<float>(text_height.y) }, s.caret);
     }
 
     // Reset clip
     SDL_SetRenderClipRect(asw::display::get_renderer(), nullptr);
 
     // Focus ring
-    if (_focused && ctx.theme.show_focus) {
-        auto ring = asw::Quad<float>(transform);
-        ring.position.x -= 2;
-        ring.position.y -= 2;
-        ring.size.x += 4;
-        ring.size.y += 4;
-        asw::draw::rect(ring, ctx.theme.btn_focus_ring);
-    }
+    draw_focus_ring(ctx.theme, transform, _focused);
 
     Widget::draw(ctx);
 }

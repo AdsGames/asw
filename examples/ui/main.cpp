@@ -5,8 +5,9 @@
 ///   - asw::ui::Root driving input, layout and drawing
 ///   - asw::ui::Panel, VBox, Label, Button, Checkbox and InputBox
 ///   - Button on_click, Checkbox and InputBox on_change callbacks
-///   - Keyboard navigation: Tab / arrows move focus, Enter activates
-///   - Editing asw::ui::Theme at runtime
+///   - Keyboard and controller navigation through action bindings
+///     (asw::ui::bind_default_navigation) and Root::on_back
+///   - Editing asw::ui::Theme at runtime, and a per-button ButtonStyle
 ///   - asw::assets::get_save_path() to keep the name between runs
 ///   - asw::dialog::request_file() / take_file() for a native file chooser
 ///   - asw::dialog::confirm() and warn() message boxes
@@ -14,13 +15,14 @@
 ///
 /// Controls:
 ///   Mouse - click buttons, click the box to type
-///   Tab / Shift+Tab / Arrows - move focus
-///   Enter / Space - press the focused button
-///   Escape - quit (asks first)
+///   Tab / Shift+Tab / Arrows, D-pad, left stick, shoulders - move focus
+///   Enter / Space / A - press the focused button
+///   Escape / B - quit (asks first)
 ///
 /// Scripted run:
 ///   ASW_EXAMPLE_AUTORUN=1 SDL_VIDEO_DRIVER=dummy ./example_ui
-///   Fills in a name, clicks Greet, Theme and the checkbox, saves autorun.png and quits.
+///   Fills in a name, clicks Greet, Theme and the checkbox, moves focus with
+///   the down action, saves autorun.png and quits.
 
 #include <array>
 #include <asw/asw.h>
@@ -68,11 +70,26 @@ void save_name(const std::string& name)
 
 void apply_palette(asw::ui::Root& ui, const Palette& p)
 {
-    ui.ctx.theme.panel_bg = p.panel;
-    ui.ctx.theme.btn_bg = p.button;
-    ui.ctx.theme.btn_hover = p.hover;
-    ui.ctx.theme.btn_pressed = p.pressed;
-    ui.ctx.theme.btn_focus_ring = p.accent;
+    auto& theme = ui.ctx.theme;
+    theme.panel_bg = p.panel;
+
+    theme.button.bg = p.button;
+    theme.button.bg_hover = p.hover;
+    theme.button.bg_pressed = p.pressed;
+    theme.button.border = p.pressed;
+    theme.button.border_width = 1.0F;
+
+    theme.checkbox.box = p.button;
+    theme.checkbox.box_hover = p.hover;
+    theme.checkbox.box_pressed = p.pressed;
+    theme.checkbox.mark = p.accent;
+
+    theme.input.border = p.button;
+    theme.input.border_hover = p.hover;
+
+    theme.focus_ring.color = p.accent;
+    theme.focus_ring.width = 2.0F;
+
     ui.root.bg = p.panel.darken(0.4F);
 }
 
@@ -188,7 +205,21 @@ int main()
         greeting.text = checked ? "Greet will save your name" : "Greet will not save your name";
     };
 
+    // Arrows, Tab, Return and Escape plus the same on any controller
+    ui.ctx.navigation = asw::ui::bind_default_navigation();
+
 #ifndef __EMSCRIPTEN__
+    // A button with its own style, left aligned and red
+    asw::ui::ButtonStyle danger;
+    danger.bg = { 120, 40, 40 };
+    danger.bg_hover = { 160, 60, 60 };
+    danger.bg_pressed = { 190, 80, 80 };
+    danger.border = { 230, 120, 120 };
+    danger.border_width = 2.0F;
+    danger.text_align = asw::TextJustify::Left;
+    quit.style = danger;
+    quit.padding = 12.0F;
+
     // Message boxes block until answered
     const auto ask_quit = []() {
         if (asw::dialog::confirm("Quit", "Close the UI example?")) {
@@ -196,6 +227,9 @@ int main()
         }
     };
     quit.on_click = ask_quit;
+
+    // Back (Escape or B) when no widget uses it
+    ui.on_back = ask_quit;
 #endif
 
     if (!name.value.empty()) {
@@ -227,15 +261,17 @@ int main()
             if (frame == 11 || frame == 21 || frame == 31) {
                 asw::input::simulate_mouse_button_up(asw::input::MouseButton::Left);
             }
+
+            // The down action moves focus from the checkbox and shows the ring
+            if (frame == 35) {
+                asw::input::simulate_key_down(asw::input::Key::Down);
+            }
+            if (frame == 36) {
+                asw::input::simulate_key_up(asw::input::Key::Down);
+            }
         }
 
         asw::core::update();
-
-#ifndef __EMSCRIPTEN__
-        if (asw::input::get_key_down(asw::input::Key::Escape)) {
-            ask_quit();
-        }
-#endif
 
         ui.update();
 

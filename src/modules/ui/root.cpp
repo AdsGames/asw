@@ -2,6 +2,7 @@
 
 #include <algorithm>
 
+#include "./asw/modules/action.h"
 #include "./asw/modules/input.h"
 
 namespace {
@@ -193,11 +194,20 @@ void asw::ui::Root::update()
     }
 
     // --- Focus Events ---
+    const auto& nav = ctx.navigation;
+
+    // An action when one is named, else the built in key
+    const auto pressed = [](const std::string& action, Key key) {
+        return action.empty() ? get_key_down(key) : get_action_down(action);
+    };
+
     const auto shift = get_key(Key::LShift) || get_key(Key::RShift);
 
     // Global focus handling first (keyboard-first UX)
-    if (get_key_down(Key::Tab)) {
-        if (shift) {
+    const bool next = pressed(nav.next, Key::Tab);
+    const bool prev = nav.prev.empty() ? false : get_action_down(nav.prev);
+    if (next || prev) {
+        if (prev || shift) {
             ctx.focus.focus_prev(ctx);
         } else {
             ctx.focus.focus_next(ctx);
@@ -206,62 +216,43 @@ void asw::ui::Root::update()
         ctx.theme.show_focus = true;
     }
 
-    // Arrow keys: dispatch KeyDown to focused widget first, fall back to focus navigation
-    if (get_key_down(Key::Up)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Up };
+    // Directions: dispatch KeyDown to focused widget first, fall back to focus navigation
+    const auto direction = [&](const std::string& action, Key key, int dx, int dy) {
+        if (!pressed(action, key)) {
+            return;
+        }
+        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = key };
         if (!dispatch_to_focused(e)) {
-            ctx.focus.focus_dir(ctx, 0, -1);
+            ctx.focus.focus_dir(ctx, dx, dy);
             ctx.theme.show_focus = true;
         }
-    }
-    if (get_key_down(Key::Down)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Down };
-        if (!dispatch_to_focused(e)) {
-            ctx.focus.focus_dir(ctx, 0, +1);
-            ctx.theme.show_focus = true;
-        }
-    }
-    if (get_key_down(Key::Left)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Left };
-        if (!dispatch_to_focused(e)) {
-            ctx.focus.focus_dir(ctx, -1, 0);
-            ctx.theme.show_focus = true;
-        }
-    }
-    if (get_key_down(Key::Right)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Right };
-        if (!dispatch_to_focused(e)) {
-            ctx.focus.focus_dir(ctx, +1, 0);
-            ctx.theme.show_focus = true;
-        }
-    }
+    };
+    direction(nav.up, Key::Up, 0, -1);
+    direction(nav.down, Key::Down, 0, +1);
+    direction(nav.left, Key::Left, -1, 0);
+    direction(nav.right, Key::Right, +1, 0);
 
     // Editing keys dispatched to focused widget
-    if (get_key_down(Key::Backspace)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Backspace };
-        dispatch_to_focused(e);
-    }
-    if (get_key_down(Key::Delete)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Delete };
-        dispatch_to_focused(e);
-    }
-    if (get_key_down(Key::Home)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::Home };
-        dispatch_to_focused(e);
-    }
-    if (get_key_down(Key::End)) {
-        const UIEvent e { .type = UIEvent::Type::KeyDown, .key = Key::End };
-        dispatch_to_focused(e);
+    for (const auto key : { Key::Backspace, Key::Delete, Key::Home, Key::End }) {
+        if (get_key_down(key)) {
+            const UIEvent e { .type = UIEvent::Type::KeyDown, .key = key };
+            dispatch_to_focused(e);
+        }
     }
 
     // Activate/back routed to focused widget
-    if (get_key_down(Key::Return) || get_key_down(Key::Space)) {
+    const bool activate = nav.activate.empty()
+        ? get_key_down(Key::Return) || get_key_down(Key::Space)
+        : get_action_down(nav.activate);
+    if (activate) {
         const UIEvent a { .type = UIEvent::Type::Activate };
         dispatch_to_focused(a);
     }
-    if (get_key_down(Key::Escape)) {
+    if (pressed(nav.back, Key::Escape)) {
         const UIEvent b { .type = UIEvent::Type::Back };
-        dispatch_to_focused(b);
+        if (!dispatch_to_focused(b) && on_back) {
+            on_back();
+        }
     }
 }
 

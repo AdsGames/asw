@@ -118,17 +118,23 @@ void asw::ui::Button::set_text(const std::string& t, bool auto_size)
 
 void asw::ui::Button::draw(Context& ctx)
 {
-    asw::Color bg = ctx.theme.btn_bg;
-    if (!enabled) {
-        bg = ctx.theme.panel_bg;
-    } else if (_pressed) {
-        bg = ctx.theme.btn_pressed;
-    } else if (_hovered) {
-        bg = ctx.theme.btn_hover;
-    }
+    const auto& s = get_style(ctx);
+    const bool highlighted = enabled && is_highlighted(ctx);
 
     if (draw_background) {
+        asw::Color bg = s.bg;
+        if (!enabled) {
+            bg = s.bg_disabled;
+        } else if (_pressed) {
+            bg = s.bg_pressed;
+        } else if (highlighted) {
+            bg = s.bg_hover;
+        }
         asw::draw::rect_fill(transform, bg);
+    }
+
+    if (s.border_width > 0.0F) {
+        asw::draw::rect(transform, s.border, s.border_width);
     }
 
     const asw::Quad<float> inner {
@@ -141,22 +147,27 @@ void asw::ui::Button::draw(Context& ctx)
     }
 
     if (!text.empty() && font != nullptr) {
+        asw::Color color = s.text;
+        if (!enabled) {
+            color = s.text_disabled;
+        } else if (highlighted) {
+            color = s.text_hover;
+        }
+
         const auto text_size = asw::util::get_text_size(font, text);
-        const auto text_pos
-            = inner.get_center() - asw::Vec2<float>(text_size.x / 2.0f, text_size.y / 2.0f);
+        const float text_y = inner.position.y + ((inner.size.y - text_size.y) / 2.0F);
 
-        asw::draw::text(font, text, text_pos, ctx.theme.text, asw::TextJustify::Left);
+        float text_x = inner.get_center().x - (text_size.x / 2.0F);
+        if (s.text_align == asw::TextJustify::Left) {
+            text_x = inner.position.x;
+        } else if (s.text_align == asw::TextJustify::Right) {
+            text_x = inner.position.x + inner.size.x - text_size.x;
+        }
+
+        asw::draw::text(font, text, { text_x, text_y }, color, asw::TextJustify::Left);
     }
 
-    if (_focused && ctx.theme.show_focus) {
-        // Focus ring
-        auto ring = asw::Quad<float>(transform);
-        ring.position.x -= 2;
-        ring.position.y -= 2;
-        ring.size.x += 4;
-        ring.size.y += 4;
-        asw::draw::rect(ring, ctx.theme.btn_focus_ring);
-    }
+    draw_focus_ring(ctx.theme, transform, _focused);
 
     Widget::draw(ctx);
 }
