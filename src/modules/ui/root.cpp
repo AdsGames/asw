@@ -62,14 +62,6 @@ void asw::ui::Root::set_size(float w, float h)
     ctx.need_focus_rebuild = true;
 }
 
-void asw::ui::Root::rebuild_focus_if_needed()
-{
-    if (!ctx.need_focus_rebuild) {
-        return;
-    }
-    validate();
-}
-
 void asw::ui::Root::validate()
 {
     // Widgets can be removed at any time, often from inside a callback, so
@@ -345,7 +337,7 @@ void asw::ui::Root::update_keys()
     }
 }
 
-void asw::ui::Root::update()
+bool asw::ui::Root::update()
 {
     _used = false;
 
@@ -361,6 +353,21 @@ void asw::ui::Root::update()
 
     update_pointer();
     update_keys();
+
+    return _used;
+}
+
+void asw::ui::Root::focus(Widget& w, bool show)
+{
+    validate();
+    ctx.focus.set_focus(ctx, &w);
+    ctx.show_focus = show;
+}
+
+void asw::ui::Root::clear_focus()
+{
+    ctx.focus.set_focus(ctx, nullptr);
+    ctx.show_focus = false;
 }
 
 void asw::ui::Root::draw()

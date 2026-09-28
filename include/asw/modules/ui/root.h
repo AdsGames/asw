@@ -10,6 +10,7 @@
 #define ASW_UI_ROOT_H
 
 #include <functional>
+#include <vector>
 
 #include "context.h"
 #include "panel.h"
@@ -17,6 +18,10 @@
 namespace asw::ui {
 
 /// @brief Root container that manages the UI tree, input, and rendering.
+///
+/// @details Call update() once per frame after asw::core::update(), then
+/// draw(). Root tracks hover, press, focus and the focus ring for every
+/// widget, and reads navigation from Context::navigation.
 ///
 class Root {
 public:
@@ -27,7 +32,8 @@ public:
     /// @brief The UI context.
     Context ctx;
 
-    /// @brief The root panel widget.
+    /// @brief The root panel widget. See through by default, set bg for a
+    /// background.
     Panel root;
 
     /// @brief Called when back is pressed and the focused widget does not
@@ -45,49 +51,35 @@ public:
     ///
     void set_size(float w, float h);
 
-    /// @brief Rebuild the focus list if need_focus_rebuild is set. The tree
-    /// is also checked automatically every update and after each dispatched
-    /// event, so this is rarely needed.
+    /// @brief Process input for this frame.
     ///
-    void rebuild_focus_if_needed();
+    /// @return True if the UI used input this frame: the pointer is over a
+    /// widget or pressing one, or a navigation, activate, back or text key
+    /// went to the UI. Games can skip their own input for the frame.
+    ///
+    bool update();
 
-    /// @brief Drop hover, capture and focus pointers to widgets that are no
-    /// longer in the tree, and refresh the focus list.
-    ///
-    void validate();
-
-    /// @brief Find the deepest widget at a given pointer position.
-    ///
-    /// @param w The widget to test.
-    /// @param pointer_pos The pointer position.
-    /// @return Pointer to the hit widget, or nullptr.
-    ///
-    Widget* hit_test(Widget& w, const asw::Vec2<float>& pointer_pos);
-
-    /// @brief Route a pointer event to the appropriate widget.
-    ///
-    /// @param e The UI event to dispatch.
-    /// @return True if the event was handled.
-    ///
-    bool dispatch_pointer(const UIEvent& e);
-
-    /// @brief Dispatch an event to the currently focused widget.
-    ///
-    /// @param e The UI event to dispatch.
-    /// @return True if the event was handled.
-    ///
-    bool dispatch_to_focused(const UIEvent& e);
-
-    /// @brief Process input and dispatch UI events.
-    ///
-    void update();
-
-    /// @brief Draw the UI tree.
+    /// @brief Draw the UI tree, then the focus ring.
     ///
     void draw();
 
+    /// @brief Focus a widget.
+    ///
+    /// @param w The widget, it must be focusable and in this tree.
+    /// @param show Show the focus ring, as keyboard navigation would.
+    ///
+    void focus(Widget& w, bool show = false);
+
+    /// @brief Remove focus from every widget.
+    ///
+    void clear_focus();
+
 private:
     void fit_to_screen();
+    void validate();
+    Widget* hit_test(Widget& w, const asw::Vec2<float>& pointer_pos);
+    bool dispatch_pointer(const UIEvent& e);
+    bool dispatch_to_focused(const UIEvent& e);
     void update_pointer();
     void update_keys();
     void activate(Widget& w);

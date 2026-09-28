@@ -21,13 +21,6 @@ namespace asw::ui {
 ///
 class FocusManager {
 public:
-    /// @brief Rebuild the focusable widget list from the widget tree.
-    ///
-    /// @param ctx The UI context.
-    /// @param root The root widget to traverse.
-    ///
-    void rebuild(Context& ctx, Widget& root);
-
     /// @brief Get the currently focused widget.
     ///
     /// @return Pointer to the focused widget, or nullptr.
@@ -43,14 +36,6 @@ public:
     /// @param w The widget to focus.
     ///
     void set_focus(Context& ctx, Widget* w);
-
-    /// @brief Drop the focused widget without notifying it, for when it has
-    /// been removed from the tree and may already be destroyed.
-    ///
-    void forget_focus()
-    {
-        _focused = nullptr;
-    }
 
     /// @brief Widget focused by the first navigation press when nothing has
     /// focus. The first focusable widget when null.
@@ -83,6 +68,18 @@ public:
     void focus_dir(Context& ctx, int dx, int dy);
 
 private:
+    friend class Root;
+
+    // Rebuild the focusable widget list from the widget tree
+    void rebuild(Context& ctx, Widget& root);
+
+    // Drop the focused widget without notifying it, for when it has been
+    // removed from the tree and may already be destroyed
+    void forget_focus()
+    {
+        _focused = nullptr;
+    }
+
     void dfs(Widget& w);
 
     std::vector<Widget*> _focusables;
@@ -111,16 +108,16 @@ public:
     /// controller navigation and off when the mouse is used.
     bool show_focus = false;
 
-    /// @brief The widget that has captured pointer input.
+private:
+    friend class Root;
+
+    // Widget pressed by the pointer, it gets pointer events until release
     Widget* pointer_capture = nullptr;
 
-    /// @brief The widget currently being hovered.
+    // Widget under the pointer
     Widget* hover = nullptr;
 
-    /// @brief Whether the pointer is currently down.
-    bool pointer_down = false;
-
-    /// @brief Whether the focus list needs to be rebuilt.
+    // Focus list needs to be rebuilt
     bool need_focus_rebuild = true;
 };
 

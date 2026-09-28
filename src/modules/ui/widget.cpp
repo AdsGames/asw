@@ -1,5 +1,7 @@
 #include "./asw/modules/ui/widget.h"
 
+#include <algorithm>
+
 #include "./asw/modules/ui/context.h"
 
 void asw::ui::Widget::layout(Context& ctx)
@@ -40,4 +42,20 @@ void asw::ui::Widget::draw(Context& ctx)
             c->draw(ctx);
         }
     }
+}
+
+bool asw::ui::Widget::remove_child(const Widget& child)
+{
+    const auto it = std::ranges::find_if(
+        children, [&child](const std::unique_ptr<Widget>& c) { return c.get() == &child; });
+    if (it == children.end()) {
+        return false;
+    }
+    children.erase(it);
+    return true;
+}
+
+void asw::ui::Widget::clear_children()
+{
+    children.clear();
 }
