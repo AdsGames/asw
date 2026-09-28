@@ -39,13 +39,18 @@ struct MouseButtonBinding {
     MouseButton button;
 };
 
-/// @brief Binding to a controller (gamepad) button.
+/// @brief Binding to a controller (gamepad) button. Set @c controller_index to
+/// ANY_CONTROLLER to accept every connected controller.
 struct ControllerButtonBinding {
     ControllerButton button;
     uint32_t controller_index { 0 };
 };
 
 /// @brief Binding to a controller axis, activated when the axis exceeds a threshold.
+///
+/// @details The threshold is compared against the axis with the dead zone
+/// applied. Set @c controller_index to ANY_CONTROLLER to accept every
+/// connected controller.
 ///
 /// @details Set @c positive_direction to false to bind to the negative axis direction
 /// (e.g. left stick left, or left trigger in inverted mode).
