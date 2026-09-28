@@ -59,7 +59,7 @@ jobs:
       - name: Run CMake
         run: >
           emcmake cmake --preset release
-          -DCPM_SOURCE_CACHE=$HOME/.cache/CPM
+          -DCPM_SOURCE_CACHE="$HOME/.cache/CPM"
           -DASW_BUILD_EXAMPLES=${{ github.event_name == 'pull_request' && 'ON' || 'OFF' }}
 
       - name: Make
