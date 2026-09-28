@@ -385,6 +385,9 @@ void asw::ui::Root::focus(Widget& w, bool show)
 
 void asw::ui::Root::clear_focus()
 {
+    // The focused widget may have been removed since the last update, drop
+    // it first so set_focus does not notify a destroyed widget
+    validate();
     ctx.focus.set_focus(ctx, nullptr);
     ctx.show_focus = false;
 }
@@ -393,7 +396,11 @@ void asw::ui::Root::draw()
 {
     root.draw(ctx);
 
-    // Focus ring on top of everything
+    // Focus ring on top of everything. Validate first in case the focused
+    // widget was removed since the last update.
+    if (ctx.show_focus && ctx.focus.focused() != nullptr) {
+        validate();
+    }
     Widget* f = ctx.focus.focused();
     if (ctx.show_focus && f != nullptr && f->visible && f->focus_ring) {
         draw_focus_ring(ctx.theme.focus_ring, f->transform);
