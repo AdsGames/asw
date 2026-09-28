@@ -29,7 +29,6 @@ struct UIEvent {
         PointerMove,
         PointerEnter,
         PointerLeave,
-        Activate,
         Back
     };
 

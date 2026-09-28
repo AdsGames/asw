@@ -19,6 +19,18 @@ bool in_tree(const std::vector<asw::ui::Widget*>& live, const asw::ui::Widget* w
 {
     return w == nullptr || std::ranges::find(live, w) != live.end();
 }
+
+// The widget a pointer acts on: the nearest focusable widget at or above
+// the hit, so a label inside a button still presses the button
+asw::ui::Widget* interactive(asw::ui::Widget* hit)
+{
+    for (auto* w = hit; w != nullptr; w = w->parent) {
+        if (w->focusable) {
+            return w;
+        }
+    }
+    return nullptr;
+}
 } // namespace
 
 asw::ui::Root::Root()
@@ -34,8 +46,8 @@ void asw::ui::Root::fit_to_screen()
     if (screen.x > 0 && screen.y > 0
         && (root.transform.size.x != static_cast<float>(screen.x)
             || root.transform.size.y != static_cast<float>(screen.y))) {
-        root.transform = { 0.0F, 0.0F, static_cast<float>(screen.x),
-            static_cast<float>(screen.y) };
+        root.transform
+            = { 0.0F, 0.0F, static_cast<float>(screen.x), static_cast<float>(screen.y) };
         ctx.need_focus_rebuild = true;
     }
 }
@@ -148,71 +160,112 @@ bool asw::ui::Root::dispatch_to_focused(const UIEvent& e)
     return handled;
 }
 
-void asw::ui::Root::update()
+void asw::ui::Root::activate(Widget& w)
+{
+    if (w.enabled) {
+        w.activate(ctx);
+        _used = true;
+    }
+
+    // The callback may have changed the tree
+    validate();
+}
+
+void asw::ui::Root::update_pointer()
 {
     using namespace asw::input;
 
-    if (auto_size) {
-        fit_to_screen();
-    }
-
-    // Catch tree changes made since the last update
-    validate();
-
-    // Arrange
-    root.layout(ctx);
-
-    // --- Mouse ---
     const auto& mouse = get_mouse();
+    const bool moved = mouse.change.x != 0.0F || mouse.change.y != 0.0F;
+    Widget* hit = hit_test(root, mouse.position);
 
     // Hover every frame, so it is right after a scene change or when widgets
     // move under a still mouse
-    if (Widget* new_hover = hit_test(root, mouse.position); new_hover != ctx.hover) {
+    Widget* new_hover = interactive(hit);
+    if (new_hover != ctx.hover) {
         if (ctx.hover != nullptr) {
+            ctx.hover->_hovered = false;
             const UIEvent leave { .type = UIEvent::Type::PointerLeave,
                 .pointer_pos = mouse.position };
             ctx.hover->on_event(ctx, leave);
         }
         ctx.hover = new_hover;
         if (ctx.hover != nullptr) {
+            ctx.hover->_hovered = true;
             const UIEvent enter { .type = UIEvent::Type::PointerEnter,
                 .pointer_pos = mouse.position };
             ctx.hover->on_event(ctx, enter);
         }
     }
 
-    if (mouse.change.x != 0.0F || mouse.change.y != 0.0F) {
-        // Regular move event
+    if (ctx.pointer_capture != nullptr || (hit != nullptr && hit != &root)) {
+        _used = true;
+    }
+
+    if (moved) {
         const UIEvent e { .type = UIEvent::Type::PointerMove, .pointer_pos = mouse.position };
         dispatch_pointer(e);
         ctx.show_focus = false;
     }
 
-    // --- Button events ---
-
     // One event per button, carrying the real button so widgets can ignore
     // the ones they do not use
     for (const auto button : { MouseButton::Left, MouseButton::Right, MouseButton::Middle }) {
+        const bool left = button == MouseButton::Left;
+
         if (get_mouse_button_down(button)) {
+            ctx.show_focus = false;
+
+            // Press, capture and focus the widget under the pointer
+            if (left && ctx.hover != nullptr && ctx.hover->enabled) {
+                ctx.pointer_capture = ctx.hover;
+                ctx.hover->_pressed = true;
+                ctx.focus.set_focus(ctx, ctx.hover);
+            }
+
             const UIEvent e { .type = UIEvent::Type::PointerDown,
                 .pointer_pos = mouse.position,
                 .mouse_button = button };
             dispatch_pointer(e);
-            ctx.show_focus = false;
         }
+
         if (get_mouse_button_up(button)) {
+            ctx.show_focus = false;
+
+            Widget* pressed = left ? ctx.pointer_capture : nullptr;
             const UIEvent e { .type = UIEvent::Type::PointerUp,
                 .pointer_pos = mouse.position,
                 .mouse_button = button };
             dispatch_pointer(e);
-            ctx.show_focus = false;
+
+            // Click: released over the widget that was pressed
+            if (pressed != nullptr) {
+                const bool over = pressed == ctx.hover;
+                pressed->_pressed = false;
+                ctx.pointer_capture = nullptr;
+                if (over) {
+                    activate(*pressed);
+                }
+            }
         }
     }
+
+    // Pressed look only while the pointer is still over the pressed widget
+    if (ctx.pointer_capture != nullptr) {
+        ctx.pointer_capture->_pressed = ctx.pointer_capture == ctx.hover;
+    }
+}
+
+void asw::ui::Root::update_keys()
+{
+    using namespace asw::input;
 
     // --- Text Input ---
     if (!input::get_text_input().empty()) {
         const UIEvent ti { .type = UIEvent::Type::TextInput, .text = input::get_text_input() };
-        dispatch_to_focused(ti);
+        if (dispatch_to_focused(ti)) {
+            _used = true;
+        }
     }
 
     // --- Focus Events ---
@@ -236,6 +289,7 @@ void asw::ui::Root::update()
         }
 
         ctx.show_focus = true;
+        _used = true;
     }
 
     // Directions: dispatch KeyDown to focused widget first, fall back to focus navigation
@@ -246,8 +300,9 @@ void asw::ui::Root::update()
         const UIEvent e { .type = UIEvent::Type::KeyDown, .key = key };
         if (!dispatch_to_focused(e)) {
             ctx.focus.focus_dir(ctx, dx, dy);
-            ctx.show_focus = true;
         }
+        ctx.show_focus = true;
+        _used = true;
     };
     direction(nav.up, Key::Up, 0, -1);
     direction(nav.down, Key::Down, 0, +1);
@@ -258,32 +313,63 @@ void asw::ui::Root::update()
     for (const auto key : { Key::Backspace, Key::Delete, Key::Home, Key::End }) {
         if (get_key_down(key)) {
             const UIEvent e { .type = UIEvent::Type::KeyDown, .key = key };
-            dispatch_to_focused(e);
+            if (dispatch_to_focused(e)) {
+                _used = true;
+            }
         }
     }
 
-    // Activate/back routed to focused widget
-    const bool activate = nav.activate.empty()
+    // Activate the focused widget. The first press only shows where focus is.
+    const bool activate_pressed = nav.activate.empty()
         ? get_key_down(Key::Return) || get_key_down(Key::Space)
         : get_action_down(nav.activate);
-    if (activate) {
-        // The first press only shows where focus is
+    if (activate_pressed) {
         if (ctx.focus.focus_start(ctx)) {
             ctx.show_focus = true;
-        } else {
-            const UIEvent a { .type = UIEvent::Type::Activate };
-            dispatch_to_focused(a);
+            _used = true;
+        } else if (Widget* f = ctx.focus.focused(); f != nullptr) {
+            activate(*f);
         }
     }
+
+    // Back goes to the focused widget, then on_back
     if (pressed(nav.back, Key::Escape)) {
         const UIEvent b { .type = UIEvent::Type::Back };
-        if (!dispatch_to_focused(b) && on_back) {
+        if (dispatch_to_focused(b)) {
+            _used = true;
+        } else if (on_back) {
             on_back();
+            _used = true;
+            validate();
         }
     }
+}
+
+void asw::ui::Root::update()
+{
+    _used = false;
+
+    if (auto_size) {
+        fit_to_screen();
+    }
+
+    // Catch tree changes made since the last update
+    validate();
+
+    // Arrange
+    root.layout(ctx);
+
+    update_pointer();
+    update_keys();
 }
 
 void asw::ui::Root::draw()
 {
     root.draw(ctx);
+
+    // Focus ring on top of everything
+    Widget* f = ctx.focus.focused();
+    if (ctx.show_focus && f != nullptr && f->visible && f->focus_ring) {
+        draw_focus_ring(ctx.theme.focus_ring, f->transform);
+    }
 }

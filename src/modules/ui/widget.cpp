@@ -23,6 +23,16 @@ void asw::ui::Widget::on_focus_changed(Context& ctx, bool focused)
     (void)focused;
 }
 
+void asw::ui::Widget::activate(Context& ctx)
+{
+    (void)ctx;
+}
+
+bool asw::ui::Widget::is_highlighted(const Context& ctx) const
+{
+    return _pressed || _hovered || (_focused && ctx.show_focus);
+}
+
 void asw::ui::Widget::draw(Context& ctx)
 {
     for (auto const& c : children) {
