@@ -12,6 +12,7 @@
 #include <algorithm>
 #include <string>
 
+#include "./easing.h"
 #include "./geometry.h"
 #include "./types.h"
 
@@ -62,8 +63,7 @@ void clear_text_size_cache();
 ///
 template <typename T> T lerp(const T& a, const T& b, float t)
 {
-    t = std::clamp(t, 0.0F, 1.0F);
-    return a + (b - a) * t;
+    return asw::easing::detail::mix(a, b, std::clamp(t, 0.0F, 1.0F));
 }
 
 } // namespace asw::util

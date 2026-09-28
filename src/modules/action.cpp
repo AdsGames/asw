@@ -190,17 +190,12 @@ void asw::input::update_actions()
             any_released |= binding_is_released(binding);
         }
 
-        // Derive press / release transitions for axis bindings (and as a
-        // fallback for any binding that doesn't supply its own signals).
-        if (any_down && !action.prev_down) {
-            any_pressed = true;
-        }
-        if (!any_down && action.prev_down) {
-            any_released = true;
-        }
-
-        action.pressed = any_pressed;
-        action.released = any_released;
+        // The action is pressed when it goes from up to down, and released
+        // when it goes from down to up. A binding's own edge still counts, so
+        // a tap within one frame is seen, but not while another binding holds
+        // the action down, e.g. pressing a second jump key does not jump again.
+        action.pressed = !action.prev_down && (any_down || any_pressed);
+        action.released = !any_down && (action.prev_down || any_released);
         action.down = any_down;
         action.strength = max_strength;
         action.prev_down = any_down;

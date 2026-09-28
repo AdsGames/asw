@@ -204,6 +204,15 @@ void _shutdown();
 ///
 MIX_Mixer* get_mixer();
 
+/// @brief Get the number of times the sound module has been shut down.
+///
+/// @details Shutting down frees all loaded audio, so audio loaded before a
+/// shutdown must not be destroyed again, even after the next init.
+///
+/// @return The shutdown count.
+///
+uint32_t _get_session();
+
 /// @brief Play a sample.
 ///
 /// @param sample Sample to play

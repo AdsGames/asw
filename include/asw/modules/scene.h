@@ -105,9 +105,10 @@ public:
     virtual void draw()
     {
         // Sort objects by z-index. The check is a linear read, so already
-        // ordered scenes skip the sort entirely.
+        // ordered scenes skip the sort entirely. The sort is stable, so objects
+        // on the same z-index keep their order and do not flicker.
         if (!std::ranges::is_sorted(_objects, std::less {}, &game::GameObject::z_index)) {
-            std::ranges::sort(_objects, std::less {}, &game::GameObject::z_index);
+            std::ranges::stable_sort(_objects, std::less {}, &game::GameObject::z_index);
         }
 
         for (std::size_t i = 0; i < _objects.size(); ++i) {

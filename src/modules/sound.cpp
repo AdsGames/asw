@@ -70,6 +70,9 @@ MIX_Track* music_track = nullptr;
 float music_base_volume = 1.0F;
 MIX_Mixer* mixer = nullptr;
 
+// Counts shutdowns, each one frees all loaded audio
+uint32_t session = 0;
+
 asw::Vec2<float> listener_position;
 asw::Vec2<float> listener_velocity;
 asw::sound::SpatialMode spatial_mode = asw::sound::SpatialMode::Stereo;
@@ -406,6 +409,12 @@ void asw::sound::_shutdown()
     }
     music_track = nullptr;
     MIX_Quit();
+    session++;
+}
+
+uint32_t asw::sound::_get_session()
+{
+    return session;
 }
 
 bool asw::sound::_init()
@@ -495,7 +504,7 @@ namespace {
 asw::sound::SoundHandle start(const asw::Sample& sample, const asw::sound::PlayOptions& options,
     const asw::Vec2<float>* position)
 {
-    if (mixer == nullptr || sample == nullptr) {
+    if (mixer == nullptr || sample == nullptr || static_cast<size_t>(options.bus) >= NUM_BUSES) {
         return {};
     }
 

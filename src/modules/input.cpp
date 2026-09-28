@@ -155,6 +155,7 @@ void asw::input::reset()
 
     // Clear mouse state
     m_state.any_pressed = false;
+    m_state.last_pressed = -1;
     m_state.change = { 0.0F, 0.0F };
     m_state.z = 0;
 

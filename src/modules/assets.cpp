@@ -20,6 +20,18 @@ std::unordered_map<std::string, asw::Texture> textures;
 std::unordered_map<std::string, asw::Font> fonts;
 std::unordered_map<std::string, asw::Sample> samples;
 std::unordered_map<std::string, asw::Music> music;
+
+// Destroys audio only while the mixer it was loaded with is running. Shutting
+// the mixer down frees all its audio, so audio loaded before a shutdown is not
+// destroyed again, even after the mixer is started again.
+auto audio_deleter()
+{
+    return [session = asw::sound::_get_session()](MIX_Audio* a) {
+        if (asw::sound::get_mixer() != nullptr && asw::sound::_get_session() == session) {
+            MIX_DestroyAudio(a);
+        }
+    };
+}
 } // namespace
 
 // --- Paths ---
@@ -105,6 +117,10 @@ asw::Texture asw::assets::create_texture(int w, int h)
 
     SDL_Texture* txr
         = SDL_CreateTexture(r, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, w, h);
+
+    if (txr == nullptr) {
+        asw::util::abort_on_error("Failed to create texture: " + std::string(SDL_GetError()));
+    }
 
     SDL_SetTextureScaleMode(txr, SDL_SCALEMODE_NEAREST);
     SDL_SetTextureBlendMode(txr, SDL_BLENDMODE_BLEND);
@@ -237,11 +253,7 @@ asw::Sample asw::assets::load_sample(const std::string& filename)
         asw::util::abort_on_error("Failed to load sample: " + full_path);
     }
 
-    return { temp, [](MIX_Audio* a) {
-                if (asw::sound::get_mixer() != nullptr) {
-                    MIX_DestroyAudio(a);
-                }
-            } };
+    return { temp, audio_deleter() };
 }
 
 asw::Sample asw::assets::load_sample(const std::string& filename, const std::string& key)
@@ -280,11 +292,7 @@ asw::Music asw::assets::load_music(const std::string& filename)
         asw::util::abort_on_error("Failed to load music: " + full_path);
     }
 
-    return { temp, [](MIX_Audio* a) {
-                if (asw::sound::get_mixer() != nullptr) {
-                    MIX_DestroyAudio(a);
-                }
-            } };
+    return { temp, audio_deleter() };
 }
 
 asw::Music asw::assets::load_music(const std::string& filename, const std::string& key)
