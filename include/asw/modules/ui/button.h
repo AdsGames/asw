@@ -10,6 +10,7 @@
 #define ASW_MODULES_UI_BUTTON_H
 
 #include <functional>
+#include <optional>
 #include <string>
 
 #include "../types.h"
@@ -77,6 +78,19 @@ public:
     /// @brief Fill the button with the theme background. Turn off for buttons
     /// that are only an image.
     bool draw_background = true;
+
+    /// @brief Style for this button only. Uses the theme button style when empty.
+    std::optional<ButtonStyle> style;
+
+    /// @brief Get the style this button draws with.
+    ///
+    /// @param ctx The UI context.
+    /// @return The button's own style, or the theme button style.
+    ///
+    const ButtonStyle& get_style(const Context& ctx) const
+    {
+        return style ? *style : ctx.theme.button;
+    }
 
     /// @brief Set the texture, optionally resizing the button to match.
     ///

@@ -15,6 +15,7 @@
 #include "event.h"
 #include "input_box.h"
 #include "label.h"
+#include "navigation.h"
 #include "panel.h"
 #include "root.h"
 #include "theme.h"
