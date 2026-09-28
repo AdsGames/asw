@@ -21,6 +21,42 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(asw)
 ```
 
+### Web Builds
+
+`asw_add_web_target()` makes a game's Emscripten build a web page. It does nothing on other platforms, so you can call it for every build:
+
+```cmake
+asw_add_web_target(${PROJECT_NAME}
+  TITLE "My Game"
+  ASSETS ${CMAKE_CURRENT_LIST_DIR}/assets
+)
+```
+
+The page is `index.html`. It fills the window, shows the loading progress, and stops the arrow keys, <kbd>Space</kbd> and <kbd>Tab</kbd> from scrolling the page. Options:
+
+| Option | Default | Purpose |
+| --- | --- | --- |
+| `TITLE` | the target name | Page title |
+| `BACKGROUND` | `#0a0a0a` | Page colour |
+| `OUTPUT_NAME` | `index` | Page file name, without `.html` |
+| `ASSETS` | none | Folders to preload at `/assets` |
+| `SHELL` | the ASW page | Your own HTML shell. It must contain `{{{ SCRIPT }}}`, and can have a `#canvas` and a `#status` |
+| `PRE_JS` | none | More `--pre-js` files |
+
+When the game is in an iframe, it sends its loading state to the parent page with `postMessage`. The page's own status label then stays hidden, so the parent page can show the loading state:
+
+```js
+window.addEventListener("message", (event) => {
+  if (event.data?.type === "asw:status") {
+    // event.data.text is the Emscripten status, "" when loading is done
+  } else if (event.data?.type === "asw:ready") {
+    // The game started
+  }
+});
+```
+
+The page adds `setStatus`, `onRuntimeInitialized` and `onStop` hooks to `Module`. A custom shell can set its own hooks on `Module`, and they run after the ASW ones.
+
 ## Developing
 
 ### Building
