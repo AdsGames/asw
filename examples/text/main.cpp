@@ -70,7 +70,7 @@ int main()
     float time = 0.0F;
     float typed_time = 0.0F;
     float frame_ms = 0.0F;
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         asw::core::update();
         const float dt = asw::core::get_delta_time();
         time += dt;
@@ -181,7 +181,7 @@ int main()
         }
 
         asw::display::present();
-    }
+    });
 
     asw::core::shutdown();
     return 0;

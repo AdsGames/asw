@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>ASW example</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #111318;
+      }
+
+      /* The canvas fills the page. SDL resizes the game window to match, and
+         ASW letterboxes the game inside it, so the aspect ratio and mouse
+         position stay correct at any size. */
+      #canvas {
+        display: block;
+        width: 100vw;
+        height: 100vh;
+        outline: none;
+      }
+
+      #status {
+        position: absolute;
+        padding: 8px 14px;
+        border-radius: 6px;
+        background: rgba(17, 19, 24, 0.85);
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        color: #9aa0a6;
+        font: 14px system-ui, sans-serif;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="canvas" tabindex="-1" oncontextmenu="event.preventDefault()"></canvas>
+    <div id="status">Loading…</div>
+
+    <script>
+      const canvas = document.getElementById("canvas");
+      const status = document.getElementById("status");
+
+      // Keys go to the game, not to page scrolling
+      window.addEventListener("keydown", (e) => {
+        if ([" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab"].includes(e.key)) {
+          e.preventDefault();
+        }
+      });
+      canvas.addEventListener("pointerdown", () => canvas.focus());
+
+      var Module = {
+        canvas,
+        // ?autorun plays the example's scripted run, as ASW_EXAMPLE_AUTORUN
+        // does on desktop
+        preRun: [
+          () => {
+            if (new URLSearchParams(location.search).has("autorun")) {
+              Module.ENV.ASW_EXAMPLE_AUTORUN = "1";
+            }
+          },
+        ],
+        setStatus(text) {
+          status.textContent = text;
+          status.hidden = !text;
+        },
+        onRuntimeInitialized() {
+          status.hidden = true;
+          canvas.focus();
+        },
+        // The example called asw::core::exit(), for example on Escape
+        onStop() {
+          status.textContent = "Stopped. Click to restart.";
+          status.hidden = false;
+          document.body.style.cursor = "pointer";
+          document.body.addEventListener("click", () => location.reload(), { once: true });
+        },
+      };
+    </script>
+    {{{ SCRIPT }}}
+  </body>
+</html>

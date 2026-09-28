@@ -119,7 +119,7 @@ int main()
 
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         // Scripted input: walk towards the radio room, fill every voice,
         // then set off an explosion
         if (autorun) {
@@ -314,7 +314,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

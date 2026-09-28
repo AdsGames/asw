@@ -82,7 +82,7 @@ int main()
 
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         // Scripted input: walk right into the first wall, then burst
         if (autorun) {
             if (frame == 5) {
@@ -186,7 +186,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

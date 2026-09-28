@@ -105,7 +105,7 @@ int main()
     int shots_fired = 0;
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         // Scripted input: move left, tap fire, then hold and release for a big shot
         if (autorun) {
             if (frame == 2) {
@@ -214,7 +214,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

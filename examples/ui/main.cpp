@@ -10,6 +10,7 @@
 ///   - asw::assets::get_save_path() to keep the name between runs
 ///   - asw::dialog::request_file() / take_file() for a native file chooser
 ///   - asw::dialog::confirm() and warn() message boxes
+///     (desktop only, the web build has no native dialogs)
 ///
 /// Controls:
 ///   Mouse - click buttons, click the box to type
@@ -131,9 +132,15 @@ int main()
     greeting.transform.size.y = 28.0F;
 
     auto& greet = add_button(stack, font, "Greet");
+#ifndef __EMSCRIPTEN__
+    // Browsers have no native file chooser or message boxes, and quitting
+    // would only freeze the page, so the web build leaves these out
     auto& load = add_button(stack, font, "Load name from file...");
+#endif
     auto& theme = add_button(stack, font, "Theme");
+#ifndef __EMSCRIPTEN__
     auto& quit = add_button(stack, font, "Quit");
+#endif
 
     // Card background follows the theme
     std::size_t palette = 0;
@@ -153,11 +160,13 @@ int main()
         greeting.text = "Hello, " + name.value + "! (saved)";
     };
 
+#ifndef __EMSCRIPTEN__
     // The chooser does not block, the file arrives in the loop through take_file()
     load.on_click = []() {
         asw::dialog::request_file(asw::dialog::FileMode::Open, "",
             { { "Text files", "txt" }, { "All files", "*" } });
     };
+#endif
 
     theme.on_click = [&ui, &card, &palette]() {
         palette = (palette + 1) % PALETTES.size();
@@ -165,6 +174,7 @@ int main()
         card.bg = ui.ctx.theme.panel_bg;
     };
 
+#ifndef __EMSCRIPTEN__
     // Message boxes block until answered
     const auto ask_quit = []() {
         if (asw::dialog::confirm("Quit", "Close the UI example?")) {
@@ -172,6 +182,7 @@ int main()
         }
     };
     quit.on_click = ask_quit;
+#endif
 
     if (!name.value.empty()) {
         greeting.text = "Welcome back, " + name.value;
@@ -179,7 +190,7 @@ int main()
 
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         // Scripted input: fill in a name, click Greet, then Theme
         if (autorun) {
             auto click = [](const asw::ui::Widget& w) {
@@ -203,12 +214,15 @@ int main()
 
         asw::core::update();
 
+#ifndef __EMSCRIPTEN__
         if (asw::input::get_key_down(asw::input::Key::Escape)) {
             ask_quit();
         }
+#endif
 
         ui.update();
 
+#ifndef __EMSCRIPTEN__
         if (const auto path = asw::dialog::take_file()) {
             const auto loaded = load_name(*path);
             if (loaded.empty()) {
@@ -218,6 +232,7 @@ int main()
                 greeting.text = "Loaded " + loaded;
             }
         }
+#endif
 
         asw::display::clear();
         ui.draw();
@@ -234,7 +249,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

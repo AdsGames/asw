@@ -194,7 +194,7 @@ int main()
 
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         if (autorun) {
             const float t = static_cast<float>(frame) / 60.0F;
             asw::input::simulate_mouse_move(
@@ -282,7 +282,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

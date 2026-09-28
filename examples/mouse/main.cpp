@@ -63,7 +63,7 @@ int main()
     std::deque<asw::Vec2<float>> trail;
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         // Scripted input: sweep across, left click, right click
         if (autorun) {
             const float t = static_cast<float>(frame) / 40.0F;
@@ -179,7 +179,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::input::set_cursor_visible(true);
     asw::core::shutdown();

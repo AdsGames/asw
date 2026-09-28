@@ -156,7 +156,7 @@ int main()
     float time = 0.0F;
     int frame = 0;
 
-    while (!asw::core::is_exiting()) {
+    asw::core::run([&]() {
         if (autorun) {
             if (frame == 5) {
                 asw::input::simulate_mouse_move({ 200.0F, 200.0F });
@@ -275,7 +275,7 @@ int main()
 
         asw::display::present();
         frame++;
-    }
+    });
 
     asw::core::shutdown();
     return 0;

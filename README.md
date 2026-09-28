@@ -40,3 +40,17 @@ cmake --build --preset debug
 ```
 
 Output is in the `build/debug/bin/` directory.
+
+### Building Examples for the Browser
+
+With [Emscripten](https://emscripten.org) installed:
+
+```sh
+emcmake cmake -S . -B build/web -DCMAKE_BUILD_TYPE=Release -DASW_BUILD_EXAMPLES=ON
+cmake --build build/web
+cd build/web/bin && python3 -m http.server
+```
+
+Then open `http://localhost:8000/example_particles.html`. Add `?autorun` to the address to play the example's scripted run.
+
+Each release has an `asw-examples.zip` with every example built for the browser and a screenshot of each.
