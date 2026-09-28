@@ -217,3 +217,19 @@ void asw::display::swap_window()
 {
     SDL_GL_SwapWindow(window);
 }
+
+bool asw::display::screenshot(const std::string& path)
+{
+    if (renderer == nullptr) {
+        return false;
+    }
+
+    SDL_Surface* surface = SDL_RenderReadPixels(renderer, nullptr);
+    if (surface == nullptr) {
+        return false;
+    }
+
+    const bool saved = IMG_SavePNG(surface, path.c_str());
+    SDL_DestroySurface(surface);
+    return saved;
+}

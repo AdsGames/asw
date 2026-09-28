@@ -133,6 +133,18 @@ void present();
 ///
 void set_blend_mode(asw::BlendMode mode);
 
+/// @brief Save what has been drawn this frame to a PNG file. Call after
+/// drawing and before the frame is presented, for example at the end of a
+/// scene's draw(). Works with the dummy video driver
+/// (SDL_VIDEO_DRIVER=dummy), so scripted runs can capture frames without a
+/// window on screen.
+///
+/// @param path Where to write the PNG.
+/// @return true - If the file was written.
+/// @return false - If reading the frame or writing the file failed.
+///
+bool screenshot(const std::string& path);
+
 /// @brief Warp mouse in window
 ///
 /// @param x The x coordinate to warp to.
