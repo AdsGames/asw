@@ -127,6 +127,18 @@ public:
         return ref;
     }
 
+    /// @brief Remove and destroy a child widget. Safe to call from a
+    /// callback, Root drops any pointer to it before the next use.
+    ///
+    /// @param child The child to remove.
+    /// @return True if it was a child of this widget.
+    ///
+    bool remove_child(const Widget& child);
+
+    /// @brief Remove and destroy every child widget.
+    ///
+    void clear_children();
+
     /// @brief The transform (position and size) of the widget.
     asw::Quad<float> transform;
 
