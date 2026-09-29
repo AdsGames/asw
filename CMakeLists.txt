@@ -52,8 +52,13 @@ else()
   set(ASW_DEPS_EXCLUDE_FROM_ALL YES)
 endif()
 
+# Release archives, not git clones: a clone brings the whole history and the
+# vendored libraries in each submodule, which asw does not build. That is
+# about 1.9 GB against about 30 MB.
 include(cmake/get_cpm.cmake)
-CPMAddPackage(NAME freetype GITHUB_REPOSITORY freetype/freetype GIT_TAG VER-2-14-1
+CPMAddPackage(NAME freetype VERSION 2.14.1
+  URL https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.tar.gz
+  URL_HASH SHA256=44bd69d1f0750603410cfd4f26f1c5523c5a3a087a2dfa8639b757dc7c6677be
   EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES)
 
 if(TARGET freetype AND NOT TARGET Freetype::Freetype)
@@ -66,16 +71,24 @@ if(ASW_INSTALL AND TARGET freetype)
   export(EXPORT freetype-targets FILE ${CMAKE_CURRENT_BINARY_DIR}/freetype-targets.cmake)
 endif()
 
-CPMAddPackage(NAME SDL GITHUB_REPOSITORY libsdl-org/SDL GIT_TAG release-3.4.16
+CPMAddPackage(NAME SDL VERSION 3.4.16
+  URL https://github.com/libsdl-org/SDL/releases/download/release-3.4.16/SDL3-3.4.16.tar.gz
+  URL_HASH SHA256=7322236cd12090c3eb40b9728be4d49c76f66ad17d04369584d4ecad5cf77c68
   EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
   OPTIONS "SDL_INSTALL ${ASW_INSTALL}")
-CPMAddPackage(NAME SDL_image GITHUB_REPOSITORY libsdl-org/SDL_image GIT_TAG release-3.4.6
+CPMAddPackage(NAME SDL_image VERSION 3.4.6
+  URL https://github.com/libsdl-org/SDL_image/releases/download/release-3.4.6/SDL3_image-3.4.6.tar.gz
+  URL_HASH SHA256=d2e4637ae700f72e5196b8fbd749850ed2e5e1e09c5a5be8d06ff55aaccf3b01
   EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
   OPTIONS "SDLIMAGE_INSTALL ${ASW_INSTALL}")
-CPMAddPackage(NAME SDL_ttf GITHUB_REPOSITORY libsdl-org/SDL_ttf GIT_TAG release-3.2.2
+CPMAddPackage(NAME SDL_ttf VERSION 3.2.2
+  URL https://github.com/libsdl-org/SDL_ttf/releases/download/release-3.2.2/SDL3_ttf-3.2.2.tar.gz
+  URL_HASH SHA256=63547d58d0185c833213885b635a2c0548201cc8f301e6587c0be1a67e1e045d
   EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
   OPTIONS "SDLTTF_INSTALL ${ASW_INSTALL}")
-CPMAddPackage(NAME SDL_mixer GITHUB_REPOSITORY libsdl-org/SDL_mixer GIT_TAG release-3.2.4
+CPMAddPackage(NAME SDL_mixer VERSION 3.2.4
+  URL https://github.com/libsdl-org/SDL_mixer/releases/download/release-3.2.4/SDL3_mixer-3.2.4.tar.gz
+  URL_HASH SHA256=182a07c745375e113dc740d43964ff21b0be29f29f59876c4dbc4db3d32f6901
   EXCLUDE_FROM_ALL ${ASW_DEPS_EXCLUDE_FROM_ALL} SYSTEM YES
   OPTIONS "SDLMIXER_INSTALL ${ASW_INSTALL}")
 
