@@ -1,5 +1,14 @@
 #include "./asw/modules/assets.h"
 
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <system_error>
+#ifdef __EMSCRIPTEN__
+#include <cstdlib>
+#include <emscripten.h>
+#endif
+
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
@@ -331,3 +340,95 @@ void asw::assets::clear_all()
     samples.clear();
     music.clear();
 }
+
+#ifdef __EMSCRIPTEN__
+namespace {
+// Storage can be blocked, which reads as empty and fails to write
+// clang-format off
+EM_JS(char*, asw_storage_read, (const char* key), {
+    try {
+        const value = localStorage.getItem(UTF8ToString(key));
+        return value === null ? 0 : stringToNewUTF8(value);
+    } catch (e) {
+        return 0;
+    }
+});
+
+EM_JS(int, asw_storage_write, (const char* key, const char* value), {
+    try {
+        localStorage.setItem(UTF8ToString(key), UTF8ToString(value));
+        return 1;
+    } catch (e) {
+        return 0;
+    }
+});
+// clang-format on
+
+std::string storage_key(const std::string& org, const std::string& app, const std::string& name)
+{
+    return org + "/" + app + "/" + name;
+}
+} // namespace
+
+std::string asw::assets::read_save(
+    const std::string& org, const std::string& app, const std::string& name)
+{
+    char* value = asw_storage_read(storage_key(org, app, name).c_str());
+    if (value == nullptr) {
+        return "";
+    }
+    std::string out(value);
+    free(value); // NOLINT(cppcoreguidelines-no-malloc), allocated by emscripten
+    return out;
+}
+
+bool asw::assets::write_save(
+    const std::string& org, const std::string& app, const std::string& name, const std::string& data)
+{
+    return asw_storage_write(storage_key(org, app, name).c_str(), data.c_str()) != 0;
+}
+#else
+std::string asw::assets::read_save(
+    const std::string& org, const std::string& app, const std::string& name)
+{
+    const auto folder = get_save_path(org, app);
+    if (folder.empty()) {
+        return "";
+    }
+    std::ifstream file(folder + name);
+    if (!file) {
+        return "";
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+bool asw::assets::write_save(
+    const std::string& org, const std::string& app, const std::string& name, const std::string& data)
+{
+    const auto folder = get_save_path(org, app);
+    if (folder.empty()) {
+        return false;
+    }
+
+    // Write a temporary file and swap it in, so a crash mid write keeps the
+    // old save
+    const std::string path = folder + name;
+    const std::string temp = path + ".tmp";
+    {
+        std::ofstream file(temp, std::ios::trunc | std::ios::binary);
+        if (!file || !(file << data)) {
+            return false;
+        }
+    }
+    std::error_code ec;
+    std::filesystem::rename(temp, path, ec);
+    if (ec) {
+        // Some platforms do not replace an existing file on rename
+        std::filesystem::remove(path, ec);
+        std::filesystem::rename(temp, path, ec);
+    }
+    return !ec;
+}
+#endif

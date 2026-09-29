@@ -9,9 +9,12 @@
 #ifndef ASW_MODULES_UI_THEME_H
 #define ASW_MODULES_UI_THEME_H
 
+#include <cstddef>
+
 #include "../color.h"
 #include "../geometry.h"
 #include "../types.h"
+#include "widget.h"
 
 namespace asw::ui {
 
@@ -168,6 +171,69 @@ struct SliderStyle {
 /// @brief The ring drawn around the focused widget during keyboard or
 /// controller navigation.
 ///
+/// @brief Look of the messages Root::toast shows at the top of the screen.
+///
+struct ToastStyle {
+    /// @brief Fill behind each message.
+    asw::Color bg { 20, 20, 20, 230 };
+
+    /// @brief Message text.
+    asw::Color text { 255, 255, 255, 255 };
+
+    /// @brief Outline, none when the width is 0.
+    asw::Color border { 0, 0, 0, 0 };
+
+    /// @brief Outline width.
+    float border_width = 0.0F;
+
+    /// @brief Space around the text inside each message.
+    float padding = 12.0F;
+
+    /// @brief Space from the top of the screen to the first message.
+    float margin = 16.0F;
+
+    /// @brief Space between messages.
+    float gap = 8.0F;
+
+    /// @brief How long a message stays, from when it shows.
+    float seconds = 3.0F;
+
+    /// @brief How long a message takes to fade out at the end.
+    float fade_seconds = 0.25F;
+
+    /// @brief Messages on screen at once, the rest wait their turn.
+    std::size_t max_visible = 3;
+
+    /// @brief Where messages show: Top, TopLeft or TopRight stack down from
+    /// the top, Bottom, BottomLeft or BottomRight stack up from the bottom.
+    Anchor anchor = Anchor::Top;
+};
+
+/// @brief Look of a Modal and the dimmed screen behind it.
+///
+struct ModalStyle {
+    /// @brief Colour laid over the screen behind the modal.
+    asw::Color dim { 0, 0, 0, 160 };
+
+    /// @brief Fill of the modal.
+    asw::Color bg { 30, 30, 30, 255 };
+
+    /// @brief Outline, none when the width is 0.
+    asw::Color border { 0, 0, 0, 0 };
+
+    /// @brief Outline width.
+    float border_width = 0.0F;
+
+    /// @brief Space between the modal's edge and its content.
+    float padding = 20.0F;
+
+    /// @brief Space between its widgets.
+    float gap = 12.0F;
+
+    /// @brief Narrowest the modal gets.
+    float min_width = 320.0F;
+};
+
 struct FocusRingStyle {
     /// @brief Ring color.
     asw::Color color { 255, 200, 80, 255 };
@@ -208,6 +274,12 @@ struct Theme {
 
     /// @brief Focus ring style.
     FocusRingStyle focus_ring {};
+
+    /// @brief Messages from Root::toast.
+    ToastStyle toast {};
+
+    /// @brief Modals from Root::open_modal.
+    ModalStyle modal {};
 
     /// @brief Default padding.
     float padding = 10.0f;

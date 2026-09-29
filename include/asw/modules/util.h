@@ -47,6 +47,14 @@ asw::Vec2<int> get_text_size(const asw::Font& font, const std::string& text);
 ///
 int get_font_height(const asw::Font& font);
 
+/// @brief Open a web page in the player's browser, e.g. a login or store
+/// page. Web builds open it in a new tab.
+///
+/// @param url The address to open.
+/// @return true - If the browser was asked to open it.
+///
+bool open_url(const std::string& url);
+
 /// @brief Clear cached text metrics.
 ///
 /// Text size caching is shared across widgets and text drawing helpers, so it

@@ -36,6 +36,30 @@ std::string get_path(const std::string& filename);
 ///
 std::string get_save_path(const std::string& org, const std::string& app);
 
+/// @brief Read save data written by write_save, e.g. progress or settings.
+///
+/// @details Desktop builds keep it in a file in get_save_path. Web builds
+/// keep it in the browser's localStorage, since the web file system is lost
+/// when the page reloads.
+///
+/// @param org The organisation name.
+/// @param app The application name.
+/// @param name The save's name, e.g. "progress".
+/// @return The saved text, or an empty string if there is none.
+///
+std::string read_save(const std::string& org, const std::string& app, const std::string& name);
+
+/// @brief Write save data, replacing what was saved under the name before.
+///
+/// @param org The organisation name.
+/// @param app The application name.
+/// @param name The save's name, e.g. "progress".
+/// @param data The text to save, e.g. JSON.
+/// @return true - If it was saved.
+///
+bool write_save(const std::string& org, const std::string& app, const std::string& name,
+    const std::string& data);
+
 // --- Texture ---
 
 /// @brief Loads a texture from a file. Formats supported are PNG, ICO, CUR,

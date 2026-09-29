@@ -86,3 +86,12 @@ void asw::util::clear_text_size_cache()
 {
     text_size_cache.clear();
 }
+
+bool asw::util::open_url(const std::string& url)
+{
+    if (!SDL_OpenURL(url.c_str())) {
+        asw::log::warn("Could not open " + url + ": " + SDL_GetError());
+        return false;
+    }
+    return true;
+}
