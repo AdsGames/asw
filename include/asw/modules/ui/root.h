@@ -151,6 +151,9 @@ public:
 private:
     void fit_to_screen();
     bool attached(const Widget* w) const;
+
+    // True if w is in the tree under root, not in a modal or removed
+    bool in_root(const Widget* w) const;
     void validate();
     void free_removed(Widget& w);
     Widget* hit_test(Widget& w, const asw::Vec2<float>& pointer_pos);

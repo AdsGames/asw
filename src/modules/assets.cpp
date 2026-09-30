@@ -5,7 +5,6 @@
 #include <sstream>
 #include <system_error>
 #ifdef __EMSCRIPTEN__
-#include <cstdlib>
 #include <emscripten.h>
 #endif
 
@@ -343,14 +342,27 @@ void asw::assets::clear_all()
 
 #ifdef __EMSCRIPTEN__
 namespace {
-// Storage can be blocked, which reads as empty and fails to write
+// Storage can be blocked, which reads as empty and fails to write. The read
+// is a length then a copy into a buffer C++ owns, so JS does not allocate.
 // clang-format off
-EM_JS(char*, asw_storage_read, (const char* key), {
+EM_JS_DEPS(asw_storage, "$UTF8ToString,$lengthBytesUTF8,$stringToUTF8");
+
+EM_JS(int, asw_storage_length, (const char* key), {
     try {
         const value = localStorage.getItem(UTF8ToString(key));
-        return value === null ? 0 : stringToNewUTF8(value);
+        return value === null ? -1 : lengthBytesUTF8(value);
     } catch (e) {
-        return 0;
+        return -1;
+    }
+});
+
+EM_JS(void, asw_storage_copy, (const char* key, char* out, int size), {
+    try {
+        const value = localStorage.getItem(UTF8ToString(key));
+        if (value !== null) {
+            stringToUTF8(value, out, size);
+        }
+    } catch (e) {
     }
 });
 
@@ -373,12 +385,14 @@ std::string storage_key(const std::string& org, const std::string& app, const st
 std::string asw::assets::read_save(
     const std::string& org, const std::string& app, const std::string& name)
 {
-    char* value = asw_storage_read(storage_key(org, app, name).c_str());
-    if (value == nullptr) {
+    const auto key = storage_key(org, app, name);
+    const int length = asw_storage_length(key.c_str());
+    if (length <= 0) {
         return "";
     }
-    std::string out(value);
-    free(value); // NOLINT(cppcoreguidelines-no-malloc), allocated by emscripten
+    // One more byte for the terminator stringToUTF8 writes
+    std::string out(static_cast<std::size_t>(length), '\0');
+    asw_storage_copy(key.c_str(), out.data(), length + 1);
     return out;
 }
 
@@ -395,7 +409,7 @@ std::string asw::assets::read_save(
     if (folder.empty()) {
         return "";
     }
-    std::ifstream file(folder + name);
+    std::ifstream file(folder + name, std::ios::binary);
     if (!file) {
         return "";
     }

@@ -73,6 +73,14 @@ bool asw::ui::Root::attached(const Widget* w) const
     return w != nullptr;
 }
 
+bool asw::ui::Root::in_root(const Widget* w) const
+{
+    while (w != nullptr && w != &root) {
+        w = w->parent;
+    }
+    return w != nullptr;
+}
+
 asw::ui::Modal* asw::ui::Root::top_modal() const
 {
     for (auto it = _modals.children().rbegin(); it != _modals.children().rend(); ++it) {
@@ -98,9 +106,12 @@ bool asw::ui::Root::has_modal() const
 
 void asw::ui::Root::opened_modal()
 {
-    // Remember focus from before the first modal only
-    if (_modals.children().size() == 1) {
-        _focus_before_modal = ctx.focus.focused();
+    // Remember focus from before the first modal only. A modal opened as
+    // another closes keeps that focus, not a widget of the closed modal.
+    if (_focus_before_modal == nullptr) {
+        if (Widget* f = ctx.focus.focused(); in_root(f)) {
+            _focus_before_modal = f;
+        }
     }
     ctx.need_focus_rebuild = true;
 }
@@ -138,11 +149,14 @@ void asw::ui::Root::update_modal_focus()
         return;
     }
 
-    // The last modal closed: focus goes back where it was
-    if (modal == nullptr && _focused_modal != nullptr) {
+    // The last modal closed: focus goes back where it was. Forget it even if
+    // the modal closed before it took focus, so the next modal remembers anew.
+    if (modal == nullptr) {
+        Widget* back = std::exchange(_focus_before_modal, nullptr);
+        if (_focused_modal == nullptr) {
+            return;
+        }
         _focused_modal = nullptr;
-        Widget* back = _focus_before_modal;
-        _focus_before_modal = nullptr;
         if (back != nullptr && attached(back) && back->focusable && back->visible && back->enabled) {
             ctx.focus.set_focus(ctx, back);
         }
@@ -633,12 +647,20 @@ void asw::ui::Root::draw()
 {
     root.draw(ctx);
 
-    // Modals over a dimmed screen
-    if (Modal* modal = top_modal(); modal != nullptr) {
-        if (const auto dim = modal->get_style(ctx).dim; dim.a > 0) {
-            asw::draw::rect_fill(_modals.transform, dim);
+    // Modals, with the screen dimmed under the top one only, so a modal
+    // below it looks inactive too
+    if (Modal* top = top_modal(); top != nullptr) {
+        for (auto const& c : _modals.children()) {
+            if (!c->visible) {
+                continue;
+            }
+            if (c.get() == top) {
+                if (const auto dim = top->get_style(ctx).dim; dim.a > 0) {
+                    asw::draw::rect_fill(_modals.transform, dim);
+                }
+            }
+            c->draw(ctx);
         }
-        _modals.draw(ctx);
     }
 
     // Focus ring on top of everything, unless the focused widget was removed
