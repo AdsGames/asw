@@ -9,6 +9,10 @@
 #include <string>
 
 namespace asw {
+
+/// @brief A colour with each channel as a float from 0.0 to 1.0
+using FColor = SDL_FColor;
+
 /// @brief RGBA color struct with 8-bit channels.
 ///
 struct Color {
@@ -64,6 +68,16 @@ struct Color {
     {
         return { to_channel(r * 255.0F), to_channel(g * 255.0F), to_channel(b * 255.0F),
             to_channel(a * 255.0F) };
+    }
+
+    /// @brief To a float colour, with each channel from 0.0 to 1.0.
+    ///
+    /// @return The equivalent FColor.
+    ///
+    FColor to_fcolor() const
+    {
+        return { static_cast<float>(r) / 255.0F, static_cast<float>(g) / 255.0F,
+            static_cast<float>(b) / 255.0F, static_cast<float>(a) / 255.0F };
     }
 
     /// @brief From a hex string (e.g. "#RRGGBBAA") to a Color.
