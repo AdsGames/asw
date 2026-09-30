@@ -30,6 +30,7 @@ add_subdirectory(easing)
 add_subdirectory(lighting)
 add_subdirectory(text)
 add_subdirectory(ui)
+add_subdirectory(overlays)
 
 # Browser builds: each example becomes an .html page with its assets packed
 # into a .data file, so it can be embedded in the docs and played on the web
@@ -38,6 +39,7 @@ if(EMSCRIPTEN)
     example_keyboard example_mouse example_controller example_actions
     example_primitives example_camera example_sound example_scenes
     example_particles example_easing example_lighting example_text example_ui
+    example_overlays
   )
 
   foreach(target IN LISTS ASW_EXAMPLE_TARGETS)

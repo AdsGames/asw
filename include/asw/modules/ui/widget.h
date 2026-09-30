@@ -19,6 +19,21 @@ namespace asw::ui {
 
 class Context;
 
+/// @brief A point of the parent an anchored widget sits at, see Widget::anchor.
+///
+enum class Anchor {
+    None,
+    TopLeft,
+    Top,
+    TopRight,
+    Left,
+    Center,
+    Right,
+    BottomLeft,
+    Bottom,
+    BottomRight,
+};
+
 /// @brief Unique identifier type for widgets.
 ///
 using WidgetId = uint32_t;
@@ -176,6 +191,15 @@ public:
     /// @brief The transform (position and size) of the widget.
     asw::Quad<float> transform;
 
+    /// @brief Pin this widget to a point of its parent, e.g. BottomRight for
+    /// a corner button. The parent places it on every layout, so it stays in
+    /// place when the screen or its own size changes. Stack and Grid place
+    /// their children themselves and ignore it.
+    Anchor anchor = Anchor::None;
+
+    /// @brief Space between an anchored widget and the parent's edges.
+    asw::Vec2<float> anchor_margin { 0.0F, 0.0F };
+
     /// @brief Whether the pointer is currently over this widget.
     bool is_hovered() const { return _hovered; }
 
@@ -201,6 +225,12 @@ protected:
     // Set by Root and FocusManager
     friend class Root;
     friend class FocusManager;
+
+    /// @brief Place a child that has an anchor inside this widget.
+    ///
+    /// @param child The child to place.
+    ///
+    void place_anchored(Widget& child) const;
 
     bool _hovered = false;
     bool _pressed = false;

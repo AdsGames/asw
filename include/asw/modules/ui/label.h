@@ -35,6 +35,20 @@ public:
     ///
     void draw(Context& ctx) override;
 
+    /// @brief Set the text, optionally sizing the label to fit it, so layouts
+    /// such as VBox and Modal give it room.
+    ///
+    /// @param t The text to set.
+    /// @param auto_size If true, the label is sized to its text when measured.
+    ///
+    void set_text(const std::string& t, bool auto_size = false);
+
+    /// @brief Size to the text if set_text asked for it.
+    ///
+    /// @param ctx The UI context.
+    ///
+    void measure(Context& ctx) override;
+
     /// @brief The font. Uses the theme font when empty.
     asw::Font font;
 
@@ -46,6 +60,9 @@ public:
 
     /// @brief The text color. Uses the theme text color when empty.
     std::optional<asw::Color> color;
+
+private:
+    bool _fit_text = false;
 };
 
 } // namespace asw::ui

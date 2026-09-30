@@ -15,6 +15,8 @@ asw::ui::Widget::Widget(Widget&& other) noexcept
     , nav_right(other.nav_right)
     , focus_ring(other.focus_ring)
     , transform(other.transform)
+    , anchor(other.anchor)
+    , anchor_margin(other.anchor_margin)
     , _children(std::move(other._children))
     , _id(generate_id())
 {
@@ -36,6 +38,8 @@ asw::ui::Widget& asw::ui::Widget::operator=(Widget&& other) noexcept
     nav_right = other.nav_right;
     focus_ring = other.focus_ring;
     transform = other.transform;
+    anchor = other.anchor;
+    anchor_margin = other.anchor_margin;
 
     // Root may still point into the old children, keep them until it frees them
     detach_children();
@@ -70,8 +74,67 @@ void asw::ui::Widget::layout(Context& ctx)
 {
     for (auto const& c : _children) {
         c->measure(ctx);
+        if (c->anchor != Anchor::None) {
+            place_anchored(*c);
+        }
         c->layout(ctx);
     }
+}
+
+void asw::ui::Widget::place_anchored(Widget& child) const
+{
+    const auto& area = transform;
+    const auto& size = child.transform.size;
+    const auto& margin = child.anchor_margin;
+
+    // 0 start, 1 middle, 2 end of each axis
+    int col = 1;
+    int row = 1;
+    switch (child.anchor) {
+    case Anchor::TopLeft:
+        col = 0;
+        row = 0;
+        break;
+    case Anchor::Top:
+        row = 0;
+        break;
+    case Anchor::TopRight:
+        col = 2;
+        row = 0;
+        break;
+    case Anchor::Left:
+        col = 0;
+        break;
+    case Anchor::Right:
+        col = 2;
+        break;
+    case Anchor::BottomLeft:
+        col = 0;
+        row = 2;
+        break;
+    case Anchor::Bottom:
+        row = 2;
+        break;
+    case Anchor::BottomRight:
+        col = 2;
+        row = 2;
+        break;
+    default:
+        break;
+    }
+
+    const auto along = [](int part, float start, float extent, float own, float gap) {
+        if (part == 0) {
+            return start + gap;
+        }
+        if (part == 2) {
+            return start + extent - own - gap;
+        }
+        return start + ((extent - own) / 2.0F);
+    };
+
+    child.transform.position = { along(col, area.position.x, area.size.x, size.x, margin.x),
+        along(row, area.position.y, area.size.y, size.y, margin.y) };
 }
 
 bool asw::ui::Widget::on_event(Context& ctx, const UIEvent& e)

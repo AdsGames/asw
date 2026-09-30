@@ -18,6 +18,7 @@
 #include "input_box.h"
 #include "label.h"
 #include "layout.h"
+#include "modal.h"
 #include "navigation.h"
 #include "panel.h"
 #include "root.h"

@@ -1,5 +1,13 @@
 #include "./asw/modules/assets.h"
 
+#include <filesystem>
+#include <fstream>
+#include <sstream>
+#include <system_error>
+#ifdef __EMSCRIPTEN__
+#include <emscripten.h>
+#endif
+
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_mixer/SDL_mixer.h>
@@ -331,3 +339,110 @@ void asw::assets::clear_all()
     samples.clear();
     music.clear();
 }
+
+#ifdef __EMSCRIPTEN__
+namespace {
+// Storage can be blocked, which reads as empty and fails to write. The read
+// is a length then a copy into a buffer C++ owns, so JS does not allocate.
+// clang-format off
+EM_JS_DEPS(asw_storage, "$UTF8ToString,$lengthBytesUTF8,$stringToUTF8");
+
+EM_JS(int, asw_storage_length, (const char* key), {
+    try {
+        const value = localStorage.getItem(UTF8ToString(key));
+        return value === null ? -1 : lengthBytesUTF8(value);
+    } catch (e) {
+        return -1;
+    }
+});
+
+EM_JS(void, asw_storage_copy, (const char* key, char* out, int size), {
+    try {
+        const value = localStorage.getItem(UTF8ToString(key));
+        if (value !== null) {
+            stringToUTF8(value, out, size);
+        }
+    } catch (e) {
+    }
+});
+
+EM_JS(int, asw_storage_write, (const char* key, const char* value), {
+    try {
+        localStorage.setItem(UTF8ToString(key), UTF8ToString(value));
+        return 1;
+    } catch (e) {
+        return 0;
+    }
+});
+// clang-format on
+
+std::string storage_key(const std::string& org, const std::string& app, const std::string& name)
+{
+    return org + "/" + app + "/" + name;
+}
+} // namespace
+
+std::string asw::assets::read_save(
+    const std::string& org, const std::string& app, const std::string& name)
+{
+    const auto key = storage_key(org, app, name);
+    const int length = asw_storage_length(key.c_str());
+    if (length <= 0) {
+        return "";
+    }
+    // One more byte for the terminator stringToUTF8 writes
+    std::string out(static_cast<std::size_t>(length), '\0');
+    asw_storage_copy(key.c_str(), out.data(), length + 1);
+    return out;
+}
+
+bool asw::assets::write_save(
+    const std::string& org, const std::string& app, const std::string& name, const std::string& data)
+{
+    return asw_storage_write(storage_key(org, app, name).c_str(), data.c_str()) != 0;
+}
+#else
+std::string asw::assets::read_save(
+    const std::string& org, const std::string& app, const std::string& name)
+{
+    const auto folder = get_save_path(org, app);
+    if (folder.empty()) {
+        return "";
+    }
+    std::ifstream file(folder + name, std::ios::binary);
+    if (!file) {
+        return "";
+    }
+    std::stringstream buffer;
+    buffer << file.rdbuf();
+    return buffer.str();
+}
+
+bool asw::assets::write_save(
+    const std::string& org, const std::string& app, const std::string& name, const std::string& data)
+{
+    const auto folder = get_save_path(org, app);
+    if (folder.empty()) {
+        return false;
+    }
+
+    // Write a temporary file and swap it in, so a crash mid write keeps the
+    // old save
+    const std::string path = folder + name;
+    const std::string temp = path + ".tmp";
+    {
+        std::ofstream file(temp, std::ios::trunc | std::ios::binary);
+        if (!file || !(file << data)) {
+            return false;
+        }
+    }
+    std::error_code ec;
+    std::filesystem::rename(temp, path, ec);
+    if (ec) {
+        // Some platforms do not replace an existing file on rename
+        std::filesystem::remove(path, ec);
+        std::filesystem::rename(temp, path, ec);
+    }
+    return !ec;
+}
+#endif
