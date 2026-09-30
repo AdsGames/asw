@@ -11,6 +11,7 @@
 
 #include <algorithm>
 #include <string>
+#include <string_view>
 
 #include "./easing.h"
 #include "./geometry.h"
@@ -38,7 +39,7 @@ asw::Vec2<float> get_texture_size(const asw::Texture& tex);
 /// @param text Text to get size of
 /// @return Size as Vec2
 ///
-asw::Vec2<int> get_text_size(const asw::Font& font, const std::string& text);
+asw::Vec2<int> get_text_size(const asw::Font& font, std::string_view text);
 
 /// @brief Get the height of a line of text in a font.
 ///

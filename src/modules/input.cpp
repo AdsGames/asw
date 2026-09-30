@@ -31,8 +31,18 @@ using ControllerState = struct ControllerState {
 /// the core.
 std::array<SDL_Cursor*, asw::input::NUM_CURSORS> cursors { nullptr };
 
-/// @brief Global controller state.
+/// @brief Global controller state. A slot stays at its index while its pad is
+/// unplugged, and the pad gets it back when plugged in again, so bindings keep
+/// reading the same physical pad.
 std::vector<ControllerState> controller { };
+
+/// @brief The pad each slot last held, by pad_identity(). Kept after the pad
+/// is unplugged and after its slot is dropped from the end of controller, so
+/// the pad can get its slot back.
+std::vector<std::string> slot_owner { };
+
+/// @brief Dead zone given to pads when they connect.
+float default_dead_zone { 0.25F };
 
 /// @brief Map of SDL_JoystickID to controller index in the controller vector.
 std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map { };
@@ -137,6 +147,50 @@ bool has_capability(const ControllerState& cont, const char* property)
 {
     return SDL_GetBooleanProperty(SDL_GetGamepadProperties(cont.gamepad), property, false);
 }
+
+/// @brief What tells a pad apart when it is plugged back in: its serial
+/// number, or its model when it has none. Two pads of one model with no serial
+/// look the same.
+std::string pad_identity(SDL_JoystickID id, SDL_Gamepad* pad)
+{
+    if (const char* serial = SDL_GetGamepadSerial(pad); serial != nullptr && *serial != '\0') {
+        return std::string("serial:") + serial;
+    }
+
+    std::array<char, 33> guid { };
+    SDL_GUIDToString(SDL_GetGamepadGUIDForID(id), guid.data(), static_cast<int>(guid.size()));
+    return std::string("guid:") + guid.data();
+}
+
+bool slot_empty(std::size_t index)
+{
+    return index >= controller.size() || controller[index].gamepad == nullptr;
+}
+
+/// @brief Pick the slot for a pad that just connected.
+std::size_t pick_slot(const std::string& identity)
+{
+    // The slot this pad had before, if no other pad has taken it
+    for (std::size_t i = 0; i < slot_owner.size(); ++i) {
+        if (slot_owner[i] == identity && slot_empty(i)) {
+            return i;
+        }
+    }
+
+    // A gap no unplugged pad is waiting for, then any gap
+    for (std::size_t i = 0; i < controller.size(); ++i) {
+        if (slot_empty(i) && (i >= slot_owner.size() || slot_owner[i].empty())) {
+            return i;
+        }
+    }
+    for (std::size_t i = 0; i < controller.size(); ++i) {
+        if (slot_empty(i)) {
+            return i;
+        }
+    }
+
+    return controller.size();
+}
 } // namespace
 
 const asw::input::KeyState& asw::input::get_keyboard()
@@ -184,6 +238,10 @@ void asw::input::reset()
 
     for (auto& released : k_state.released) {
         released = false;
+    }
+
+    for (auto& repeated : k_state.repeated) {
+        repeated = false;
     }
 
     // Clear mouse state
@@ -372,6 +430,12 @@ bool asw::input::get_key_down(asw::input::Key key)
     return keyboard.pressed[static_cast<int>(key)];
 }
 
+bool asw::input::get_key_repeat(asw::input::Key key)
+{
+    const auto index = static_cast<int>(key);
+    return keyboard.pressed[index] || keyboard.repeated[index];
+}
+
 bool asw::input::get_key_up(asw::input::Key key)
 {
     return keyboard.released[static_cast<int>(key)];
@@ -439,6 +503,8 @@ void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone)
     dead_zone = std::clamp(dead_zone, 0.0F, 0.99F);
 
     if (index == ANY_CONTROLLER) {
+        // Pads connected later start with this dead zone too
+        default_dead_zone = dead_zone;
         for (auto& cont : controller) {
             cont.dead_zone = dead_zone;
         }
@@ -496,7 +562,12 @@ asw::input::InputDevice asw::input::get_last_device()
 
 int asw::input::get_controller_count()
 {
-    return controller.size();
+    return static_cast<int>(controller.size());
+}
+
+bool asw::input::is_controller_connected(uint32_t index)
+{
+    return index < controller.size() && controller[index].gamepad != nullptr;
 }
 
 std::string asw::input::get_controller_name(uint32_t index)
@@ -510,8 +581,16 @@ std::string asw::input::get_controller_name(uint32_t index)
 
 /// Event Hooks
 
-void asw::input::_key_down(SDL_Scancode scancode)
+void asw::input::_key_down(SDL_Scancode scancode, bool repeat)
 {
+    // Repeats do not count as a new press, so held keys do not retrigger
+    // get_key_down()
+    if (repeat) {
+        keyboard.repeated[scancode] = true;
+        keyboard.down[scancode] = true;
+        return;
+    }
+
     keyboard.pressed[scancode] = true;
     keyboard.down[scancode] = true;
     keyboard.any_pressed = true;
@@ -579,14 +658,26 @@ void asw::input::_controller_added(SDL_JoystickID id)
         return;
     }
 
-    // Add controller
-    auto& new_controller = controller.emplace_back();
+    // A pad plugged back in gets its old slot, others fill the first gap
+    std::string identity = pad_identity(id, opened);
+    const std::size_t index = pick_slot(identity);
+    if (index >= controller.size()) {
+        controller.resize(index + 1);
+    }
+    if (index >= slot_owner.size()) {
+        slot_owner.resize(index + 1);
+    }
+    slot_owner[index] = std::move(identity);
+
+    auto& new_controller = controller[index];
+    new_controller = ControllerState { };
     new_controller.gamepad = opened;
+    new_controller.dead_zone = default_dead_zone;
     const char* name = SDL_GetGamepadName(opened);
     new_controller.name = name != nullptr ? name : "";
-    controller_id_map[id] = controller.size() - 1;
+    controller_id_map[id] = static_cast<uint32_t>(index);
 
-    asw::log::info("Gamepad added: {} (ID: {})", new_controller.name, id);
+    asw::log::info("Gamepad added: {} (ID: {}, index: {})", new_controller.name, id, index);
 }
 
 void asw::input::_controller_removed(SDL_JoystickID id)
@@ -596,21 +687,18 @@ void asw::input::_controller_removed(SDL_JoystickID id)
         return;
     }
 
-    // Erase from vector and map
+    // Empty the slot but keep it, so the other pads keep their indexes
     const auto index = it->second;
     controller_id_map.erase(it);
-    controller.erase(controller.begin() + index);
-
-    // Controllers after the removed one shift down a slot
-    for (auto& [other_id, other_index] : controller_id_map) {
-        if (other_index > index) {
-            other_index--;
-        }
+    if (controller[index].gamepad != nullptr) {
+        SDL_CloseGamepad(controller[index].gamepad);
     }
+    controller[index] = ControllerState { };
 
-    // Close gamepad if it exists
-    if (auto* existing = SDL_GetGamepadFromID(id); existing != nullptr) {
-        SDL_CloseGamepad(existing);
+    // Drop empty slots at the end. slot_owner keeps them, so the pad can
+    // still get its slot back.
+    while (!controller.empty() && controller.back().gamepad == nullptr) {
+        controller.pop_back();
     }
 }
 

@@ -122,11 +122,13 @@ public:
     /// @brief Clean up the game scene.
     ///
     /// @details Called when the game switches away from this scene. Removes
-    /// all objects by default.
+    /// all objects by default, including ones queued by create_object() that
+    /// have not been added yet.
     ///
     virtual void cleanup()
     {
         _objects.clear();
+        _obj_to_create.clear();
     };
 
     /// @brief Add a game object to the scene.

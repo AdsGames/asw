@@ -55,8 +55,13 @@ void asw::core::update()
             SDL_Point window_size;
             SDL_GetWindowSize(asw::display::get_window(), &window_size.x, &window_size.y);
 
-            SDL_Point render_size;
-            SDL_GetRenderLogicalPresentation(r, &render_size.x, &render_size.y, nullptr);
+            // SDL reports the logical size of the current render target,
+            // which is 0 while a texture is the target
+            const auto render_size = asw::display::get_logical_size();
+            if (render_size.x <= 0 || render_size.y <= 0 || window_size.x <= 0
+                || window_size.y <= 0) {
+                break;
+            }
 
             const auto x_scale
                 = static_cast<float>(window_size.x) / static_cast<float>(render_size.x);
@@ -73,9 +78,7 @@ void asw::core::update()
         }
 
         case SDL_EVENT_KEY_DOWN: {
-            if (!e.key.repeat) {
-                asw::input::_key_down(e.key.scancode);
-            }
+            asw::input::_key_down(e.key.scancode, e.key.repeat);
             break;
         }
 

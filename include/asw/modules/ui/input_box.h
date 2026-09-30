@@ -85,6 +85,9 @@ public:
 
 private:
     std::size_t _cursor_pos = 0;
+
+    /// @brief How far the text is scrolled left, so the caret stays in view.
+    float _scroll = 0.0F;
 };
 
 } // namespace asw::ui

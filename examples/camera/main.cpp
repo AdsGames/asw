@@ -21,6 +21,7 @@
 
 #include <asw/asw.h>
 #include <cstdlib>
+#include <format>
 #include <vector>
 
 namespace {
@@ -55,6 +56,7 @@ int main()
     asw::display::set_title("ASW Example - Camera");
 
     const bool autorun = std::getenv("ASW_EXAMPLE_AUTORUN") != nullptr;
+    const auto font = asw::assets::load_font("assets/font.ttf", 8.0F, asw::FontStyle::Pixel);
 
     asw::Camera camera(asw::Vec2<float>(800.0F, 600.0F));
     camera.set_bounds(asw::Quad<float>(0.0F, 0.0F, WORLD_W, WORLD_H));
@@ -111,12 +113,10 @@ int main()
         if (asw::input::get_key(asw::input::Key::W) || asw::input::get_key(asw::input::Key::Up)) {
             move.y -= 1.0F;
         }
-        if (asw::input::get_key(asw::input::Key::S)
-            || asw::input::get_key(asw::input::Key::Down)) {
+        if (asw::input::get_key(asw::input::Key::S) || asw::input::get_key(asw::input::Key::Down)) {
             move.y += 1.0F;
         }
-        if (asw::input::get_key(asw::input::Key::A)
-            || asw::input::get_key(asw::input::Key::Left)) {
+        if (asw::input::get_key(asw::input::Key::A) || asw::input::get_key(asw::input::Key::Left)) {
             move.x -= 1.0F;
         }
         if (asw::input::get_key(asw::input::Key::D)
@@ -149,8 +149,7 @@ int main()
         for (float x = 0.0F; x <= WORLD_W; x += 100.0F) {
             if (x >= view.position.x && x <= view.position.x + view.size.x) {
                 asw::draw::line(camera.world_to_screen(asw::Vec2<float>(x, 0.0F)),
-                    camera.world_to_screen(asw::Vec2<float>(x, WORLD_H)),
-                    asw::color::slategray);
+                    camera.world_to_screen(asw::Vec2<float>(x, WORLD_H)), asw::color::slategray);
             }
         }
         for (float y = 0.0F; y <= WORLD_H; y += 100.0F) {
@@ -172,6 +171,19 @@ int main()
                 player.position.x + 8.0F, player.position.y - 36.0F, 32.0F, 32.0F)));
 
         emitter.draw(camera);
+
+        // Info, in screen space so it stays put while the camera moves
+        asw::draw::text_shadow(font,
+            "Move: WASD / arrows  Shake: Space  Screenshot: F12  Quit: Escape", { 10.0F, 10.0F },
+            asw::color::white);
+        asw::draw::text_shadow(font,
+            std::format("Player: {:.0f}, {:.0f}  View: {:.0f}, {:.0f}", player.position.x,
+                player.position.y, view.position.x, view.position.y),
+            { 10.0F, 24.0F }, asw::color::white);
+        asw::draw::text_shadow(font, "The camera follows the player and stops at the world edge",
+            { 10.0F, 564.0F }, asw::color::lightgray);
+        asw::draw::text_shadow(font, "Walls push the player out, so walk into one to try it",
+            { 10.0F, 578.0F }, asw::color::lightgray);
 
         if (asw::input::get_key_down(asw::input::Key::F12)) {
             asw::display::screenshot("screenshot.png");

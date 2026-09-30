@@ -579,7 +579,7 @@ void asw::lighting::LightMap::draw_light(const Light& light)
 
     if (shadow_mode == ShadowMode::Visibility) {
         asw::geometry::visibility(
-            seen, center, radius, screen_occluders, light.direction, light.cone);
+            seen, center, radius, screen_occluders, screen_bounds, light.direction, light.cone);
         textured_fan(glow, center, radius, seen, color, !spot);
         return;
     }
@@ -597,7 +597,15 @@ void asw::lighting::LightMap::draw_light(const Light& light)
 
     asw::display::set_render_target(scratch);
     SDL_SetRenderClipRect(r, &clip);
+
+    // The fill uses the draw blend mode. Replace, so the area is cleared to
+    // black whatever the game left it on. A clear would ignore the clip.
+    SDL_BlendMode previous = SDL_BLENDMODE_NONE;
+    SDL_GetRenderDrawBlendMode(r, &previous);
+    SDL_SetRenderDrawBlendMode(r, SDL_BLENDMODE_NONE);
     asw::draw::rect_fill(area, asw::Color(0, 0, 0));
+    SDL_SetRenderDrawBlendMode(r, previous);
+
     draw_shape();
     draw_shadows(center, square);
     SDL_SetRenderClipRect(r, nullptr);

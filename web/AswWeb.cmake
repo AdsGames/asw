@@ -7,7 +7,8 @@
 #   [SHELL <file>]            Own HTML shell instead of the ASW one. It needs
 #                             {{{ SCRIPT }}}, and a #canvas and #status to use
 #                             them.
-#   [ASSETS <dir>...]         Folders to preload at /assets
+#   [ASSETS <dir>...]         Folders to preload at /assets. Relative paths
+#                             are from the calling CMakeLists.txt folder.
 #   [PRE_JS <file>...])       More --pre-js files
 #
 # Makes <target> a web page that shows loading progress, keeps the keys the
@@ -55,13 +56,19 @@ function(asw_add_web_target target)
     "--extern-pre-js=${web_dir}/asw-web.js"
     "-sALLOW_MEMORY_GROWTH=1"
   )
+  # emcc runs in the build folder, so give it absolute paths. The files are
+  # link dependencies, so a changed asset rebuilds the preloaded data.
+  set(asset_files)
   foreach(dir IN LISTS ARG_ASSETS)
+    cmake_path(ABSOLUTE_PATH dir BASE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     target_link_options(${target} PRIVATE "--preload-file=${dir}@/assets")
+    file(GLOB_RECURSE dir_files CONFIGURE_DEPENDS ${dir}/*)
+    list(APPEND asset_files ${dir_files})
   endforeach()
   foreach(file IN LISTS ARG_PRE_JS)
     target_link_options(${target} PRIVATE "--pre-js=${file}")
   endforeach()
 
   set_property(TARGET ${target} APPEND PROPERTY LINK_DEPENDS
-    ${shell} ${web_dir}/asw-web.js ${ARG_PRE_JS})
+    ${shell} ${web_dir}/asw-web.js ${ARG_PRE_JS} ${asset_files})
 endfunction()

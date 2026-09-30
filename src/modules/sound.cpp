@@ -51,6 +51,17 @@ struct Voice {
     // Gain after bus, distance and occlusion, used to pick a voice to steal
     float effective_gain = 0.0F;
 
+    // What was last sent to the track. Each SDL_mixer call takes the mixer
+    // lock, so unchanged values are not sent again.
+    struct Sent {
+        enum class Placement { None, Stereo, Point };
+        Placement placement = Placement::None;
+        float a = 0.0F;
+        float b = 0.0F;
+        float gain = -1.0F;
+        float ratio = -1.0F;
+    } sent;
+
     LowPass filter;
 };
 
@@ -68,6 +79,7 @@ std::array<Duck, NUM_BUSES> ducks {};
 std::array<Voice, NUM_VOICES> voices;
 MIX_Track* music_track = nullptr;
 float music_base_volume = 1.0F;
+float music_sent_gain = -1.0F;
 MIX_Mixer* mixer = nullptr;
 
 // Counts shutdowns, each one frees all loaded audio
@@ -185,14 +197,37 @@ float doppler(const Voice& v)
     return std::clamp(ratio, MIN_DOPPLER, MAX_DOPPLER);
 }
 
-void set_stereo_pan(MIX_Track* track, float pan)
+void set_stereo_pan(Voice& v, float pan)
 {
-    // Equal power panning
     pan = std::clamp(pan, -1.0F, 1.0F);
+    if (v.sent.placement == Voice::Sent::Placement::Stereo && v.sent.a == pan) {
+        return;
+    }
+    v.sent = { .placement = Voice::Sent::Placement::Stereo,
+        .a = pan,
+        .gain = v.sent.gain,
+        .ratio = v.sent.ratio };
+
+    // Equal power panning
     MIX_StereoGains gains;
     gains.left = std::sqrt((1.0F - pan) * 0.5F);
     gains.right = std::sqrt((1.0F + pan) * 0.5F);
-    MIX_SetTrackStereo(track, &gains);
+    MIX_SetTrackStereo(v.track, &gains);
+}
+
+void set_point(Voice& v, float x, float z)
+{
+    if (v.sent.placement == Voice::Sent::Placement::Point && v.sent.a == x && v.sent.b == z) {
+        return;
+    }
+    v.sent = { .placement = Voice::Sent::Placement::Point,
+        .a = x,
+        .b = z,
+        .gain = v.sent.gain,
+        .ratio = v.sent.ratio };
+
+    const MIX_Point3D point { x, 0.0F, z };
+    MIX_SetTrack3DPosition(v.track, &point);
 }
 
 // Push a voice's state to its track
@@ -210,20 +245,19 @@ void apply(Voice& v)
         if (spatial_mode == asw::sound::SpatialMode::Surround) {
             // Unit length, so SDL_mixer only picks the direction and our
             // attenuation sets the volume. Down the screen is behind.
-            MIX_Point3D point { 0.0F, 0.0F, 0.0F };
             if (distance > 0.001F) {
-                point.x = delta.x / distance;
-                point.z = delta.y / distance;
+                set_point(v, delta.x / distance, delta.y / distance);
+            } else {
+                set_point(v, 0.0F, 0.0F);
             }
-            MIX_SetTrack3DPosition(v.track, &point);
         } else {
             // Sine of the angle to the listener, centred inside min_distance.
             // Kept off the extremes so the far ear still hears a little.
             const float spread = std::max(distance, v.attenuation.min_distance);
-            set_stereo_pan(v.track, (delta.x / std::max(spread, 0.001F)) * 0.8F);
+            set_stereo_pan(v, (delta.x / std::max(spread, 0.001F)) * 0.8F);
         }
     } else {
-        set_stereo_pan(v.track, v.pan);
+        set_stereo_pan(v, v.pan);
     }
 
     gain *= 1.0F - ((1.0F - OCCLUDED_GAIN) * v.occlusion);
@@ -233,14 +267,25 @@ void apply(Voice& v)
         std::memory_order_relaxed);
 
     v.effective_gain = std::clamp(gain, 0.0F, 1.0F);
-    MIX_SetTrackGain(v.track, v.effective_gain);
-    MIX_SetTrackFrequencyRatio(v.track, std::clamp(ratio, 0.01F, 100.0F));
+    if (v.sent.gain != v.effective_gain) {
+        v.sent.gain = v.effective_gain;
+        MIX_SetTrackGain(v.track, v.effective_gain);
+    }
+
+    ratio = std::clamp(ratio, 0.01F, 100.0F);
+    if (v.sent.ratio != ratio) {
+        v.sent.ratio = ratio;
+        MIX_SetTrackFrequencyRatio(v.track, ratio);
+    }
 }
 
 void apply_music()
 {
-    MIX_SetTrackGain(music_track,
-        std::clamp(music_base_volume * bus_gain(asw::sound::Bus::Music), 0.0F, 1.0F));
+    const float gain = std::clamp(music_base_volume * bus_gain(asw::sound::Bus::Music), 0.0F, 1.0F);
+    if (music_sent_gain != gain) {
+        music_sent_gain = gain;
+        MIX_SetTrackGain(music_track, gain);
+    }
 }
 
 // Free voice, or the quietest voice this priority may replace
@@ -419,14 +464,15 @@ uint32_t asw::sound::_get_session()
 
 bool asw::sound::_init()
 {
-    if (!MIX_Init()) {
-        asw::log::error("Failed to initialize SDL_mixer: {}", SDL_GetError());
-        return false;
-    }
-
+    // Before MIX_Init, so the init count matches the one MIX_Quit in _shutdown
     if (mixer != nullptr) {
         asw::log::warn("Mixer already initialized");
         return true;
+    }
+
+    if (!MIX_Init()) {
+        asw::log::error("Failed to initialize SDL_mixer: {}", SDL_GetError());
+        return false;
     }
 
     // Initialize SDL_mixer
@@ -443,6 +489,7 @@ bool asw::sound::_init()
 
     for (auto& v : voices) {
         v.track = MIX_CreateTrack(mixer);
+        v.sent = { };
         if (v.track == nullptr) {
             asw::log::error("Failed to create track: {}", SDL_GetError());
             return false;
@@ -451,6 +498,7 @@ bool asw::sound::_init()
     }
 
     music_track = MIX_CreateTrack(mixer);
+    music_sent_gain = -1.0F;
     if (music_track == nullptr) {
         asw::log::error("Failed to create music track: {}", SDL_GetError());
         return false;
@@ -531,6 +579,8 @@ asw::sound::SoundHandle start(const asw::Sample& sample, const asw::sound::PlayO
     v.priority = options.priority;
     v.filter.reset.store(true);
 
+    // Send everything for the new sound
+    v.sent = { };
     MIX_SetTrackAudio(v.track, sample.get());
     apply(v);
 

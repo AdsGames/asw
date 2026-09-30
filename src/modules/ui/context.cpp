@@ -7,14 +7,12 @@
 void asw::ui::FocusManager::rebuild(Context& ctx, Widget& root)
 {
     _focusables.clear();
+    _focused_found = false;
     dfs(root);
     // Keep current focus if still exists. Nothing is focused until the
     // player navigates or clicks, so no widget looks selected by default.
-    if (_focused != nullptr) {
-        auto it = std::ranges::find(_focusables, _focused);
-        if (it == _focusables.end()) {
-            set_focus(ctx, nullptr);
-        }
+    if (_focused != nullptr && !_focused_found) {
+        set_focus(ctx, nullptr);
     }
 }
 
@@ -204,6 +202,7 @@ void asw::ui::FocusManager::dfs(Widget& w)
     }
     if (w.focusable) {
         _focusables.push_back(&w);
+        _focused_found = _focused_found || &w == _focused;
     }
     for (auto const& c : w.children()) {
         dfs(*c);

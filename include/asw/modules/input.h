@@ -353,6 +353,7 @@ using KeyState = struct KeyState {
     std::array<bool, NUM_KEYS> pressed { false };
     std::array<bool, NUM_KEYS> released { false };
     std::array<bool, NUM_KEYS> down { false };
+    std::array<bool, NUM_KEYS> repeated { false };
 
     bool any_pressed { false };
     int last_pressed { -1 };
@@ -379,6 +380,17 @@ bool get_key(asw::input::Key key);
 /// @return false - If the key was not pressed.
 ///
 bool get_key_down(asw::input::Key key);
+
+/// @brief Check if a key was pressed or auto-repeated since the last update.
+///
+/// @details A held key repeats at the rate the operating system sets. Use this
+/// for text editing and menu movement, and get_key_down() for game actions.
+///
+/// @param key The key to check.
+/// @return true - If the key was pressed or repeated.
+/// @return false - If it was not.
+///
+bool get_key_repeat(asw::input::Key key);
 
 /// @brief Check if a key was released since the last update.
 ///
@@ -549,7 +561,7 @@ Vec2<float> get_controller_stick(uint32_t index, asw::input::ControllerStick sti
 /// @brief Set the joystick deadzone for a controller.
 ///
 /// @param index The index of the controller, or ANY_CONTROLLER for all
-/// connected controllers.
+/// connected controllers and every controller connected later.
 /// @param dead_zone The dead zone, between 0.0f and 1.0f. Defaults to 0.25f.
 ///
 void set_controller_dead_zone(uint32_t index, float dead_zone);
@@ -616,8 +628,25 @@ bool controller_has_trigger_rumble(uint32_t index);
 ///
 InputDevice get_last_device();
 
-/// @brief Get the number of controllers connected.
+/// @brief Get the number of controller slots.
+///
+/// @details Each pad keeps its index while other pads are unplugged. A pad
+/// plugged back in gets its old index, told apart by serial number, or by
+/// model when it has no serial. A new pad fills the first empty slot. So this
+/// is the highest connected index plus one, and 0 when no controller is
+/// connected.
+///
+/// @return int - The number of controller slots.
+///
 int get_controller_count();
+
+/// @brief Check if a controller is connected at an index.
+///
+/// @param index The index of the controller.
+/// @return true - If a controller is connected at the index.
+/// @return false - If the slot is empty or the index is invalid.
+///
+bool is_controller_connected(uint32_t index);
 
 /// @brief Get the name of a controller.
 std::string get_controller_name(uint32_t index);
@@ -640,7 +669,11 @@ void _shutdown();
 void _append_text(const char* text);
 
 /// @brief Key down hook
-void _key_down(SDL_Scancode scancode);
+///
+/// @param scancode The key.
+/// @param repeat Whether the event is an auto-repeat of a held key.
+///
+void _key_down(SDL_Scancode scancode, bool repeat = false);
 
 /// @brief Key up hook
 void _key_up(SDL_Scancode scancode);

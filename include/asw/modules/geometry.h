@@ -833,6 +833,16 @@ namespace geometry {
     void visibility(Polygonf& result, const Vec2f& from, float radius,
         const std::vector<Polygonf>& occluders, float direction = 0.0F, float cone = 0.0F);
 
+    /// @brief Find the area that can be seen from a point, with the bounds of
+    /// the occluders already worked out, e.g. once per frame for many lights.
+    ///
+    /// @param occluder_bounds The bounds() of each occluder, in the same
+    /// order. Must be the same size as @p occluders.
+    ///
+    void visibility(Polygonf& result, const Vec2f& from, float radius,
+        const std::vector<Polygonf>& occluders, const std::vector<Quadf>& occluder_bounds,
+        float direction = 0.0F, float cone = 0.0F);
+
 } // namespace geometry
 
 } // namespace asw

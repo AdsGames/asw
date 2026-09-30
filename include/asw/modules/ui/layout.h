@@ -10,7 +10,7 @@
 #define ASW_MODULES_UI_LAYOUT_H
 
 #include <cstddef>
-#include <unordered_map>
+#include <vector>
 
 #include "context.h"
 #include "widget.h"
@@ -73,12 +73,20 @@ public:
 
 private:
     struct Entry {
+        WidgetId id;
         float natural;
         float forced;
     };
 
-    std::unordered_map<WidgetId, Entry> _last;
-    std::unordered_map<WidgetId, Entry> _next;
+    // Find a child's record from last layout. Children come in the same
+    // order each layout, so the search starts where the last one ended.
+    const Entry* find(WidgetId id) const;
+
+    // Vectors, not maps, and kept between layouts, so a layout does not
+    // allocate
+    std::vector<Entry> _last;
+    std::vector<Entry> _next;
+    mutable std::size_t _cursor = 0;
 };
 
 } // namespace detail
@@ -156,6 +164,10 @@ public:
 private:
     // Heights forced by the row height
     detail::ForcedSizes _heights;
+
+    // Kept between layouts so a layout does not allocate
+    std::vector<Widget*> _shown;
+    std::vector<float> _natural_h;
 };
 
 /// @brief Whether a widget sits in a row with other widgets that can take

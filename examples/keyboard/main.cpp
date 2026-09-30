@@ -124,7 +124,7 @@ int main()
 
         // --- Text input ---
         typed += asw::input::get_text_input();
-        if (asw::input::get_key_down(asw::input::Key::Backspace) && !typed.empty()) {
+        if (asw::input::get_key_repeat(asw::input::Key::Backspace) && !typed.empty()) {
             typed.pop_back();
         }
         if (typed.size() > 60) {

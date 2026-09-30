@@ -133,6 +133,9 @@ int main()
     asw::core::init(800, 600);
     asw::display::set_title("ASW Example - Controller");
 
+    // ANY_CONTROLLER also sets the dead zone of pads plugged in later
+    asw::input::set_controller_dead_zone(PAD, DEAD_ZONE);
+
     const bool autorun = std::getenv("ASW_EXAMPLE_AUTORUN") != nullptr;
     const auto font = asw::assets::load_font("assets/font.ttf", 8.0F, asw::FontStyle::Pixel);
 
@@ -169,9 +172,6 @@ int main()
             asw::draw::text_shadow(font, "No controller found - plug one in", { 400.0F, 324.0F },
                 asw::color::orange, asw::color::black, { 2.0F, 2.0F }, asw::TextJustify::Center);
         } else {
-            // Dead zones are stored per pad, so this reaches pads plugged in later
-            asw::input::set_controller_dead_zone(PAD, DEAD_ZONE);
-
             // Remember the last face button pressed this frame
             const std::pair<ControllerButton, const char*> named[] = {
                 { ControllerButton::A, "A" },

@@ -1,6 +1,7 @@
 #include "./asw/modules/action.h"
 
 #include <algorithm>
+#include <string_view>
 #include <unordered_map>
 #include <vector>
 
@@ -18,7 +19,17 @@ struct ActionData {
     bool prev_down { false };
 };
 
-std::unordered_map<std::string, ActionData> action_map;
+// Looked up by string_view without building a std::string
+struct NameHash {
+    using is_transparent = void;
+
+    std::size_t operator()(std::string_view name) const
+    {
+        return std::hash<std::string_view> { }(name);
+    }
+};
+
+std::unordered_map<std::string, ActionData, NameHash, std::equal_to<>> action_map;
 
 // ---------------------------------------------------------------------------
 // Per-binding query helpers
@@ -144,7 +155,9 @@ void asw::input::bind_action(std::string_view name, asw::input::ActionBinding bi
 
 void asw::input::unbind_action(std::string_view name)
 {
-    action_map.erase(std::string(name));
+    if (auto it = action_map.find(name); it != action_map.end()) {
+        action_map.erase(it);
+    }
 }
 
 void asw::input::clear_actions()
@@ -154,25 +167,25 @@ void asw::input::clear_actions()
 
 bool asw::input::get_action_down(std::string_view name)
 {
-    auto it = action_map.find(std::string(name));
+    auto it = action_map.find(name);
     return it != action_map.end() && it->second.pressed;
 }
 
 bool asw::input::get_action_up(std::string_view name)
 {
-    auto it = action_map.find(std::string(name));
+    auto it = action_map.find(name);
     return it != action_map.end() && it->second.released;
 }
 
 bool asw::input::get_action(std::string_view name)
 {
-    auto it = action_map.find(std::string(name));
+    auto it = action_map.find(name);
     return it != action_map.end() && it->second.down;
 }
 
 float asw::input::get_action_strength(std::string_view name)
 {
-    auto it = action_map.find(std::string(name));
+    auto it = action_map.find(name);
     return it != action_map.end() ? it->second.strength : 0.0F;
 }
 
