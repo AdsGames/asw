@@ -12,7 +12,10 @@
 #include <algorithm>
 #include <cmath>
 #include <concepts>
+#include <cstddef>
+#include <optional>
 #include <type_traits>
+#include <vector>
 
 namespace asw {
 
@@ -732,6 +735,105 @@ using Vec3f = Vec3<float>;
 using Vec3i = Vec3<int>;
 using Quadf = Quad<float>;
 using Quadi = Quad<int>;
+
+/// @brief A polygon, as its corners in order. The last corner joins the first.
+template <typename T> using Polygon = std::vector<Vec2<T>>;
+using Polygonf = Polygon<float>;
+
+namespace geometry {
+
+    /// @brief Get the signed area of a polygon.
+    ///
+    /// @param polygon The polygon.
+    /// @return The area. It is positive when the corners go clockwise on screen
+    /// and negative when they go anticlockwise.
+    ///
+    template <typename T> typename Vec2<T>::Real signed_area(const Polygon<T>& polygon)
+    {
+        using Real = typename Vec2<T>::Real;
+        Real area = 0;
+        for (std::size_t i = 0; i < polygon.size(); ++i) {
+            area += static_cast<Real>(polygon[i].cross(polygon[(i + 1) % polygon.size()]));
+        }
+        return area / Real(2);
+    }
+
+    /// @brief Get the smallest rectangle that holds every corner of a polygon.
+    ///
+    /// @param polygon The polygon.
+    /// @return The bounds, or an empty rectangle at 0, 0 for no corners.
+    ///
+    template <typename T> Quad<T> bounds(const Polygon<T>& polygon)
+    {
+        if (polygon.empty()) {
+            return { };
+        }
+
+        Vec2<T> lo = polygon.front();
+        Vec2<T> hi = polygon.front();
+        for (const auto& p : polygon) {
+            lo = { std::min(lo.x, p.x), std::min(lo.y, p.y) };
+            hi = { std::max(hi.x, p.x), std::max(hi.y, p.y) };
+        }
+        return { lo, hi - lo };
+    }
+
+    /// @brief Check if a point is inside a triangle. Points on an edge are inside.
+    ///
+    /// @param point The point to check.
+    /// @param a The first corner.
+    /// @param b The second corner.
+    /// @param c The third corner.
+    /// @return true if the point is inside or on the edge.
+    ///
+    template <typename T>
+    bool point_in_triangle(
+        const Vec2<T>& point, const Vec2<T>& a, const Vec2<T>& b, const Vec2<T>& c)
+    {
+        const T d1 = (b - a).cross(point - a);
+        const T d2 = (c - b).cross(point - b);
+        const T d3 = (a - c).cross(point - c);
+        const bool has_neg = d1 < 0 || d2 < 0 || d3 < 0;
+        const bool has_pos = d1 > 0 || d2 > 0 || d3 > 0;
+        return !(has_neg && has_pos);
+    }
+
+    /// @brief Find where a ray hits a line segment.
+    ///
+    /// @param origin Where the ray starts.
+    /// @param direction Which way the ray goes. It does not need to be normalized.
+    /// @param a One end of the segment.
+    /// @param b The other end of the segment.
+    /// @return How far along the ray the hit is, in lengths of @p direction, or
+    /// nothing when the ray misses or runs along the segment.
+    ///
+    std::optional<float> ray_hit(
+        const Vec2f& origin, const Vec2f& direction, const Vec2f& a, const Vec2f& b);
+
+    /// @brief Find the area that can be seen from a point.
+    ///
+    /// @details Useful for field of view and for light. Rays stop at the first
+    /// polygon edge, and at a square of half size @p radius around @p from.
+    ///
+    /// @param from The point to look from.
+    /// @param radius How far to look.
+    /// @param occluders Polygons that block the view.
+    /// @param direction Direction to look, in radians, when @p cone is set.
+    /// @param cone Width of the view in radians. 0 looks all round.
+    /// @return The edge of the visible area in angle order, not including @p from.
+    ///
+    Polygonf visibility(const Vec2f& from, float radius, const std::vector<Polygonf>& occluders,
+        float direction = 0.0F, float cone = 0.0F);
+
+    /// @brief Find the area that can be seen from a point, into a polygon you keep
+    /// between calls so it does not allocate each time.
+    ///
+    /// @param result Replaced with the edge of the visible area.
+    ///
+    void visibility(Polygonf& result, const Vec2f& from, float radius,
+        const std::vector<Polygonf>& occluders, float direction = 0.0F, float cone = 0.0F);
+
+} // namespace geometry
 
 } // namespace asw
 
