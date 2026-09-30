@@ -32,13 +32,13 @@ using ControllerState = struct ControllerState {
 std::array<SDL_Cursor*, asw::input::NUM_CURSORS> cursors { nullptr };
 
 /// @brief Global controller state.
-std::vector<ControllerState> controller {};
+std::vector<ControllerState> controller { };
 
 /// @brief Map of SDL_JoystickID to controller index in the controller vector.
-std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map {};
+std::unordered_map<SDL_JoystickID, uint32_t> controller_id_map { };
 
-asw::input::KeyState keyboard {};
-asw::input::MouseState mouse {};
+asw::input::KeyState keyboard { };
+asw::input::MouseState mouse { };
 std::string text_input;
 asw::input::InputDevice last_device { asw::input::InputDevice::KeyboardMouse };
 
@@ -103,6 +103,39 @@ template <typename Pred> bool any_controller(uint32_t index, Pred pred)
     }
 
     return index < controller.size() && pred(controller[index]);
+}
+
+/// @brief Run an action on one controller, or on all when index is ANY_CONTROLLER.
+/// @return true if the action succeeded on at least one controller.
+template <typename Action> bool each_controller(uint32_t index, Action action)
+{
+    if (index == asw::input::ANY_CONTROLLER) {
+        // No short circuit, every controller gets the action
+        bool any = false;
+        for (auto& cont : controller) {
+            any = action(cont) || any;
+        }
+        return any;
+    }
+
+    return index < controller.size() && action(controller[index]);
+}
+
+/// @brief Convert an intensity between 0 and 1 to SDL's motor range.
+uint16_t to_motor_intensity(float intensity)
+{
+    // NaN fails the clamp and would be undefined behaviour to convert
+    if (std::isnan(intensity)) {
+        return 0;
+    }
+
+    return static_cast<uint16_t>(std::clamp(intensity, 0.0F, 1.0F) * UINT16_MAX);
+}
+
+/// @brief Read a boolean capability from a controller's properties.
+bool has_capability(const ControllerState& cont, const char* property)
+{
+    return SDL_GetBooleanProperty(SDL_GetGamepadProperties(cont.gamepad), property, false);
 }
 } // namespace
 
@@ -243,21 +276,21 @@ SDL_WindowID simulated_window_id()
 
 void push_simulated_key(asw::input::Key key, bool down)
 {
-    SDL_KeyboardEvent key_event {};
+    SDL_KeyboardEvent key_event { };
     key_event.type = down ? SDL_EVENT_KEY_DOWN : SDL_EVENT_KEY_UP;
     key_event.windowID = simulated_window_id();
     key_event.scancode
         = static_cast<SDL_Scancode>(static_cast<std::underlying_type_t<asw::input::Key>>(key));
     key_event.down = down;
 
-    SDL_Event e {};
+    SDL_Event e { };
     e.key = key_event;
     SDL_PushEvent(&e);
 }
 
 void push_simulated_mouse_button(asw::input::MouseButton button, bool down)
 {
-    SDL_MouseButtonEvent button_event {};
+    SDL_MouseButtonEvent button_event { };
     button_event.type = down ? SDL_EVENT_MOUSE_BUTTON_DOWN : SDL_EVENT_MOUSE_BUTTON_UP;
     button_event.windowID = simulated_window_id();
     button_event.button = static_cast<uint8_t>(
@@ -274,7 +307,7 @@ void push_simulated_mouse_button(asw::input::MouseButton button, bool down)
             renderer, mouse.position.x, mouse.position.y, &button_event.x, &button_event.y);
     }
 
-    SDL_Event e {};
+    SDL_Event e { };
     e.button = button_event;
     SDL_PushEvent(&e);
 }
@@ -303,7 +336,7 @@ void asw::input::simulate_mouse_move(const asw::Vec2<float>& position)
             renderer, mouse.position.x, mouse.position.y, &window_prev.x, &window_prev.y);
     }
 
-    SDL_MouseMotionEvent motion {};
+    SDL_MouseMotionEvent motion { };
     motion.type = SDL_EVENT_MOUSE_MOTION;
     motion.windowID = simulated_window_id();
     motion.x = window_pos.x;
@@ -311,7 +344,7 @@ void asw::input::simulate_mouse_move(const asw::Vec2<float>& position)
     motion.xrel = window_pos.x - window_prev.x;
     motion.yrel = window_pos.y - window_prev.y;
 
-    SDL_Event e {};
+    SDL_Event e { };
     e.motion = motion;
     SDL_PushEvent(&e);
 }
@@ -417,6 +450,43 @@ void asw::input::set_controller_dead_zone(uint32_t index, float dead_zone)
     }
 
     controller[index].dead_zone = dead_zone;
+}
+
+bool asw::input::rumble_controller(
+    uint32_t index, float low_frequency, float high_frequency, uint32_t duration_ms)
+{
+    const auto low = to_motor_intensity(low_frequency);
+    const auto high = to_motor_intensity(high_frequency);
+
+    return each_controller(index, [&](const ControllerState& cont) {
+        return SDL_RumbleGamepad(cont.gamepad, low, high, duration_ms);
+    });
+}
+
+bool asw::input::rumble_controller_triggers(
+    uint32_t index, float left, float right, uint32_t duration_ms)
+{
+    const auto left_intensity = to_motor_intensity(left);
+    const auto right_intensity = to_motor_intensity(right);
+
+    return each_controller(index, [&](const ControllerState& cont) {
+        return SDL_RumbleGamepadTriggers(
+            cont.gamepad, left_intensity, right_intensity, duration_ms);
+    });
+}
+
+bool asw::input::controller_has_rumble(uint32_t index)
+{
+    return any_controller(index, [](const ControllerState& cont) {
+        return has_capability(cont, SDL_PROP_GAMEPAD_CAP_RUMBLE_BOOLEAN);
+    });
+}
+
+bool asw::input::controller_has_trigger_rumble(uint32_t index)
+{
+    return any_controller(index, [](const ControllerState& cont) {
+        return has_capability(cont, SDL_PROP_GAMEPAD_CAP_TRIGGER_RUMBLE_BOOLEAN);
+    });
 }
 
 asw::input::InputDevice asw::input::get_last_device()
