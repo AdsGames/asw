@@ -553,9 +553,7 @@ void asw::draw::rect_fill_rotate(const asw::Quad<float>& position, float angle, 
         { -half_w, half_h },
     } };
 
-    const SDL_FColor fcolor { static_cast<float>(color.r) / 255.0F,
-        static_cast<float>(color.g) / 255.0F, static_cast<float>(color.b) / 255.0F,
-        static_cast<float>(color.a) / 255.0F };
+    const asw::FColor fcolor = color.to_fcolor();
 
     std::array<SDL_Vertex, 4> vertices { };
     for (std::size_t i = 0; i < corners.size(); i++) {
