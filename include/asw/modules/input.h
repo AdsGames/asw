@@ -554,6 +554,58 @@ Vec2<float> get_controller_stick(uint32_t index, asw::input::ControllerStick sti
 ///
 void set_controller_dead_zone(uint32_t index, float dead_zone);
 
+/// @brief Rumble a controller's main motors.
+///
+/// @details Each call replaces the previous rumble on that controller. Call
+/// with both intensities at 0 to stop early.
+///
+/// @param index The index of the controller, or ANY_CONTROLLER for all
+/// connected controllers.
+/// @param low_frequency Intensity of the low frequency (left) motor, between
+/// 0.0f and 1.0f.
+/// @param high_frequency Intensity of the high frequency (right) motor,
+/// between 0.0f and 1.0f.
+/// @param duration_ms How long to rumble, in milliseconds.
+/// @return true - If at least one controller started rumbling.
+/// @return false - If no controller supports rumble or the index is invalid.
+///
+bool rumble_controller(
+    uint32_t index, float low_frequency, float high_frequency, uint32_t duration_ms);
+
+/// @brief Rumble a controller's trigger motors.
+///
+/// @details Only some controllers, such as Xbox One and Series controllers,
+/// have trigger motors. Each call replaces the previous trigger rumble on that
+/// controller. Call with both intensities at 0 to stop early.
+///
+/// @param index The index of the controller, or ANY_CONTROLLER for all
+/// connected controllers.
+/// @param left Intensity of the left trigger motor, between 0.0f and 1.0f.
+/// @param right Intensity of the right trigger motor, between 0.0f and 1.0f.
+/// @param duration_ms How long to rumble, in milliseconds.
+/// @return true - If at least one controller started rumbling.
+/// @return false - If no controller supports trigger rumble or the index is
+/// invalid.
+///
+bool rumble_controller_triggers(uint32_t index, float left, float right, uint32_t duration_ms);
+
+/// @brief Check if a controller supports rumble.
+///
+/// @param index The index of the controller, or ANY_CONTROLLER.
+/// @return true - If the controller (or any controller) supports rumble.
+/// @return false - If it does not, or the index is invalid.
+///
+bool controller_has_rumble(uint32_t index);
+
+/// @brief Check if a controller supports trigger rumble.
+///
+/// @param index The index of the controller, or ANY_CONTROLLER.
+/// @return true - If the controller (or any controller) supports trigger
+/// rumble.
+/// @return false - If it does not, or the index is invalid.
+///
+bool controller_has_trigger_rumble(uint32_t index);
+
 /// @brief Get the device the player used most recently.
 ///
 /// @details Useful for showing keyboard or controller prompts. Key presses,
