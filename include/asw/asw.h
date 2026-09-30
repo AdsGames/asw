@@ -16,6 +16,7 @@
 #include "./modules/game.h"
 #include "./modules/geometry.h"
 #include "./modules/input.h"
+#include "./modules/lighting.h"
 #include "./modules/log.h"
 #include "./modules/particles.h"
 #include "./modules/random.h"
