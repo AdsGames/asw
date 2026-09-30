@@ -31,13 +31,13 @@ struct Toast {
     std::string text;
 
     /// @brief Picture before the text, e.g. an achievement icon. Optional.
-    asw::Texture icon;
+    asw::Texture icon { };
 
     /// @brief How long it stays, the theme toast seconds when 0.
     float seconds = 0.0F;
 
     /// @brief Text colour, the theme toast text colour when empty.
-    std::optional<asw::Color> color;
+    std::optional<asw::Color> color { };
 };
 
 /// @brief Root container that manages the UI tree, input, and rendering.

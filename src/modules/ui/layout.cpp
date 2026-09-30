@@ -3,24 +3,37 @@
 #include <algorithm>
 #include <vector>
 
+const asw::ui::detail::ForcedSizes::Entry* asw::ui::detail::ForcedSizes::find(WidgetId id) const
+{
+    const std::size_t count = _last.size();
+    for (std::size_t i = 0; i < count; ++i) {
+        const std::size_t index = (_cursor + i) % count;
+        if (_last[index].id == id) {
+            _cursor = index + 1;
+            return &_last[index];
+        }
+    }
+    return nullptr;
+}
+
 float asw::ui::detail::ForcedSizes::natural(const Widget& w, float current) const
 {
-    const auto it = _last.find(w.id());
-    if (it != _last.end() && it->second.forced == current) {
-        return it->second.natural;
+    const Entry* entry = find(w.id());
+    if (entry != nullptr && entry->forced == current) {
+        return entry->natural;
     }
     return current;
 }
 
 void asw::ui::detail::ForcedSizes::record(const Widget& w, float natural, float forced)
 {
-    _next[w.id()] = { .natural = natural, .forced = forced };
+    _next.push_back({ .id = w.id(), .natural = natural, .forced = forced });
 }
 
 void asw::ui::detail::ForcedSizes::keep(const Widget& w)
 {
-    if (const auto it = _last.find(w.id()); it != _last.end()) {
-        _next.insert(*it);
+    if (const Entry* entry = find(w.id())) {
+        _next.push_back(*entry);
     }
 }
 
@@ -28,6 +41,7 @@ void asw::ui::detail::ForcedSizes::finish()
 {
     _last.swap(_next);
     _next.clear();
+    _cursor = 0;
 }
 
 void asw::ui::Stack::layout(Context& ctx)
@@ -80,8 +94,10 @@ void asw::ui::Grid::layout(Context& ctx)
     const float cell_w
         = std::max(0.0F, (inner_w - (gap * static_cast<float>(cols - 1))) / static_cast<float>(cols));
 
-    std::vector<Widget*> shown;
-    std::vector<float> natural_h;
+    auto& shown = _shown;
+    auto& natural_h = _natural_h;
+    shown.clear();
+    natural_h.clear();
     for (auto const& c : children()) {
         if (c->visible) {
             c->measure(ctx);

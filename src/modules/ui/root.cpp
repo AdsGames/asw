@@ -19,13 +19,26 @@ void play_ui_sound(const asw::Sample& sample)
     }
 }
 
+// Whether a widget and every parent above it are enabled. A disabled widget
+// disables its children, as in keyboard navigation.
+bool enabled_in_tree(const asw::ui::Widget* w)
+{
+    for (; w != nullptr; w = w->parent) {
+        if (!w->enabled) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // The widget a pointer acts on: the nearest focusable widget at or above
-// the hit, so a label inside a button still presses the button
+// the hit, so a label inside a button still presses the button. Nothing
+// inside a disabled parent reacts to the pointer.
 asw::ui::Widget* interactive(asw::ui::Widget* hit)
 {
     for (auto* w = hit; w != nullptr; w = w->parent) {
         if (w->focusable) {
-            return w;
+            return enabled_in_tree(w->parent) ? w : nullptr;
         }
     }
     return nullptr;
@@ -48,7 +61,6 @@ void asw::ui::Root::fit_to_screen()
             || root.transform.size.y != static_cast<float>(screen.y))) {
         root.transform
             = { 0.0F, 0.0F, static_cast<float>(screen.x), static_cast<float>(screen.y) };
-        ctx.need_focus_rebuild = true;
     }
     _modals.transform = root.transform;
 }
@@ -61,7 +73,6 @@ void asw::ui::Root::set_size(float w, float h)
     root.transform = r;
     _modals.transform = r;
     auto_size = false;
-    ctx.need_focus_rebuild = true;
 }
 
 bool asw::ui::Root::attached(const Widget* w) const
@@ -113,7 +124,6 @@ void asw::ui::Root::opened_modal()
             _focus_before_modal = f;
         }
     }
-    ctx.need_focus_rebuild = true;
 }
 
 void asw::ui::Root::close_modals()
@@ -157,7 +167,8 @@ void asw::ui::Root::update_modal_focus()
             return;
         }
         _focused_modal = nullptr;
-        if (back != nullptr && attached(back) && back->focusable && back->visible && back->enabled) {
+        if (back != nullptr && attached(back) && back->focusable && back->visible
+            && enabled_in_tree(back)) {
             ctx.focus.set_focus(ctx, back);
         }
     }
@@ -187,7 +198,6 @@ void asw::ui::Root::validate()
     // Also drops focus from a removed widget, telling it so. While a modal is
     // open only its widgets can have focus.
     ctx.focus.rebuild(ctx, active_root());
-    ctx.need_focus_rebuild = false;
     update_modal_focus();
 }
 
@@ -224,6 +234,12 @@ asw::ui::Widget* asw::ui::Root::hit_test(Widget& w, const asw::Vec2<float>& poin
 
 bool asw::ui::Root::bubble(Widget* target, const UIEvent& e)
 {
+    // No handler runs, so the tree cannot change and needs no validate. The
+    // pointer moving over empty space takes this path every frame.
+    if (target == nullptr) {
+        return false;
+    }
+
     // Take the chain first, a handler that removes its own widget cuts it off
     // from its parent
     std::vector<Widget*> chain;
@@ -273,7 +289,7 @@ bool asw::ui::Root::dispatch_to_focused(const UIEvent& e)
 
 void asw::ui::Root::activate(Widget& w)
 {
-    if (w.enabled) {
+    if (enabled_in_tree(&w)) {
         play_ui_sound(ctx.theme.sound_activate);
         w.activate(ctx);
         _used = true;
@@ -342,7 +358,7 @@ void asw::ui::Root::update_pointer()
             ctx.show_focus = false;
 
             // Press, capture and focus the widget under the pointer
-            if (left && ctx.hover != nullptr && ctx.hover->enabled) {
+            if (left && ctx.hover != nullptr && enabled_in_tree(ctx.hover)) {
                 ctx.pointer_capture = ctx.hover;
                 ctx.hover->_pressed = true;
                 ctx.hover->_captured = true;
@@ -414,6 +430,14 @@ void asw::ui::Root::update_keys()
         return action.empty() ? get_key_down(key) : get_action_down(action);
     };
 
+    // Like pressed, but a held built in key repeats, as in a text field or menu
+    const auto repeating = [typed](const std::string& action, Key key) {
+        if (typed) {
+            return false;
+        }
+        return action.empty() ? get_key_repeat(key) : get_action_down(action);
+    };
+
     const auto shift = get_key(Key::LShift) || get_key(Key::RShift);
 
     // Global focus handling first (keyboard-first UX)
@@ -432,7 +456,7 @@ void asw::ui::Root::update_keys()
 
     // Directions: dispatch KeyDown to focused widget first, fall back to focus navigation
     const auto direction = [&](const std::string& action, Key key, int dx, int dy) {
-        if (!pressed(action, key)) {
+        if (!repeating(action, key)) {
             return;
         }
         const UIEvent e { .type = UIEvent::Type::KeyDown, .key = key };
@@ -451,9 +475,9 @@ void asw::ui::Root::update_keys()
         play_ui_sound(ctx.theme.sound_move);
     }
 
-    // Editing keys dispatched to focused widget
+    // Editing keys dispatched to focused widget. Held keys repeat.
     for (const auto key : { Key::Backspace, Key::Delete, Key::Home, Key::End }) {
-        if (get_key_down(key)) {
+        if (get_key_repeat(key)) {
             const UIEvent e { .type = UIEvent::Type::KeyDown, .key = key };
             if (dispatch_to_focused(e)) {
                 _used = true;

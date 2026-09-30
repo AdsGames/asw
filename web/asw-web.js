@@ -36,8 +36,15 @@ var Module = typeof Module != "undefined" ? Module : {};
 
   // Keys go to the game, not to page scrolling
   window.addEventListener("keydown", (event) => {
-    const keys = [" ", "ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab"];
+    const keys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Tab"];
     if (keys.includes(event.key)) {
+      event.preventDefault();
+    }
+  });
+  // Space scrolls on keypress. Cancelling it on keydown would stop the
+  // keypress SDL reads typed text from, so text boxes could not get a space.
+  window.addEventListener("keypress", (event) => {
+    if (event.key === " ") {
       event.preventDefault();
     }
   });

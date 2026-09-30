@@ -21,9 +21,65 @@ struct Ray {
     Vec2f dir;
 };
 
+struct Segment {
+    Vec2f a;
+    Vec2f b;
+
+    // Distance from the view point to the closest point of the segment. No
+    // ray can hit the segment closer than this.
+    float distance;
+};
+
 Vec2f rotate(const Vec2f& v, float cos_a, float sin_a)
 {
     return { (v.x * cos_a) - (v.y * sin_a), (v.x * sin_a) + (v.y * cos_a) };
+}
+
+float distance_to_segment(const Vec2f& p, const Vec2f& a, const Vec2f& b)
+{
+    const Vec2f edge = b - a;
+    const float length_sq = edge.dot(edge);
+    const float t = length_sq > 0.0F ? std::clamp((p - a).dot(edge) / length_sq, 0.0F, 1.0F) : 0.0F;
+    return (p - (a + (edge * t))).magnitude();
+}
+
+// Clip a segment to an axis aligned box (Liang-Barsky). Returns false when
+// no part of it is inside.
+bool clip_segment(Vec2f& a, Vec2f& b, const Vec2f& min, const Vec2f& max)
+{
+    const Vec2f d = b - a;
+    float t0 = 0.0F;
+    float t1 = 1.0F;
+
+    const std::array<std::pair<float, float>, 4> edges { {
+        { -d.x, a.x - min.x },
+        { d.x, max.x - a.x },
+        { -d.y, a.y - min.y },
+        { d.y, max.y - a.y },
+    } };
+    for (const auto& [p, q] : edges) {
+        if (p == 0.0F) {
+            if (q < 0.0F) {
+                return false;
+            }
+            continue;
+        }
+
+        const float r = q / p;
+        if (p < 0.0F) {
+            t0 = std::max(t0, r);
+        } else {
+            t1 = std::min(t1, r);
+        }
+        if (t0 > t1) {
+            return false;
+        }
+    }
+
+    const Vec2f start = a;
+    a = start + (d * t0);
+    b = start + (d * t1);
+    return true;
 }
 } // namespace
 
@@ -56,14 +112,28 @@ asw::Polygonf asw::geometry::visibility(const Vec2f& from, float radius,
 void asw::geometry::visibility(Polygonf& result, const Vec2f& from, float radius,
     const std::vector<Polygonf>& occluders, float direction, float cone)
 {
+    thread_local std::vector<Quadf> occluder_bounds;
+    occluder_bounds.clear();
+    for (const auto& polygon : occluders) {
+        occluder_bounds.push_back(bounds(polygon));
+    }
+    visibility(result, from, radius, occluders, occluder_bounds, direction, cone);
+}
+
+void asw::geometry::visibility(Polygonf& result, const Vec2f& from, float radius,
+    const std::vector<Polygonf>& occluders, const std::vector<Quadf>& occluder_bounds,
+    float direction, float cone)
+{
     result.clear();
     if (!(radius > 0.0F)) {
         return;
     }
 
-    thread_local std::vector<std::pair<Vec2f, Vec2f>> segments;
+    thread_local std::vector<Segment> segments;
+    thread_local std::vector<Vec2f> corners;
     thread_local std::vector<Ray> rays;
     segments.clear();
+    corners.clear();
     rays.clear();
 
     // The edge of the square the view reaches
@@ -74,18 +144,43 @@ void asw::geometry::visibility(Polygonf& result, const Vec2f& from, float radius
         { from.x - radius, from.y + radius },
     } };
     for (std::size_t i = 0; i < square.size(); ++i) {
-        segments.emplace_back(square[i], square[(i + 1) % square.size()]);
+        const auto& a = square[i];
+        const auto& b = square[(i + 1) % square.size()];
+        segments.push_back({ a, b, distance_to_segment(from, a, b) });
+        corners.push_back(a);
     }
 
+    // Edges are clipped to the square. Where an edge crosses the square is a
+    // corner of the visible area too, so it gets rays like any other corner.
     const asw::Quadf reach(square[0], Vec2f(radius * 2.0F, radius * 2.0F));
-    for (const auto& polygon : occluders) {
-        if (polygon.size() < 2 || !bounds(polygon).collides(reach)) {
+    for (std::size_t p = 0; p < occluders.size(); ++p) {
+        const auto& polygon = occluders[p];
+        if (polygon.size() < 2 || p >= occluder_bounds.size()
+            || !occluder_bounds[p].collides(reach)) {
             continue;
         }
         for (std::size_t i = 0; i < polygon.size(); ++i) {
-            segments.emplace_back(polygon[i], polygon[(i + 1) % polygon.size()]);
+            Vec2f a = polygon[i];
+            Vec2f b = polygon[(i + 1) % polygon.size()];
+            const Vec2f original_b = b;
+            if (!clip_segment(a, b, square[0], square[2])) {
+                continue;
+            }
+
+            segments.push_back({ a, b, distance_to_segment(from, a, b) });
+
+            // Each corner inside the square starts exactly one edge, so the
+            // first end of each edge gives it once. A clipped second end
+            // starts no edge, so add it here.
+            corners.push_back(a);
+            if (b != original_b) {
+                corners.push_back(b);
+            }
         }
     }
+
+    // Nearest edges first, so each ray can stop once the rest are too far
+    std::ranges::sort(segments, { }, &Segment::distance);
 
     const bool spot = cone > 0.0F && cone < TAU;
     const float half_cone = cone / 2.0F;
@@ -95,12 +190,11 @@ void asw::geometry::visibility(Polygonf& result, const Vec2f& from, float radius
         }
     };
 
-    // Every corner starts exactly one segment, so the first end of each
-    // segment gives each corner once. Aim at it and just either side of it
+    // Aim at each corner and just either side of it
     const float nudge_cos = std::cos(CORNER_NUDGE);
     const float nudge_sin = std::sin(CORNER_NUDGE);
-    for (const auto& segment : segments) {
-        const Vec2f to = segment.first - from;
+    for (const auto& corner : corners) {
+        const Vec2f to = corner - from;
         const float length = to.magnitude();
         if (length <= 0.0F) {
             continue;
@@ -123,9 +217,13 @@ void asw::geometry::visibility(Polygonf& result, const Vec2f& from, float radius
 
     result.reserve(rays.size());
     for (const auto& ray : rays) {
+        // Ray directions have length 1, so a hit's t is its distance
         float nearest = std::numeric_limits<float>::max();
-        for (const auto& [a, b] : segments) {
-            if (const auto t = ray_hit(from, ray.dir, a, b)) {
+        for (const auto& segment : segments) {
+            if (segment.distance >= nearest) {
+                break;
+            }
+            if (const auto t = ray_hit(from, ray.dir, segment.a, segment.b)) {
                 nearest = std::min(nearest, *t);
             }
         }

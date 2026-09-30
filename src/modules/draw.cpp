@@ -7,27 +7,48 @@
 #include <array>
 #include <cmath>
 #include <numbers>
-#include <unordered_map>
+#include <string_view>
 #include <vector>
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/util.h"
+#include "./lru_cache.h"
 
 namespace {
 struct TextCacheKey {
     asw::Renderer* renderer;
+
+    // Holds the font, so its address is not reused while cached
     asw::Font font;
     std::string text;
-    uint32_t color;
 
     // Changes when the font's size, style or hinting change
     uint32_t font_generation;
 
-    // Output pixels per logical pixel the text was rendered for, in hundredths
+    // Output pixels per logical pixel asked for, in hundredths
+    uint32_t render_scale;
+};
+
+// What a lookup compares, so a lookup does not copy the text
+struct TextKeyView {
+    const asw::Renderer* renderer;
+    const TTF_Font* font;
+    std::string_view text;
+    uint32_t font_generation;
     uint32_t render_scale;
 
-    bool operator==(const TextCacheKey&) const = default;
+    bool operator==(const TextKeyView&) const = default;
 };
+
+TextKeyView view(const TextCacheKey& key)
+{
+    return { key.renderer, key.font.get(), key.text, key.font_generation, key.render_scale };
+}
+
+const TextKeyView& view(const TextKeyView& key)
+{
+    return key;
+}
 
 struct TextCacheEntry {
     asw::Texture texture;
@@ -37,18 +58,27 @@ struct TextCacheEntry {
     float height { 0.0F };
 };
 
-struct TextCacheKeyHash {
-    std::size_t operator()(const TextCacheKey& key) const
+struct TextKeyHash {
+    using is_transparent = void;
+
+    template <typename K> std::size_t operator()(const K& key) const
     {
-        std::size_t seed = std::hash<asw::Renderer*> { }(key.renderer);
-        seed ^= std::hash<asw::Font> { }(key.font) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<std::string> { }(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<uint32_t> { }(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
-            + ((seed << 6) + (seed >> 2));
-        seed
-            ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        const TextKeyView v = view(key);
+        std::size_t seed = std::hash<const asw::Renderer*> { }(v.renderer);
+        asw::detail::hash_combine(seed, std::hash<const TTF_Font*> { }(v.font));
+        asw::detail::hash_combine(seed, std::hash<std::string_view> { }(v.text));
+        asw::detail::hash_combine(seed, std::hash<uint32_t> { }(v.font_generation));
+        asw::detail::hash_combine(seed, std::hash<uint32_t> { }(v.render_scale));
         return seed;
+    }
+};
+
+struct TextKeyEqual {
+    using is_transparent = void;
+
+    template <typename A, typename B> bool operator()(const A& a, const B& b) const
+    {
+        return view(a) == view(b);
     }
 };
 
@@ -65,10 +95,8 @@ struct ScaledFontKeyHash {
     std::size_t operator()(const ScaledFontKey& key) const
     {
         std::size_t seed = std::hash<asw::Font> { }(key.font);
-        seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
-            + ((seed << 6) + (seed >> 2));
-        seed
-            ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
+        asw::detail::hash_combine(seed, std::hash<uint32_t> { }(key.font_generation));
+        asw::detail::hash_combine(seed, std::hash<uint32_t> { }(key.render_scale));
         return seed;
     }
 };
@@ -77,16 +105,12 @@ struct ScaledFontKeyHash {
 constexpr uint32_t RENDER_SCALE_ONE = 100;
 
 constexpr std::size_t SCALED_FONT_LIMIT = 32;
-std::unordered_map<ScaledFontKey, asw::Font, ScaledFontKeyHash> scaled_fonts;
+asw::detail::LruCache<ScaledFontKey, asw::Font, ScaledFontKeyHash, std::equal_to<>> scaled_fonts(
+    SCALED_FONT_LIMIT);
 
 constexpr std::size_t TEXT_CACHE_LIMIT = 256;
-std::unordered_map<TextCacheKey, TextCacheEntry, TextCacheKeyHash> text_cache;
-
-uint32_t pack_color(const asw::Color color)
-{
-    return (static_cast<uint32_t>(color.r) << 24U) | (static_cast<uint32_t>(color.g) << 16U)
-        | (static_cast<uint32_t>(color.b) << 8U) | static_cast<uint32_t>(color.a);
-}
+asw::detail::LruCache<TextCacheKey, TextCacheEntry, TextKeyHash, TextKeyEqual> text_cache(
+    TEXT_CACHE_LIMIT);
 
 // Output pixels per logical pixel to render text at, in hundredths. Smooth
 // text is rendered at the output resolution so it stays sharp when the window
@@ -111,8 +135,8 @@ uint32_t text_render_scale(asw::Renderer* renderer, bool pixel_font)
 TTF_Font* get_scaled_font(const asw::Font& font, uint32_t font_generation, uint32_t render_scale)
 {
     ScaledFontKey key { font, font_generation, render_scale };
-    if (auto it = scaled_fonts.find(key); it != scaled_fonts.end()) {
-        return it->second.get();
+    if (const auto* cached = scaled_fonts.find(key)) {
+        return cached->get();
     }
 
     TTF_Font* copy = TTF_CopyFont(font.get());
@@ -126,17 +150,13 @@ TTF_Font* get_scaled_font(const asw::Font& font, uint32_t font_generation, uint3
         return nullptr;
     }
 
-    if (scaled_fonts.size() >= SCALED_FONT_LIMIT) {
-        scaled_fonts.clear();
-    }
-
     asw::Font scaled { copy, [](TTF_Font* f) {
                           if (TTF_WasInit() > 0) {
                               TTF_CloseFont(f);
                           }
                       } };
 
-    return scaled_fonts.try_emplace(std::move(key), std::move(scaled)).first->second.get();
+    return scaled_fonts.insert(std::move(key), std::move(scaled)).get();
 }
 
 asw::Texture make_cached_texture(SDL_Texture* texture)
@@ -348,26 +368,28 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     const uint32_t font_generation = TTF_GetFontGeneration(font.get());
     const uint32_t render_scale = text_render_scale(r, pixel_font);
 
-    // Alpha is applied when drawing, so fading text reuses one cached texture
-    const auto opaque = asw::Color(color.r, color.g, color.b, 255);
-    TextCacheKey cache_key { r, font, text, pack_color(opaque), font_generation, render_scale };
-    auto cached_text = text_cache.find(cache_key);
-    if (cached_text == text_cache.end()) {
+    // Text is cached in white and the color is applied when drawing, so text
+    // that changes color or fades reuses one cached texture
+    const TextCacheEntry* cached_text
+        = text_cache.find(TextKeyView { r, font.get(), text, font_generation, render_scale });
+    if (cached_text == nullptr) {
         TTF_Font* render_font = font.get();
+        uint32_t used_scale = render_scale;
         if (render_scale != RENDER_SCALE_ONE) {
             if (auto* scaled = get_scaled_font(font, font_generation, render_scale);
                 scaled != nullptr) {
                 render_font = scaled;
             } else {
-                // Could not resize, fall back to scaling the logical size text
-                cache_key.render_scale = RENDER_SCALE_ONE;
+                // Could not resize, fall back to scaling the logical size
+                // text. Still cached under the scale asked for, so the next
+                // draw finds it.
+                used_scale = RENDER_SCALE_ONE;
             }
         }
 
-        const float scale
-            = static_cast<float>(cache_key.render_scale) / static_cast<float>(RENDER_SCALE_ONE);
+        const float scale = static_cast<float>(used_scale) / static_cast<float>(RENDER_SCALE_ONE);
 
-        const auto sdlColor = SDL_Color { color.r, color.g, color.b, 255 };
+        const auto sdlColor = SDL_Color { 255, 255, 255, 255 };
         SDL_Surface* textSurface = pixel_font
             ? TTF_RenderText_Solid(render_font, text.c_str(), 0, sdlColor)
             : TTF_RenderText_Blended(render_font, text.c_str(), 0, sdlColor);
@@ -412,20 +434,15 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
         };
         SDL_DestroySurface(textSurface);
 
-        if (text_cache.size() >= TEXT_CACHE_LIMIT) {
-            // Keep the cache bounded without introducing a heavier eviction
-            // structure in this hot path.
-            text_cache.clear();
-        }
-
-        cached_text = text_cache.try_emplace(std::move(cache_key), std::move(entry)).first;
+        cached_text = &text_cache.insert(
+            { r, font, text, font_generation, render_scale }, std::move(entry));
     }
 
     SDL_FRect dest;
     dest.x = position.x;
     dest.y = position.y;
-    dest.w = cached_text->second.width;
-    dest.h = cached_text->second.height;
+    dest.w = cached_text->width;
+    dest.h = cached_text->height;
 
     // Justification settings
     if (justify == asw::TextJustify::Center) {
@@ -439,8 +456,9 @@ void asw::draw::text(const asw::Font& font, const std::string& text,
     dest.x = std::round(dest.x);
     dest.y = std::round(dest.y);
 
-    SDL_SetTextureAlphaMod(cached_text->second.texture.get(), color.a);
-    SDL_RenderTexture(r, cached_text->second.texture.get(), nullptr, &dest);
+    SDL_SetTextureColorMod(cached_text->texture.get(), color.r, color.g, color.b);
+    SDL_SetTextureAlphaMod(cached_text->texture.get(), color.a);
+    SDL_RenderTexture(r, cached_text->texture.get(), nullptr, &dest);
 }
 
 void asw::draw::text_shadow(const asw::Font& font, const std::string& text,
@@ -584,15 +602,35 @@ void asw::draw::circle(const asw::Vec2<float>& position, float radius, asw::Colo
     const float cx = position.x;
     const float cy = position.y;
 
+    // Reused between calls so drawing does not allocate each frame
+    static std::vector<SDL_FPoint> points;
+    points.clear();
+
     while (x >= y) {
-        SDL_RenderPoint(r, cx + x, cy + y);
-        SDL_RenderPoint(r, cx - x, cy + y);
-        SDL_RenderPoint(r, cx + x, cy - y);
-        SDL_RenderPoint(r, cx - x, cy - y);
-        SDL_RenderPoint(r, cx + y, cy + x);
-        SDL_RenderPoint(r, cx - y, cy + x);
-        SDL_RenderPoint(r, cx + y, cy - x);
-        SDL_RenderPoint(r, cx - y, cy - x);
+        if (x == 0.0F) {
+            points.push_back({ cx, cy });
+        } else if (y == 0.0F) {
+            // The octants meet on the axes, so each axis pixel once
+            points.push_back({ cx + x, cy });
+            points.push_back({ cx - x, cy });
+            points.push_back({ cx, cy + x });
+            points.push_back({ cx, cy - x });
+        } else if (x == y) {
+            // The octants meet on the diagonals, so each diagonal pixel once
+            points.push_back({ cx + x, cy + y });
+            points.push_back({ cx - x, cy + y });
+            points.push_back({ cx + x, cy - y });
+            points.push_back({ cx - x, cy - y });
+        } else {
+            points.push_back({ cx + x, cy + y });
+            points.push_back({ cx - x, cy + y });
+            points.push_back({ cx + x, cy - y });
+            points.push_back({ cx - x, cy - y });
+            points.push_back({ cx + y, cy + x });
+            points.push_back({ cx - y, cy + x });
+            points.push_back({ cx + y, cy - x });
+            points.push_back({ cx - y, cy - x });
+        }
         y++;
         if (err < 0) {
             err += (2.0F * y) + 1.0F;
@@ -601,6 +639,9 @@ void asw::draw::circle(const asw::Vec2<float>& position, float radius, asw::Colo
             err += (2.0F * (y - x)) + 1.0F;
         }
     }
+
+    // One call, not one per point
+    SDL_RenderPoints(r, points.data(), static_cast<int>(points.size()));
 }
 
 void asw::draw::circle_fill(const asw::Vec2<float>& position, float radius, asw::Color color)
@@ -678,60 +719,89 @@ void asw::draw::polygon_fill(const asw::Polygonf& points, asw::Color color)
     // Ear clipping: cut off corners that bulge out and hold no other point
     // until one triangle is left
     const float winding = asw::geometry::signed_area(points) < 0.0F ? -1.0F : 1.0F;
+    const auto n = static_cast<int>(points.size());
 
-    static std::vector<int> remaining;
+    // Remaining corners as a ring, so cutting one off is constant time
+    static std::vector<int> prev;
+    static std::vector<int> next;
+    static std::vector<char> reflex;
     static std::vector<int> indices;
-    remaining.clear();
+    prev.resize(points.size());
+    next.resize(points.size());
+    reflex.resize(points.size());
     indices.clear();
-    for (std::size_t i = 0; i < points.size(); ++i) {
-        remaining.push_back(static_cast<int>(i));
+
+    const auto point
+        = [&](int i) -> const asw::Vec2f& { return points[static_cast<std::size_t>(i)]; };
+
+    // A corner that does not bulge out. Only these can sit inside an ear.
+    const auto is_reflex = [&](int i) {
+        const auto& a = point(prev[i]);
+        const auto& b = point(i);
+        const auto& c = point(next[i]);
+        return (b - a).cross(c - b) * winding <= 0.0F;
+    };
+
+    bool any_reflex = false;
+    for (int i = 0; i < n; ++i) {
+        prev[i] = (i + n - 1) % n;
+        next[i] = (i + 1) % n;
+    }
+    for (int i = 0; i < n; ++i) {
+        reflex[i] = static_cast<char>(is_reflex(i));
+        any_reflex = any_reflex || reflex[i] != 0;
     }
 
-    while (remaining.size() > 3) {
-        const std::size_t n = remaining.size();
-        bool clipped = false;
+    int count = n;
+    int cur = 0;
 
-        for (std::size_t i = 0; i < n; ++i) {
-            const int prev = remaining[(i + n - 1) % n];
-            const int cur = remaining[i];
-            const int next = remaining[(i + 1) % n];
-            const auto& a = points[static_cast<std::size_t>(prev)];
-            const auto& b = points[static_cast<std::size_t>(cur)];
-            const auto& c = points[static_cast<std::size_t>(next)];
+    // Convex shapes, such as most drawn shapes, need no search
+    if (any_reflex) {
+        int tried = 0;
+        while (count > 3 && tried < count) {
+            const int p = prev[cur];
+            const int nx = next[cur];
 
-            if ((b - a).cross(c - b) * winding <= 0.0F) {
+            bool ear = reflex[cur] == 0;
+            if (ear) {
+                // A point on a corner of the ear, such as a repeated point,
+                // does not block it
+                const auto& a = point(p);
+                const auto& b = point(cur);
+                const auto& c = point(nx);
+                for (int o = next[nx]; o != p; o = next[o]) {
+                    const auto& q = point(o);
+                    if (reflex[o] != 0 && q != a && q != b && q != c
+                        && asw::geometry::point_in_triangle(q, a, b, c)) {
+                        ear = false;
+                        break;
+                    }
+                }
+            }
+
+            if (!ear) {
+                cur = nx;
+                ++tried;
                 continue;
             }
 
-            // A point on a corner of the ear, such as a repeated point, does
-            // not block it
-            const bool holds_point = std::ranges::any_of(remaining, [&](int other) {
-                const auto& p = points[static_cast<std::size_t>(other)];
-                return other != prev && other != cur && other != next && p != a && p != b && p != c
-                    && asw::geometry::point_in_triangle(p, a, b, c);
-            });
-            if (holds_point) {
-                continue;
-            }
+            indices.insert(indices.end(), { p, cur, nx });
+            next[p] = nx;
+            prev[nx] = p;
+            --count;
+            reflex[p] = static_cast<char>(is_reflex(p));
+            reflex[nx] = static_cast<char>(is_reflex(nx));
 
-            indices.insert(indices.end(), { prev, cur, next });
-            remaining.erase(remaining.begin() + static_cast<std::ptrdiff_t>(i));
-            clipped = true;
-            break;
-        }
-
-        // Crossing edges or repeated points leave no ear. Fill the rest as a
-        // fan rather than drawing nothing
-        if (!clipped) {
-            for (std::size_t i = 1; i + 1 < remaining.size(); ++i) {
-                indices.insert(indices.end(), { remaining[0], remaining[i], remaining[i + 1] });
-            }
-            remaining.clear();
+            // The neighbours are the corners that changed, so look there next
+            cur = p;
+            tried = 0;
         }
     }
 
-    if (remaining.size() == 3) {
-        indices.insert(indices.end(), { remaining[0], remaining[1], remaining[2] });
+    // What is left is convex, or has crossing edges or repeated points and
+    // no ear. Fill it as a fan rather than drawing nothing
+    for (int i = next[cur]; next[i] != cur; i = next[i]) {
+        indices.insert(indices.end(), { cur, i, next[i] });
     }
 
     const asw::FColor fcolor = color.to_fcolor();

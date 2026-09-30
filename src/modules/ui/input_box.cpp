@@ -176,28 +176,43 @@ void asw::ui::InputBox::draw(Context& ctx)
     const bool text_visible = !had_clip || SDL_GetRectIntersection(&box_clip, &old_clip, &clip);
     SDL_SetRenderClipRect(renderer, &clip);
 
+    // Caret offset from the start of the text
+    _cursor_pos = std::min(_cursor_pos, value.size());
+    float caret_offset = 0.0F;
+    if (_focused && _cursor_pos > 0 && f != nullptr) {
+        // A view of the text before the caret, not a copy
+        const std::string_view before_caret = std::string_view(value).substr(0, _cursor_pos);
+        caret_offset = static_cast<float>(asw::util::get_text_size(f, before_caret).x);
+    }
+
+    // Scroll so the caret stays inside the box. The caret is 1 pixel wide, so
+    // it needs that much room at the right edge.
+    const float visible_width = std::max(transform.size.x - (text_padding * 2) - 1.0F, 0.0F);
+    if (!_focused || value.empty() || f == nullptr) {
+        _scroll = 0.0F;
+    } else {
+        const auto text_width = static_cast<float>(asw::util::get_text_size(f, value).x);
+        _scroll = std::clamp(_scroll, caret_offset - visible_width, caret_offset);
+        _scroll = std::clamp(_scroll, 0.0F, std::max(text_width - visible_width, 0.0F));
+    }
+
+    const float text_x = transform.position.x + text_padding - _scroll;
+
     // Text position (vertically centered)
-    const auto display_text = value.empty() ? placeholder : value;
+    const auto& display_text = value.empty() ? placeholder : value;
     const auto display_color = value.empty() ? s.placeholder : s.text;
 
     if (text_visible && !display_text.empty() && f != nullptr) {
         const auto text_size = asw::util::get_text_size(f, display_text);
         const float text_y = transform.position.y + ((transform.size.y - text_size.y) / 2.0F);
-        const asw::Vec2 text_pos { transform.position.x + text_padding, text_y };
+        const asw::Vec2 text_pos { text_x, text_y };
 
         asw::draw::text(f, display_text, text_pos, display_color);
     }
 
     // Cursor
-    _cursor_pos = std::min(_cursor_pos, value.size());
     if (text_visible && _focused && f != nullptr) {
-        const auto before_cursor = value.substr(0, _cursor_pos);
-        float cursor_x = transform.position.x + text_padding;
-
-        if (!before_cursor.empty()) {
-            const auto size = asw::util::get_text_size(f, before_cursor);
-            cursor_x += static_cast<float>(size.x);
-        }
+        const float cursor_x = text_x + caret_offset;
 
         const auto text_height = asw::util::get_text_size(f, "|");
         const float cursor_y = transform.position.y

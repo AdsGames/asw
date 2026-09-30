@@ -3,34 +3,65 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <SDL3_ttf/SDL_ttf.h>
-#include <unordered_map>
+#include <string_view>
 
 #include "./asw/modules/log.h"
+#include "./lru_cache.h"
 
 namespace {
 struct TextSizeCacheKey {
+    // Holds the font, so its address is not reused while cached
     asw::Font font;
     std::string text;
 
     // Changes when the font's size, style or hinting change
     uint32_t font_generation;
-
-    bool operator==(const TextSizeCacheKey&) const = default;
 };
 
-struct TextSizeCacheKeyHash {
-    std::size_t operator()(const TextSizeCacheKey& key) const
+// What a lookup compares, so a lookup does not copy the text
+struct TextSizeKeyView {
+    const TTF_Font* font;
+    std::string_view text;
+    uint32_t font_generation;
+
+    bool operator==(const TextSizeKeyView&) const = default;
+};
+
+TextSizeKeyView view(const TextSizeCacheKey& key)
+{
+    return { key.font.get(), key.text, key.font_generation };
+}
+
+const TextSizeKeyView& view(const TextSizeKeyView& key)
+{
+    return key;
+}
+
+struct TextSizeKeyHash {
+    using is_transparent = void;
+
+    template <typename K> std::size_t operator()(const K& key) const
     {
-        std::size_t seed = std::hash<asw::Font> {}(key.font);
-        seed ^= std::hash<std::string> {}(key.text) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<uint32_t> {}(key.font_generation) + 0x9e3779b9
-            + ((seed << 6) + (seed >> 2));
+        const TextSizeKeyView v = view(key);
+        std::size_t seed = std::hash<const TTF_Font*> { }(v.font);
+        asw::detail::hash_combine(seed, std::hash<std::string_view> { }(v.text));
+        asw::detail::hash_combine(seed, std::hash<uint32_t> { }(v.font_generation));
         return seed;
     }
 };
 
+struct TextSizeKeyEqual {
+    using is_transparent = void;
+
+    template <typename A, typename B> bool operator()(const A& a, const B& b) const
+    {
+        return view(a) == view(b);
+    }
+};
+
 constexpr std::size_t TEXT_SIZE_CACHE_LIMIT = 512;
-std::unordered_map<TextSizeCacheKey, asw::Vec2<int>, TextSizeCacheKeyHash> text_size_cache;
+asw::detail::LruCache<TextSizeCacheKey, asw::Vec2<int>, TextSizeKeyHash, TextSizeKeyEqual>
+    text_size_cache(TEXT_SIZE_CACHE_LIMIT);
 } // namespace
 
 void asw::util::abort_on_error(const std::string& message)
@@ -47,29 +78,28 @@ asw::Vec2<float> asw::util::get_texture_size(const asw::Texture& tex)
     return size;
 }
 
-asw::Vec2<int> asw::util::get_text_size(const asw::Font& font, const std::string& text)
+asw::Vec2<int> asw::util::get_text_size(const asw::Font& font, std::string_view text)
 {
     if (font == nullptr) {
         return {};
     }
 
-    const TextSizeCacheKey cache_key { font, text, TTF_GetFontGeneration(font.get()) };
-    if (auto it = text_size_cache.find(cache_key); it != text_size_cache.end()) {
-        return it->second;
+    const uint32_t font_generation = TTF_GetFontGeneration(font.get());
+    if (const auto* cached
+        = text_size_cache.find(TextSizeKeyView { font.get(), text, font_generation })) {
+        return *cached;
     }
 
-    TTF_Text* ttf_text = TTF_CreateText(nullptr, font.get(), text.c_str(), 0);
+    // Length given, so the text does not need to end in a null. A length of
+    // 0 means null terminated to SDL_ttf, so empty text is passed as "".
+    TTF_Text* ttf_text = text.empty()
+        ? TTF_CreateText(nullptr, font.get(), "", 0)
+        : TTF_CreateText(nullptr, font.get(), text.data(), text.size());
     asw::Vec2<int> size;
     TTF_GetTextSize(ttf_text, &size.x, &size.y);
     TTF_DestroyText(ttf_text);
 
-    if (text_size_cache.size() >= TEXT_SIZE_CACHE_LIMIT) {
-        // Keep the shared cache bounded while still avoiding repeated
-        // measurement work for the common stable UI strings.
-        text_size_cache.clear();
-    }
-
-    text_size_cache.try_emplace(cache_key, size);
+    text_size_cache.insert({ font, std::string(text), font_generation }, size);
     return size;
 }
 

@@ -84,6 +84,9 @@ private:
     std::vector<Widget*> _focusables;
     Widget* _focused = nullptr;
 
+    // Whether the last rebuild found the focused widget in the tree
+    bool _focused_found = false;
+
     // Across position kept during repeated moves one way
     std::optional<float> _lane_x;
     std::optional<float> _lane_y;
@@ -119,9 +122,6 @@ private:
 
     // Widget under the pointer
     Widget* hover = nullptr;
-
-    // Focus list needs to be rebuilt
-    bool need_focus_rebuild = true;
 };
 
 } // namespace asw::ui
