@@ -1,0 +1,3 @@
+add_executable(example_advanced_lighting main.cpp)
+target_link_libraries(example_advanced_lighting PRIVATE asw::asw)
+asw_example_assets(example_advanced_lighting)

@@ -28,6 +28,7 @@ add_subdirectory(scenes)
 add_subdirectory(particles)
 add_subdirectory(easing)
 add_subdirectory(lighting)
+add_subdirectory(advanced_lighting)
 add_subdirectory(text)
 add_subdirectory(ui)
 add_subdirectory(overlays)
@@ -38,7 +39,7 @@ if(EMSCRIPTEN)
   set(ASW_EXAMPLE_TARGETS
     example_keyboard example_mouse example_controller example_actions
     example_primitives example_camera example_sound example_scenes
-    example_particles example_easing example_lighting example_text example_ui
+    example_particles example_easing example_lighting example_advanced_lighting example_text example_ui
     example_overlays
   )
 
