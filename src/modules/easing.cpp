@@ -9,6 +9,12 @@ float asw::easing::linear(float t)
     return t;
 }
 
+// Smoothstep
+float asw::easing::smoothstep(float t)
+{
+    return t * t * (3.0F - (2.0F * t));
+}
+
 // Quadratic
 float asw::easing::ease_in_quad(float t)
 {
@@ -148,4 +154,18 @@ float asw::easing::ease_out_back(float t)
     constexpr float s = 1.70158F;
     const float u = t - 1.0F;
     return (u * u * ((s + 1.0F) * u + s)) + 1.0F;
+}
+
+// Convenience
+float asw::easing::falloff(float t, asw::Falloff mode)
+{
+    switch (mode) {
+    case asw::Falloff::Smooth:
+        return smoothstep(t);
+    case asw::Falloff::Quadratic:
+        return ease_out_quad(t);
+    case asw::Falloff::Linear:
+    default:
+        return linear(t);
+    }
 }
