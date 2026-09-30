@@ -7,7 +7,8 @@
 ///   - asw::util::lerp() to blend colours by the eased value
 ///
 /// Each cell is one easing function. Rows are families: linear and quad,
-/// cubic, sine, expo, then elastic, bounce and back. The bar under each
+/// cubic, sine, expo, then elastic, bounce and back, with smoothstep last.
+/// The bar under each
 /// curve moves by the eased value, so overshoot and bounce are easy to see.
 ///
 /// Controls:
@@ -66,6 +67,7 @@ const std::vector<Curve>& curves()
         { e::ease_out_bounce, asw::color::mediumpurple },
         { e::ease_in_back, asw::color::hotpink },
         { e::ease_out_back, asw::color::hotpink },
+        { e::smoothstep, asw::color::silver },
     };
     return list;
 }
@@ -176,12 +178,12 @@ int main()
             draw_cell(list[i], { col * CELL_W, row * CELL_H }, t);
         }
 
-        // Progress bar in the empty last cell
-        const asw::Quad<float> bar(
-            3.0F * CELL_W + 25.0F, 4.0F * CELL_H + 50.0F, (CELL_W - 50.0F) * t, 16.0F);
-        asw::draw::rect_fill(bar, paused ? asw::color::gray : asw::color::white);
-        asw::draw::rect({ 3.0F * CELL_W + 25.0F, 4.0F * CELL_H + 50.0F, CELL_W - 50.0F, 16.0F },
-            asw::color::white);
+        // Progress bar in the strip above the first row of plots
+        constexpr float BAR_X = 25.0F;
+        constexpr float BAR_W = (CELL_W * COLUMNS) - (BAR_X * 2.0F);
+        asw::draw::rect_fill(
+            { BAR_X, 6.0F, BAR_W * t, 8.0F }, paused ? asw::color::gray : asw::color::white);
+        asw::draw::rect({ BAR_X, 6.0F, BAR_W, 8.0F }, asw::color::white);
 
         if (autorun && frame == 50) {
             const bool saved = asw::display::screenshot("autorun.png");
