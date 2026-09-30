@@ -46,8 +46,8 @@ struct TextCacheKeyHash {
         seed ^= std::hash<uint32_t> { }(key.color) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
             + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9
-            + ((seed << 6) + (seed >> 2));
+        seed
+            ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
@@ -67,8 +67,8 @@ struct ScaledFontKeyHash {
         std::size_t seed = std::hash<asw::Font> { }(key.font);
         seed ^= std::hash<uint32_t> { }(key.font_generation) + 0x9e3779b9
             + ((seed << 6) + (seed >> 2));
-        seed ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9
-            + ((seed << 6) + (seed >> 2));
+        seed
+            ^= std::hash<uint32_t> { }(key.render_scale) + 0x9e3779b9 + ((seed << 6) + (seed >> 2));
         return seed;
     }
 };
@@ -630,6 +630,119 @@ void asw::draw::circle_fill(const asw::Vec2<float>& position, float radius, asw:
     }
 
     SDL_RenderFillRects(r, spans.data(), static_cast<int>(spans.size()));
+}
+
+void asw::draw::triangle_fill(const asw::Vec2<float>& a, const asw::Vec2<float>& b,
+    const asw::Vec2<float>& c, asw::Color color)
+{
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr) {
+        return;
+    }
+
+    const asw::FColor fcolor = color.to_fcolor();
+    const std::array<SDL_Vertex, 3> vertices { {
+        { { a.x, a.y }, fcolor, { 0.0F, 0.0F } },
+        { { b.x, b.y }, fcolor, { 0.0F, 0.0F } },
+        { { c.x, c.y }, fcolor, { 0.0F, 0.0F } },
+    } };
+
+    SDL_RenderGeometry(r, nullptr, vertices.data(), 3, nullptr, 0);
+}
+
+void asw::draw::polygon(const asw::Polygonf& points, asw::Color color)
+{
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr || points.size() < 2) {
+        return;
+    }
+
+    static std::vector<SDL_FPoint> line_points;
+    line_points.clear();
+    for (const auto& p : points) {
+        line_points.push_back({ p.x, p.y });
+    }
+    line_points.push_back({ points.front().x, points.front().y });
+
+    SDL_SetRenderDrawColor(r, color.r, color.g, color.b, color.a);
+    SDL_RenderLines(r, line_points.data(), static_cast<int>(line_points.size()));
+}
+
+void asw::draw::polygon_fill(const asw::Polygonf& points, asw::Color color)
+{
+    auto* r = asw::display::get_renderer();
+    if (r == nullptr || points.size() < 3) {
+        return;
+    }
+
+    // Ear clipping: cut off corners that bulge out and hold no other point
+    // until one triangle is left
+    const float winding = asw::geometry::signed_area(points) < 0.0F ? -1.0F : 1.0F;
+
+    static std::vector<int> remaining;
+    static std::vector<int> indices;
+    remaining.clear();
+    indices.clear();
+    for (std::size_t i = 0; i < points.size(); ++i) {
+        remaining.push_back(static_cast<int>(i));
+    }
+
+    while (remaining.size() > 3) {
+        const std::size_t n = remaining.size();
+        bool clipped = false;
+
+        for (std::size_t i = 0; i < n; ++i) {
+            const int prev = remaining[(i + n - 1) % n];
+            const int cur = remaining[i];
+            const int next = remaining[(i + 1) % n];
+            const auto& a = points[static_cast<std::size_t>(prev)];
+            const auto& b = points[static_cast<std::size_t>(cur)];
+            const auto& c = points[static_cast<std::size_t>(next)];
+
+            if ((b - a).cross(c - b) * winding <= 0.0F) {
+                continue;
+            }
+
+            // A point on a corner of the ear, such as a repeated point, does
+            // not block it
+            const bool holds_point = std::ranges::any_of(remaining, [&](int other) {
+                const auto& p = points[static_cast<std::size_t>(other)];
+                return other != prev && other != cur && other != next && p != a && p != b && p != c
+                    && asw::geometry::point_in_triangle(p, a, b, c);
+            });
+            if (holds_point) {
+                continue;
+            }
+
+            indices.insert(indices.end(), { prev, cur, next });
+            remaining.erase(remaining.begin() + static_cast<std::ptrdiff_t>(i));
+            clipped = true;
+            break;
+        }
+
+        // Crossing edges or repeated points leave no ear. Fill the rest as a
+        // fan rather than drawing nothing
+        if (!clipped) {
+            for (std::size_t i = 1; i + 1 < remaining.size(); ++i) {
+                indices.insert(indices.end(), { remaining[0], remaining[i], remaining[i + 1] });
+            }
+            remaining.clear();
+        }
+    }
+
+    if (remaining.size() == 3) {
+        indices.insert(indices.end(), { remaining[0], remaining[1], remaining[2] });
+    }
+
+    const asw::FColor fcolor = color.to_fcolor();
+    static std::vector<SDL_Vertex> vertices;
+    vertices.clear();
+    for (const auto& p : points) {
+        vertices.push_back({ { p.x, p.y }, fcolor, { 0.0F, 0.0F } });
+    }
+
+    SDL_RenderGeometry(r, nullptr, vertices.data(), static_cast<int>(vertices.size()),
+        indices.data(), static_cast<int>(indices.size()));
 }
 
 void asw::draw::set_blend_mode(const asw::Texture& texture, asw::BlendMode mode)

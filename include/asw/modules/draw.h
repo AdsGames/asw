@@ -9,6 +9,8 @@
 #ifndef ASW_DRAW_H
 #define ASW_DRAW_H
 
+#include <string>
+
 #include "./color.h"
 #include "./geometry.h"
 #include "./types.h"
@@ -183,6 +185,31 @@ void circle(const asw::Vec2<float>& position, float radius, asw::Color color);
 /// @param color The color of the circle.
 ///
 void circle_fill(const asw::Vec2<float>& position, float radius, asw::Color color);
+
+/// @brief Draw a filled triangle.
+///
+/// @param a The first corner.
+/// @param b The second corner.
+/// @param c The third corner.
+/// @param color The color of the triangle.
+///
+void triangle_fill(const asw::Vec2<float>& a, const asw::Vec2<float>& b, const asw::Vec2<float>& c,
+    asw::Color color);
+
+/// @brief Draw the outline of a polygon. The last point joins the first.
+///
+/// @param points The corners, in order.
+/// @param color The color of the outline.
+///
+void polygon(const asw::Polygonf& points, asw::Color color);
+
+/// @brief Draw a filled polygon. The polygon can be concave, but its edges
+/// must not cross.
+///
+/// @param points The corners, in order, either way round.
+/// @param color The color of the polygon.
+///
+void polygon_fill(const asw::Polygonf& points, asw::Color color);
 
 /// @brief Set the blend mode of a texture.
 ///
