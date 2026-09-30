@@ -42,6 +42,18 @@ enum class ScaleMode {
     Linear = SDL_SCALEMODE_LINEAR,
 };
 
+/// @brief How a gradient or light fades from its centre to its edge
+enum class Falloff {
+    /// Even fade to the edge.
+    Linear,
+
+    /// Soft at the centre and at the edge.
+    Smooth,
+
+    /// Bright core that drops off quickly, closer to a real light.
+    Quadratic,
+};
+
 /// @brief Text justification options for text rendering
 enum class TextJustify {
     Left,

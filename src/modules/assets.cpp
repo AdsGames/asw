@@ -19,6 +19,7 @@
 
 #include "./asw/modules/display.h"
 #include "./asw/modules/draw.h"
+#include "./asw/modules/easing.h"
 #include "./asw/modules/sound.h"
 #include "./asw/modules/types.h"
 #include "./asw/modules/util.h"
@@ -140,7 +141,8 @@ asw::Texture asw::assets::create_texture(int w, int h)
             } };
 }
 
-asw::Texture asw::assets::create_radial_gradient(int size, asw::Color inner, asw::Color outer)
+asw::Texture asw::assets::create_radial_gradient(
+    int size, asw::Color inner, asw::Color outer, asw::Falloff falloff)
 {
     auto* r = asw::display::get_renderer();
     if (r == nullptr) {
@@ -169,9 +171,7 @@ asw::Texture asw::assets::create_radial_gradient(int size, asw::Color inner, asw
                                        static_cast<float>(y) + 0.5F - half)
                 / half;
 
-            // Smoothstep from the centre to the edge
-            const float t = std::clamp(distance, 0.0F, 1.0F);
-            const float amount = t * t * (3.0F - 2.0F * t);
+            const float amount = asw::easing::falloff(std::clamp(distance, 0.0F, 1.0F), falloff);
 
             row[x] = SDL_MapRGBA(details, nullptr, mix(inner.r, outer.r, amount),
                 mix(inner.g, outer.g, amount), mix(inner.b, outer.b, amount),
@@ -396,8 +396,8 @@ std::string asw::assets::read_save(
     return out;
 }
 
-bool asw::assets::write_save(
-    const std::string& org, const std::string& app, const std::string& name, const std::string& data)
+bool asw::assets::write_save(const std::string& org, const std::string& app,
+    const std::string& name, const std::string& data)
 {
     return asw_storage_write(storage_key(org, app, name).c_str(), data.c_str()) != 0;
 }
@@ -418,8 +418,8 @@ std::string asw::assets::read_save(
     return buffer.str();
 }
 
-bool asw::assets::write_save(
-    const std::string& org, const std::string& app, const std::string& name, const std::string& data)
+bool asw::assets::write_save(const std::string& org, const std::string& app,
+    const std::string& name, const std::string& data)
 {
     const auto folder = get_save_path(org, app);
     if (folder.empty()) {

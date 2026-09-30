@@ -103,14 +103,16 @@ void unload_texture(const std::string& key);
 asw::Texture create_texture(int w, int h);
 
 /// @brief Create a square texture with a radial gradient. The colour goes
-/// smoothly from inner at the centre to outer at the edge. Useful for lights.
+/// from inner at the centre to outer at the edge. Useful for lights.
 ///
 /// @param size The width and height of the texture.
 /// @param inner The colour at the centre.
 /// @param outer The colour at the edge and in the corners.
+/// @param falloff How the colour changes from the centre to the edge.
 /// @return The created Texture object, with linear scaling and blend mode set.
 ///
-asw::Texture create_radial_gradient(int size, asw::Color inner, asw::Color outer);
+asw::Texture create_radial_gradient(
+    int size, asw::Color inner, asw::Color outer, asw::Falloff falloff = asw::Falloff::Smooth);
 
 // --- Font ---
 
