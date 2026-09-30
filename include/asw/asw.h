@@ -7,6 +7,7 @@
 #include "./modules/assets.h"
 #include "./modules/camera.h"
 #include "./modules/color.h"
+#include "./modules/config.h"
 #include "./modules/core.h"
 #include "./modules/dialog.h"
 #include "./modules/display.h"

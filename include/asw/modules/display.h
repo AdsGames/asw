@@ -66,9 +66,21 @@ void set_icon(const std::string& path);
 
 /// @brief Set the window to fullscreen or windowed.
 ///
+/// @details When the config sets display.fullscreen, it wins and
+/// @p fullscreen is ignored.
+///
 /// @param fullscreen Whether or not to set the window to fullscreen.
 ///
 void set_fullscreen(bool fullscreen);
+
+/// @brief Check if the window is fullscreen.
+///
+/// @details Reads the window itself, so it is right when the config sets
+/// display.fullscreen. Useful for showing the real state in a settings menu.
+///
+/// @return true if the window is fullscreen.
+///
+bool is_fullscreen();
 
 /// @brief Set the resolution of the window.
 ///

@@ -12,6 +12,7 @@
 
 #include "./asw/modules/action.h"
 #include "./asw/modules/assets.h"
+#include "./asw/modules/config.h"
 #include "./asw/modules/display.h"
 #include "./asw/modules/input.h"
 #include "./asw/modules/log.h"
@@ -32,8 +33,8 @@ void asw::core::update()
 {
     const uint64_t now = SDL_GetTicksNS();
     if (last_update_ns != 0) {
-        delta_time = std::min(
-            static_cast<float>(now - last_update_ns) / 1'000'000'000.0F, MAX_DELTA_TIME);
+        delta_time
+            = std::min(static_cast<float>(now - last_update_ns) / 1'000'000'000.0F, MAX_DELTA_TIME);
     }
     last_update_ns = now;
 
@@ -167,6 +168,8 @@ void asw::core::init(int width, int height, int scale)
         asw::util::abort_on_error("SDL_Init");
     }
 
+    asw::config::_init();
+
     if (!TTF_Init()) {
         asw::util::abort_on_error("TTF_Init");
     }
@@ -183,6 +186,8 @@ void asw::core::init_opengl(int width, int height, int scale)
     if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_GAMEPAD)) {
         asw::util::abort_on_error("SDL_Init");
     }
+
+    asw::config::_init();
 
     if (!TTF_Init()) {
         asw::util::abort_on_error("TTF_Init");
@@ -239,6 +244,8 @@ void asw::core::shutdown()
     // Same pattern for sound: null mixer pointer before teardown so any
     // surviving Sample/Music shared_ptrs become no-ops.
     asw::sound::_shutdown();
+
+    asw::config::_shutdown();
 
     TTF_Quit();
     SDL_Quit();

@@ -57,6 +57,30 @@ window.addEventListener("message", (event) => {
 
 The page adds `setStatus`, `onRuntimeInitialized` and `onStop` hooks to `Module`. A custom shell can set its own hooks on `Module`, and they run after the ASW ones.
 
+### Config
+
+A config file sets things for every game from outside the game, such as an arcade launcher starting games fullscreen. Point `ASW_CONFIG` at the file:
+
+```sh
+ASW_CONFIG=arcade.cfg ./my_game
+```
+
+Each line is `key = value`. Lines starting with `#` or `;` are comments:
+
+```ini
+# arcade.cfg
+display.fullscreen = true
+display.vsync = true
+```
+
+| Key | Values | Purpose |
+| --- | --- | --- |
+| `display.fullscreen` | `true` or `false` | Start fullscreen or windowed. `asw::display::set_fullscreen()` then has no effect |
+| `display.scale` | `1` to `16` | Window scale, in place of the `scale` given to `asw::core::init()` |
+| `display.vsync` | `true` or `false` | Turn vsync on or off |
+
+`1`/`0`, `yes`/`no` and `on`/`off` also work. Games can read their own keys with `asw::config::get_bool()`, `get_int()`, `get_float()` and `get_string()`.
+
 ## Developing
 
 ### Building

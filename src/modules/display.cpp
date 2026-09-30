@@ -3,9 +3,12 @@
 #include <SDL3/SDL.h>
 #include <SDL3_image/SDL_image.h>
 #include <algorithm>
+#include <optional>
 #include <string>
 
+#include "./asw/modules/config.h"
 #include "./asw/modules/draw.h"
+#include "./asw/modules/log.h"
 #include "./asw/modules/types.h"
 #include "./asw/modules/util.h"
 
@@ -17,10 +20,46 @@ SDL_GLContext gl_context = nullptr;
 // Logical size of the screen. Kept here because SDL reports the logical
 // presentation of the current render target, which is 0 for textures.
 asw::Vec2<int> logical_size;
+
+// Settings from the config. They win over what the game asks for
+std::optional<bool> fullscreen_override;
+std::optional<bool> vsync_override;
+std::optional<int> scale_override;
+
+constexpr int MAX_SCALE = 16;
+
+void read_overrides()
+{
+    fullscreen_override = asw::config::get_bool("display.fullscreen");
+    vsync_override = asw::config::get_bool("display.vsync");
+    scale_override = asw::config::get_int("display.scale");
+
+    if (scale_override && (*scale_override < 1 || *scale_override > MAX_SCALE)) {
+        asw::log::warn(
+            "Ignoring config display.scale = {}, use 1 to {}", *scale_override, MAX_SCALE);
+        scale_override.reset();
+    }
+}
+
+// Window flags and scale, with the overrides applied
+SDL_WindowFlags apply_overrides(SDL_WindowFlags flags, int& scale)
+{
+    if (scale_override) {
+        scale = *scale_override;
+    }
+
+    if (fullscreen_override.value_or(false)) {
+        flags |= SDL_WINDOW_FULLSCREEN;
+    }
+
+    return flags;
+}
 } // namespace
 
 void asw::display::_init(int width, int height, int scale)
 {
+    read_overrides();
+
     // High pixel density gives the canvas one pixel per device pixel in the
     // browser. Without it the scene is drawn at CSS size and the browser
     // stretches it, which blurs it on high density screens
@@ -32,12 +71,13 @@ void asw::display::_init(int width, int height, int scale)
     flags |= SDL_WINDOW_OPENGL;
 #endif
 
+    flags = apply_overrides(flags, scale);
     window = SDL_CreateWindow("", width * scale, height * scale, flags);
     if (window == nullptr) {
         asw::util::abort_on_error("WINDOW");
     }
 
-    SDL_SetHint(SDL_HINT_RENDER_VSYNC, "1");
+    SDL_SetHint(SDL_HINT_RENDER_VSYNC, vsync_override.value_or(true) ? "1" : "0");
 
     renderer = SDL_CreateRenderer(window, nullptr);
 
@@ -50,9 +90,11 @@ void asw::display::_init(int width, int height, int scale)
 
 void asw::display::_init_opengl(int width, int height, int scale)
 {
-    window = SDL_CreateWindow(
-        "", width * scale, height * scale,
-        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
+    read_overrides();
+
+    const SDL_WindowFlags flags = apply_overrides(
+        SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY, scale);
+    window = SDL_CreateWindow("", width * scale, height * scale, flags);
     if (window == nullptr) {
         asw::util::abort_on_error("WINDOW");
     }
@@ -64,6 +106,10 @@ void asw::display::_init_opengl(int width, int height, int scale)
 
     if (!SDL_GL_MakeCurrent(window, gl_context)) {
         asw::util::abort_on_error("SDL_GL_MakeCurrent");
+    }
+
+    if (vsync_override) {
+        SDL_GL_SetSwapInterval(*vsync_override ? 1 : 0);
     }
 }
 
@@ -119,8 +165,17 @@ void asw::display::set_icon(const std::string& path)
 
 void asw::display::set_fullscreen(bool fullscreen)
 {
-    SDL_SetWindowFullscreen(window, fullscreen);
+    SDL_SetWindowFullscreen(window, fullscreen_override.value_or(fullscreen));
     SDL_SyncWindow(window);
+}
+
+bool asw::display::is_fullscreen()
+{
+    if (window == nullptr) {
+        return false;
+    }
+
+    return (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) != 0;
 }
 
 void asw::display::set_resolution(int w, int h)
@@ -143,7 +198,7 @@ asw::Vec2<int> asw::display::get_size()
 asw::Vec2<int> asw::display::get_logical_size()
 {
     if (renderer == nullptr) {
-        return {};
+        return { };
     }
 
     return logical_size;
